@@ -1,0 +1,324 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Ishbor design system — Precision Blue
+ * Inspired by Stripe, Linear, Vercel, Notion.
+ * Blue-600 primary, cool neutrals, restrained warmth.
+ * Inter Tight (display), Inter (body), Playfair Display (italic accents), JetBrains Mono (labels).
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+
+  --font-display: "Inter Tight", "Inter", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", "Newsreader", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Cool white, deep ink */
+  --background: oklch(0.985 0.002 250);
+  --foreground: oklch(0.145 0.015 260);
+
+  --surface: oklch(0.995 0 0);
+  --elevated: oklch(0.975 0.005 250);
+
+  --card: oklch(0.995 0 0);
+  --card-foreground: oklch(0.145 0.015 260);
+
+  --popover: oklch(0.995 0 0);
+  --popover-foreground: oklch(0.145 0.015 260);
+
+  /* Blue-600 — #2563EB */
+  --primary: oklch(0.546 0.185 257);
+  --primary-foreground: oklch(0.985 0.005 250);
+
+  --secondary: oklch(0.96 0.01 250);
+  --secondary-foreground: oklch(0.185 0.015 260);
+
+  --muted: oklch(0.96 0.01 250);
+  --muted-foreground: oklch(0.50 0.015 260);
+
+  /* Blue-500 / Blue-400 accent */
+  --accent: oklch(0.96 0.015 250);
+  --accent-foreground: oklch(0.185 0.015 260);
+
+  /* Star gold — retained for ratings only */
+  --gold: oklch(0.78 0.145 85);
+  --gold-foreground: oklch(0.16 0.012 60);
+
+  --destructive: oklch(0.577 0.19 27);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  --success: oklch(0.62 0.14 160);
+  --success-foreground: oklch(0.985 0 0);
+
+  --warning: oklch(0.78 0.14 75);
+  --warning-foreground: oklch(0.16 0.012 60);
+
+  --border: oklch(0.145 0.015 260 / 0.08);
+  --input: oklch(0.145 0.015 260 / 0.12);
+  --ring: oklch(0.546 0.185 257 / 0.45);
+
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+.dark {
+  --background: oklch(0.13 0.005 260);
+  --foreground: oklch(0.965 0.005 250);
+
+  --surface: oklch(0.17 0.008 260);
+  --elevated: oklch(0.21 0.01 260);
+
+  --card: oklch(0.17 0.008 260);
+  --card-foreground: oklch(0.965 0.005 250);
+
+  --popover: oklch(0.17 0.008 260);
+  --popover-foreground: oklch(0.965 0.005 250);
+
+  --primary: oklch(0.67 0.175 257);
+  --primary-foreground: oklch(0.13 0.005 260);
+
+  --secondary: oklch(0.23 0.01 260);
+  --secondary-foreground: oklch(0.965 0.005 250);
+
+  --muted: oklch(0.22 0.008 260);
+  --muted-foreground: oklch(0.65 0.015 250);
+
+  --accent: oklch(0.23 0.015 255);
+  --accent-foreground: oklch(0.965 0.005 250);
+
+  --gold: oklch(0.82 0.14 85);
+  --gold-foreground: oklch(0.13 0.005 260);
+
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.98 0 0);
+
+  --success: oklch(0.7 0.15 160);
+  --success-foreground: oklch(0.13 0.005 260);
+
+  --warning: oklch(0.82 0.13 75);
+  --warning-foreground: oklch(0.13 0.005 260);
+
+  --border: oklch(1 0 0 / 0.07);
+  --input: oklch(1 0 0 / 0.1);
+  --ring: oklch(0.67 0.175 257 / 0.45);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 20%, transparent);
+  }
+}
+
+@utility font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
+}
+
+@utility font-serif-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 500;
+}
+
+@utility font-mono {
+  font-family: var(--font-mono);
+}
+
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      color-mix(in oklab, var(--color-foreground) 4%, transparent) 1px,
+      transparent 0
+    );
+    background-size: 24px 24px;
+    mask-image: radial-gradient(ellipse at center, black, transparent 70%);
+    opacity: 0.35;
+  }
+}
+
+@utility ornate-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-muted-foreground);
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to var(--dir, right),
+      transparent,
+      var(--color-border),
+      transparent
+    );
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s var(--ease-out-expo) both;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Staggered fade-up for card grids */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 320ms; }
+
+/* Focus ring utility — Stripe-style */
+.focus-ring {
+  outline: none;
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-primary);
+    border-radius: inherit;
+  }
+}
+
+/* Glass card effect */
+.glass {
+  backdrop-filter: blur(12px) saturate(1.2);
+  background-color: color-mix(in oklab, var(--color-card) 80%, transparent);
+}
+
+/* Transition defaults — Linear-style */
+.transition-default {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: 200ms;
+}
