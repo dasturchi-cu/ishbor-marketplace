@@ -53,11 +53,14 @@ export type Order = {
   title: string;
   client: string;
   clientHue: number;
-  amount: number;
-  status: "in_progress" | "review" | "revision" | "completed";
+  freelancer: string;
+  freelancerHue: number;
+  status: "in_progress" | "review" | "revision" | "completed" | "disputed";
+  progress: number;
   dueDate: string;
-  daysLeft: number;
-  milestones: { label: string; done: boolean }[];
+  amount: number;
+  escrowFunded: boolean;
+  milestones: { label: string; done: boolean; amount: number }[];
 };
 
 export type Application = {
@@ -66,30 +69,42 @@ export type Application = {
   client: string;
   clientHue: number;
   budget: number;
-  appliedAgo: string;
+  category: string;
+  submittedAgo: string;
   status: "pending" | "shortlisted" | "rejected" | "hired";
-  bid: number;
+  coverNote: string;
 };
 
-export type EscrowItem = {
+export type Review = {
+  id: string;
+  from: string;
+  fromHue: number;
+  project: string;
+  rating: number;
+  body: string;
+  date: string;
+};
+
+export type EscrowRecord = {
   id: string;
   project: string;
   client: string;
   clientHue: number;
   amount: number;
-  status: "funded" | "pending_release" | "released" | "disputed";
+  status: "funded" | "released" | "pending" | "disputed";
   milestone: string;
-  dueDate: string;
+  date: string;
 };
 
-export type Review = {
+export type HiringLead = {
   id: string;
-  author: string;
-  authorHue: number;
-  rating: number;
-  body: string;
+  name: string;
+  hue: number;
+  title: string;
+  stage: "reviewing" | "shortlisted" | "interview" | "offer";
   project: string;
-  date: string;
+  rate: number;
+  rating: number;
 };
 
 export const freelancers: Freelancer[] = [
@@ -98,8 +113,8 @@ export const freelancers: Freelancer[] = [
   { id: "f3", username: "dilnoza", name: "Dilnoza Kim", title: "3D Artist & Motion Designer", city: "Almaty", rate: 38, rating: 4.92, reviews: 41, level: "Rising", skills: ["Blender", "Cinema 4D", "WebGL", "After Effects"], bio: "Procedural geometry meets nomadic ornament. Latest work: Aral Sea documentary opener.", available: true, hue: 270, earned: 62000, jobs: 28 },
   { id: "f4", username: "temur", name: "Temur Ismoilov", title: "Master Illustrator & Pattern Designer", city: "Bukhara", rate: 35, rating: 5.0, reviews: 67, level: "Top Rated", skills: ["Procreate", "Illustrator", "Pattern Design"], bio: "Six generations of suzani makers in my family. Now I design for fashion houses and CPG brands.", available: false, hue: 230, earned: 88000, jobs: 51 },
   { id: "f5", username: "madina", name: "Madina Azimova", title: "Growth & Strategy Consultant", city: "Tashkent", rate: 80, rating: 4.95, reviews: 53, level: "Expert", skills: ["GTM Strategy", "Market Research", "Notion", "SQL"], bio: "Led growth at three regional unicorns. I build playbooks, not slide decks.", available: true, hue: 290, earned: 245000, jobs: 38 },
-  { id: "f6", username: "farrukh", name: "Farrukh Saidov", title: "iOS Engineer - Swift & SwiftUI", city: "Tashkent", rate: 55, rating: 4.98, reviews: 71, level: "Top Rated", skills: ["Swift", "SwiftUI", "Core Data", "ARKit"], bio: "Shipped 14 apps to the App Store. Specializing in fintech and on-demand.", available: true, hue: 210, earned: 198000, jobs: 47 },
-  { id: "f7", username: "kamila", name: "Kamila Yusupova", title: "Legal Consultant - IP & Contracts", city: "Tashkent", rate: 95, rating: 5.0, reviews: 32, level: "Expert", skills: ["IP Law", "Cross-border", "M&A"], bio: "Cross-border counsel for SaaS and creative businesses entering CIS markets.", available: true, hue: 200, earned: 412000, jobs: 22 },
+  { id: "f6", username: "farrukh", name: "Farrukh Saidov", title: "iOS Engineer • Swift & SwiftUI", city: "Tashkent", rate: 55, rating: 4.98, reviews: 71, level: "Top Rated", skills: ["Swift", "SwiftUI", "Core Data", "ARKit"], bio: "Shipped 14 apps to the App Store. Specializing in fintech and on-demand.", available: true, hue: 210, earned: 198000, jobs: 47 },
+  { id: "f7", username: "kamila", name: "Kamila Yusupova", title: "Legal Consultant • IP & Contracts", city: "Tashkent", rate: 95, rating: 5.0, reviews: 32, level: "Expert", skills: ["IP Law", "Cross-border", "M&A"], bio: "Cross-border counsel for SaaS and creative businesses entering CIS markets.", available: true, hue: 200, earned: 412000, jobs: 22 },
   { id: "f8", username: "rustam", name: "Rustam Khalilov", title: "Architect & Interior Designer", city: "Samarkand", rate: 50, rating: 4.94, reviews: 28, level: "Verified", skills: ["AutoCAD", "Rhino", "V-Ray", "Sustainable Design"], bio: "Restoration of madrasas meets contemporary residential. Riga-trained.", available: true, hue: 160, earned: 124000, jobs: 19 },
 ];
 
@@ -115,27 +130,27 @@ export const services: Service[] = [
 ];
 
 export const projects: Project[] = [
-  { id: "p1", title: "Fintech App Redesign for National Bank", client: "Asaka Capital", clientHue: 215, budget: 12000, budgetType: "fixed", category: "Product Design", postedAgo: "4h ago", proposals: 12, description: "Looking for an expert UI designer to lead the mobile transformation of our retail banking platform. Focus on accessibility, localized typography (Cyrillic + Latin), and a 6-week sprint to MVP.", skills: ["Figma", "Design Systems", "Fintech", "Accessibility"], duration: "6 weeks", verified: true },
-  { id: "p2", title: "Arabic & Cyrillic Localization for E-commerce", client: "Hunar Bazaar", clientHue: 290, budget: 3500, budgetType: "fixed", category: "Localization", postedAgo: "8h ago", proposals: 8, description: "Consultation and implementation of RTL layouts and specialized font weights for an upscale regional lifestyle brand.", skills: ["i18n", "RTL", "Typography", "Next.js"], duration: "3 weeks", verified: true },
-  { id: "p3", title: "Series A Pitch Deck - Climate Tech", client: "Aralink Labs", clientHue: 160, budget: 4500, budgetType: "fixed", category: "Strategy & Design", postedAgo: "1d ago", proposals: 21, description: "Need a story-driven 18-slide deck for our $8M Series A. Climate tech / water restoration in the Aral basin. Must move investors.", skills: ["Pitch Decks", "Storytelling", "Keynote", "Climate"], duration: "10 days", verified: true },
-  { id: "p4", title: "Long-term iOS Engineer - On-demand startup", client: "Tezda", clientHue: 250, budget: 55, budgetType: "hourly", category: "Mobile Development", postedAgo: "1d ago", proposals: 6, description: "Looking for a senior iOS engineer for 20-30h/week, 6 months minimum. SwiftUI, Combine, MapKit. Equity option available.", skills: ["Swift", "SwiftUI", "MapKit", "Combine"], duration: "6+ months", verified: true },
-  { id: "p5", title: "Madrasa Restoration - 3D Documentation", client: "UNESCO CA Bureau", clientHue: 280, budget: 8000, budgetType: "fixed", category: "Architecture", postedAgo: "2d ago", proposals: 4, description: "Photogrammetry, 3D modelling and historically accurate restoration drawings for a 16th-century madrasa in Bukhara.", skills: ["Photogrammetry", "Rhino", "Heritage", "AutoCAD"], duration: "8 weeks", verified: true },
-  { id: "p6", title: "B2B SaaS Marketing Site (Webflow)", client: "Soliq Pro", clientHue: 210, budget: 6500, budgetType: "fixed", category: "Web Design", postedAgo: "3d ago", proposals: 18, description: "Premium marketing site for a tax-automation SaaS. Webflow build, CMS, 8 pages plus blog. Linear/Stripe quality bar.", skills: ["Webflow", "Copywriting", "Animation", "SEO"], duration: "5 weeks", verified: false },
+  { id: "p1", title: "Fintech App Redesign for National Bank", client: "Asaka Capital", clientHue: 215, budget: 12000, budgetType: "fixed", category: "Product Design", postedAgo: "4h ago", proposals: 12, description: "Looking for an expert UI designer to lead the mobile transformation of our retail banking platform.", skills: ["Figma", "Design Systems", "Fintech", "Accessibility"], duration: "6 weeks", verified: true },
+  { id: "p2", title: "Arabic & Cyrillic Localization for E-commerce", client: "Hunar Bazaar", clientHue: 290, budget: 3500, budgetType: "fixed", category: "Localization", postedAgo: "8h ago", proposals: 8, description: "RTL layouts and specialized font weights for an upscale regional lifestyle brand.", skills: ["i18n", "RTL", "Typography", "Next.js"], duration: "3 weeks", verified: true },
+  { id: "p3", title: "Series A Pitch Deck — Climate Tech", client: "Aralink Labs", clientHue: 160, budget: 4500, budgetType: "fixed", category: "Strategy & Design", postedAgo: "1d ago", proposals: 21, description: "18-slide deck for $8M Series A. Climate tech / water restoration in the Aral basin.", skills: ["Pitch Decks", "Storytelling", "Keynote", "Climate"], duration: "10 days", verified: true },
+  { id: "p4", title: "Long-term iOS Engineer — On-demand startup", client: "Tezda", clientHue: 250, budget: 55, budgetType: "hourly", category: "Mobile Development", postedAgo: "1d ago", proposals: 6, description: "Senior iOS engineer for 20-30h/week, 6 months minimum. SwiftUI, Combine, MapKit.", skills: ["Swift", "SwiftUI", "MapKit", "Combine"], duration: "6+ months", verified: true },
+  { id: "p5", title: "Madrasa Restoration — 3D Documentation", client: "UNESCO CA Bureau", clientHue: 280, budget: 8000, budgetType: "fixed", category: "Architecture", postedAgo: "2d ago", proposals: 4, description: "Photogrammetry, 3D modelling and restoration drawings for a 16th-century madrasa in Bukhara.", skills: ["Photogrammetry", "Rhino", "Heritage", "AutoCAD"], duration: "8 weeks", verified: true },
+  { id: "p6", title: "B2B SaaS Marketing Site (Webflow)", client: "Soliq Pro", clientHue: 210, budget: 6500, budgetType: "fixed", category: "Web Design", postedAgo: "3d ago", proposals: 18, description: "Premium marketing site for a tax-automation SaaS. Webflow build, 8 pages plus blog.", skills: ["Webflow", "Copywriting", "Animation", "SEO"], duration: "5 weeks", verified: false },
 ];
 
 export const categories = [
-  { slug: "design", name: "Design & Brand", count: 1240, glyph: "+" },
-  { slug: "development", name: "Development", count: 2820, glyph: "o" },
-  { slug: "marketing", name: "Marketing & Growth", count: 940, glyph: "*" },
-  { slug: "writing", name: "Writing & Translation", count: 1180, glyph: "#" },
-  { slug: "video", name: "Video & Animation", count: 620, glyph: "@" },
-  { slug: "architecture", name: "Architecture & 3D", count: 410, glyph: "~" },
-  { slug: "consulting", name: "Strategy & Legal", count: 380, glyph: "=" },
-  { slug: "craft", name: "Craft & Heritage", count: 290, glyph: "%" },
+  { slug: "design", name: "Design & Brand", count: 1240, glyph: "✦" },
+  { slug: "development", name: "Development", count: 2820, glyph: "◇" },
+  { slug: "marketing", name: "Marketing & Growth", count: 940, glyph: "✶" },
+  { slug: "writing", name: "Writing & Translation", count: 1180, glyph: "✧" },
+  { slug: "video", name: "Video & Animation", count: 620, glyph: "❋" },
+  { slug: "architecture", name: "Architecture & 3D", count: 410, glyph: "◈" },
+  { slug: "consulting", name: "Strategy & Legal", count: 380, glyph: "✺" },
+  { slug: "craft", name: "Craft & Heritage", count: 290, glyph: "✻" },
 ];
 
 export const messages = [
-  { id: "m1", name: "Nargiza Akhmedova", hue: 250, snippet: "I've prepared three direction explorations for the dashboard...", time: "2m", unread: 2, online: true },
+  { id: "m1", name: "Nargiza Akhmedova", hue: 250, snippet: "I've prepared three direction explorations for the dashboard…", time: "2m", unread: 2, online: true },
   { id: "m2", name: "Asaka Capital", hue: 215, snippet: "Contract signed. First milestone funded into escrow.", time: "1h", unread: 0, online: false },
   { id: "m3", name: "Azamat Usmanov", hue: 210, snippet: "Shipped the migrations. Ready for review whenever.", time: "3h", unread: 1, online: true },
   { id: "m4", name: "Madina Azimova", hue: 290, snippet: "Quick call Thursday to walk through the growth playbook?", time: "1d", unread: 0, online: false },
@@ -143,99 +158,94 @@ export const messages = [
 ];
 
 export const notifications = [
-  { id: "n1", kind: "payment" as const, title: "Milestone funded", body: "Asaka Capital funded $4,000 into escrow for Fintech App Redesign.", time: "12m", read: false, priority: true },
-  { id: "n2", kind: "proposal" as const, title: "New proposal received", body: "Azamat Usmanov submitted a proposal for your iOS project at $55/h.", time: "1h", read: false, priority: true },
-  { id: "n3", kind: "review" as const, title: "5-star review", body: "Tezda left a 5-star review on your iOS engagement. Great work!", time: "3h", read: false, priority: false },
-  { id: "n4", kind: "system" as const, title: "Identity verified", body: "Your Pasport ID is now verified. You qualify for Pro listings.", time: "1d", read: true, priority: false },
-  { id: "n5", kind: "message" as const, title: "Message from Nargiza", body: "I've prepared three direction explorations for the dashboard wireframes.", time: "1d", read: true, priority: false },
-  { id: "n6", kind: "payment" as const, title: "Withdrawal processed", body: "Your withdrawal of $2,200 to Humo card ending 4421 is complete.", time: "2d", read: true, priority: false },
-  { id: "n7", kind: "proposal" as const, title: "Application shortlisted", body: "Soliq Pro shortlisted your application for the Webflow Marketing Site project.", time: "2d", read: true, priority: false },
+  { id: "n1", kind: "payment" as const, title: "Milestone funded", body: "Asaka Capital funded $4,000 into escrow for Fintech App Redesign.", time: "12m", read: false, priority: "high" as const },
+  { id: "n2", kind: "proposal" as const, title: "New proposal received", body: "Azamat Usmanov submitted a proposal on your iOS project.", time: "1h", read: false, priority: "high" as const },
+  { id: "n3", kind: "review" as const, title: "5-star review", body: "Tezda left a 5-star review on your iOS engagement. Great work!", time: "3h", read: false, priority: "normal" as const },
+  { id: "n4", kind: "escrow" as const, title: "Milestone approved", body: "Your milestone for the Brand Identity project has been approved and released.", time: "5h", read: true, priority: "normal" as const },
+  { id: "n5", kind: "message" as const, title: "Message from Nargiza", body: "I've prepared three direction explorations for the dashboard. Want me to walk through them?", time: "1d", read: true, priority: "normal" as const },
+  { id: "n6", kind: "system" as const, title: "Identity verified", body: "Your Passport ID is now verified. You qualify for Pro listings and higher escrow limits.", time: "1d", read: true, priority: "normal" as const },
+  { id: "n7", kind: "proposal" as const, title: "Proposal shortlisted", body: "Soliq Pro shortlisted your proposal for the Webflow Marketing Site project.", time: "2d", read: true, priority: "normal" as const },
+  { id: "n8", kind: "payment" as const, title: "Withdrawal completed", body: "Your withdrawal of $2,200 to Humo card ending in 4421 has been processed.", time: "3d", read: true, priority: "low" as const },
 ];
 
 export const transactions = [
   { id: "t1", kind: "in" as const, label: "Milestone release", project: "Fintech App Redesign", amount: 4000, date: "Jun 10", status: "Completed" },
-  { id: "t2", kind: "out" as const, label: "Withdrawal - Humo card", project: "#### 4421", amount: -2200, date: "Jun 08", status: "Completed" },
+  { id: "t2", kind: "out" as const, label: "Withdrawal — Humo card", project: "•••• 4421", amount: -2200, date: "Jun 08", status: "Completed" },
   { id: "t3", kind: "in" as const, label: "Service order", project: "Brand Identity System", amount: 1200, date: "Jun 06", status: "Completed" },
   { id: "t4", kind: "fee" as const, label: "Platform fee", project: "Brand Identity System", amount: -96, date: "Jun 06", status: "Completed" },
   { id: "t5", kind: "in" as const, label: "Milestone release", project: "Localization sprint", amount: 1750, date: "Jun 02", status: "Completed" },
-  { id: "t6", kind: "out" as const, label: "Withdrawal - Uzcard", project: "#### 8829", amount: -3000, date: "May 29", status: "Pending" },
-  { id: "t7", kind: "in" as const, label: "Service order", project: "iOS App Development", amount: 2400, date: "May 24", status: "Completed" },
-  { id: "t8", kind: "fee" as const, label: "Platform fee", project: "iOS App Development", amount: -192, date: "May 24", status: "Completed" },
+  { id: "t6", kind: "out" as const, label: "Withdrawal — Uzcard", project: "•••• 8829", amount: -3000, date: "May 29", status: "Pending" },
+  { id: "t7", kind: "in" as const, label: "Order payment", project: "iOS App Development", amount: 2400, date: "May 25", status: "Completed" },
+  { id: "t8", kind: "fee" as const, label: "Platform fee", project: "iOS App Development", amount: -192, date: "May 25", status: "Completed" },
 ];
 
 export const orders: Order[] = [
   {
-    id: "o1",
-    title: "Fintech App Redesign - Mobile UI",
-    client: "Asaka Capital",
-    clientHue: 215,
-    amount: 12000,
-    status: "in_progress",
-    dueDate: "Jun 24",
-    daysLeft: 12,
+    id: "o1", title: "Fintech App Redesign — Phase 1", client: "Asaka Capital", clientHue: 215,
+    freelancer: "Nargiza Akhmedova", freelancerHue: 250, status: "in_progress", progress: 60,
+    dueDate: "Jun 24", amount: 12000, escrowFunded: true,
     milestones: [
-      { label: "Discovery & Research", done: true },
-      { label: "Wireframes", done: true },
-      { label: "Visual Design", done: false },
-      { label: "Handoff & Specs", done: false },
+      { label: "Research & wireframes", done: true, amount: 2000 },
+      { label: "High-fidelity screens", done: true, amount: 4000 },
+      { label: "Prototype & handoff", done: false, amount: 6000 },
     ],
   },
   {
-    id: "o2",
-    title: "Brand Identity System",
-    client: "Aralink Labs",
-    clientHue: 160,
-    amount: 1200,
-    status: "review",
-    dueDate: "Jun 14",
-    daysLeft: 2,
+    id: "o2", title: "Brand Identity System", client: "Hunar Bazaar", clientHue: 290,
+    freelancer: "Nargiza Akhmedova", freelancerHue: 250, status: "review", progress: 90,
+    dueDate: "Jun 15", amount: 1200, escrowFunded: true,
     milestones: [
-      { label: "Brand Strategy", done: true },
-      { label: "Logo Design", done: true },
-      { label: "Guidelines Doc", done: true },
-      { label: "Client Review", done: false },
+      { label: "Logo & mark", done: true, amount: 400 },
+      { label: "Color & type system", done: true, amount: 400 },
+      { label: "Brand guidelines PDF", done: false, amount: 400 },
     ],
   },
   {
-    id: "o3",
-    title: "Webflow Marketing Site",
-    client: "Soliq Pro",
-    clientHue: 210,
-    amount: 6500,
-    status: "revision",
-    dueDate: "Jun 18",
-    daysLeft: 6,
+    id: "o3", title: "iOS App — On-demand delivery", client: "Tezda", clientHue: 250,
+    freelancer: "Farrukh Saidov", freelancerHue: 210, status: "in_progress", progress: 35,
+    dueDate: "Aug 01", amount: 8800, escrowFunded: true,
     milestones: [
-      { label: "Design", done: true },
-      { label: "Development", done: true },
-      { label: "Revision round", done: false },
-      { label: "Launch", done: false },
+      { label: "Architecture & sprint 1", done: true, amount: 2200 },
+      { label: "Core feature build", done: false, amount: 4400 },
+      { label: "Testing & App Store", done: false, amount: 2200 },
+    ],
+  },
+  {
+    id: "o4", title: "Growth Strategy Audit", client: "Aralink Labs", clientHue: 160,
+    freelancer: "Madina Azimova", freelancerHue: 290, status: "completed", progress: 100,
+    dueDate: "Jun 05", amount: 850, escrowFunded: false,
+    milestones: [
+      { label: "Audit & findings", done: true, amount: 425 },
+      { label: "90-day playbook", done: true, amount: 425 },
     ],
   },
 ];
 
 export const applications: Application[] = [
-  { id: "a1", projectTitle: "Series A Pitch Deck - Climate Tech", client: "Aralink Labs", clientHue: 160, budget: 4500, appliedAgo: "2d ago", status: "shortlisted", bid: 3800 },
-  { id: "a2", projectTitle: "Long-term iOS Engineer - On-demand startup", client: "Tezda", clientHue: 250, budget: 55, appliedAgo: "3d ago", status: "pending", bid: 55 },
-  { id: "a3", projectTitle: "Arabic & Cyrillic Localization for E-commerce", client: "Hunar Bazaar", clientHue: 290, budget: 3500, appliedAgo: "5d ago", status: "hired", bid: 3200 },
-  { id: "a4", projectTitle: "Madrasa Restoration - 3D Documentation", client: "UNESCO CA Bureau", clientHue: 280, budget: 8000, appliedAgo: "1w ago", status: "rejected", bid: 7200 },
-];
-
-export const escrowItems: EscrowItem[] = [
-  { id: "e1", project: "Fintech App Redesign", client: "Asaka Capital", clientHue: 215, amount: 4000, status: "funded", milestone: "Visual Design milestone", dueDate: "Jun 24" },
-  { id: "e2", project: "Webflow Marketing Site", client: "Soliq Pro", clientHue: 210, amount: 3250, status: "pending_release", milestone: "Development complete", dueDate: "Jun 18" },
-  { id: "e3", project: "Brand Identity System", client: "Aralink Labs", clientHue: 160, amount: 600, status: "funded", milestone: "Final delivery", dueDate: "Jun 14" },
+  { id: "a1", projectTitle: "B2B SaaS Marketing Site (Webflow)", client: "Soliq Pro", clientHue: 210, budget: 6500, category: "Web Design", submittedAgo: "2d ago", status: "shortlisted", coverNote: "I've built 12 Webflow marketing sites for SaaS companies including Alif and Payme." },
+  { id: "a2", projectTitle: "Series A Pitch Deck — Climate Tech", client: "Aralink Labs", clientHue: 160, budget: 4500, category: "Strategy & Design", submittedAgo: "3d ago", status: "pending", coverNote: "I specialize in investor narratives for climate and impact-driven startups." },
+  { id: "a3", projectTitle: "Arabic & Cyrillic Localization", client: "Hunar Bazaar", clientHue: 290, budget: 3500, category: "Localization", submittedAgo: "5d ago", status: "pending", coverNote: "Native Uzbek speaker with deep i18n experience across Central Asian markets." },
+  { id: "a4", projectTitle: "Madrasa Restoration 3D Documentation", client: "UNESCO CA Bureau", clientHue: 280, budget: 8000, category: "Architecture", submittedAgo: "1w ago", status: "rejected", coverNote: "Led photogrammetry documentation for three UNESCO heritage sites in Uzbekistan." },
 ];
 
 export const reviews: Review[] = [
-  { id: "r1", author: "Tezda Inc.", authorHue: 250, rating: 5, body: "Nargiza delivered exceptional mobile UI work. Her attention to Central Asian typography nuances was exactly what we needed. Will hire again without hesitation.", project: "iOS Banking App Redesign", date: "Jun 10" },
-  { id: "r2", author: "Asaka Capital", authorHue: 215, rating: 5, body: "Top-tier strategic thinking and execution. The brand identity system she created has become our foundation for all future communications.", project: "Brand Identity System", date: "May 28" },
-  { id: "r3", author: "Hunar Bazaar", authorHue: 290, rating: 4, body: "Great work on the localization project. Some back-and-forth on the Cyrillic weights but the final result is polished.", project: "E-commerce Localization", date: "May 15" },
+  { id: "r1", from: "Asaka Capital", fromHue: 215, project: "Fintech App Redesign", rating: 5, body: "Nargiza delivered exceptional work. The designs are both beautiful and production-ready. Will definitely hire again.", date: "Jun 10" },
+  { id: "r2", from: "Tezda", fromHue: 250, project: "iOS App Development", rating: 5, body: "Farrukh is a rockstar. Delivered on time, communicated proactively, and the code quality is superb.", date: "Jun 05" },
+  { id: "r3", from: "Hunar Bazaar", fromHue: 290, project: "Brand Identity System", rating: 4, body: "Great work overall. Minor delays on revisions but the final output was worth it.", date: "May 28" },
+  { id: "r4", from: "Aralink Labs", fromHue: 160, project: "Growth Audit", rating: 5, body: "The playbook Madina built has already generated measurable results in just 3 weeks.", date: "May 20" },
 ];
 
-export const teamActivity = [
-  { id: "ta1", actor: "Nargiza A.", actorHue: 250, action: "submitted milestone", project: "Fintech App Redesign", time: "15m ago" },
-  { id: "ta2", actor: "Azamat U.", actorHue: 215, action: "started contract", project: "Backend API integration", time: "2h ago" },
-  { id: "ta3", actor: "Kamila Y.", actorHue: 200, action: "delivered contract review", project: "SaaS legal audit", time: "4h ago" },
-  { id: "ta4", actor: "Madina A.", actorHue: 290, action: "uploaded growth playbook", project: "Q3 GTM strategy", time: "1d ago" },
+export const escrowRecords: EscrowRecord[] = [
+  { id: "e1", project: "Fintech App Redesign", client: "Asaka Capital", clientHue: 215, amount: 6000, status: "funded", milestone: "Prototype & handoff", date: "Jun 10" },
+  { id: "e2", project: "iOS App — On-demand delivery", client: "Tezda", clientHue: 250, amount: 4400, status: "funded", milestone: "Core feature build", date: "Jun 08" },
+  { id: "e3", project: "Brand Identity System", client: "Hunar Bazaar", clientHue: 290, amount: 400, status: "pending", milestone: "Brand guidelines PDF", date: "Jun 12" },
+  { id: "e4", project: "Growth Strategy Audit", client: "Aralink Labs", clientHue: 160, amount: 850, status: "released", milestone: "Full delivery", date: "Jun 05" },
+];
+
+export const hiringPipeline: HiringLead[] = [
+  { id: "h1", name: "Nargiza Akhmedova", hue: 250, title: "Senior Brand Designer", stage: "shortlisted", project: "Fintech App Redesign", rate: 45, rating: 5.0 },
+  { id: "h2", name: "Azamat Usmanov", hue: 215, title: "Full Stack Engineer", stage: "interview", project: "Fintech App Redesign", rate: 65, rating: 4.97 },
+  { id: "h3", name: "Farrukh Saidov", hue: 210, title: "iOS Engineer", stage: "offer", project: "iOS App", rate: 55, rating: 4.98 },
+  { id: "h4", name: "Dilnoza Kim", hue: 270, title: "3D Artist", stage: "reviewing", project: "Series A Deck", rate: 38, rating: 4.92 },
+  { id: "h5", name: "Madina Azimova", hue: 290, title: "Growth Consultant", stage: "reviewing", project: "Growth Audit", rate: 80, rating: 4.95 },
 ];
