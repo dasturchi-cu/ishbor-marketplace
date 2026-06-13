@@ -7,6 +7,7 @@ import {
   Video,
   Search,
   ChevronRight,
+  ChevronLeft,
   Lock,
   CheckCircle2,
   FileText,
@@ -165,10 +166,12 @@ function EscrowNotification({ m }: { m: Message }) {
   if (!m.escrow) return null;
   return (
     <div className="flex justify-center">
-      <div className="inline-flex items-center gap-2 rounded-full border border-success/20 bg-success/8 px-4 py-2 text-xs font-medium text-success shadow-sm">
+      <div className="flex justify-center px-2">
+      <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-success/20 bg-success/8 px-3 py-2 text-xs font-medium text-success shadow-sm sm:px-4">
         <Lock className="size-3.5" />
         <span className="font-semibold">{m.escrow.event}:</span>
-        <span>${m.escrow.amount.toLocaleString()} funded · {m.escrow.project}</span>
+        <span className="truncate">${m.escrow.amount.toLocaleString()} funded · {m.escrow.project}</span>
+      </div>
       </div>
     </div>
   );
@@ -176,18 +179,19 @@ function EscrowNotification({ m }: { m: Message }) {
 
 function MessagesPage() {
   const [input, setInput] = useState("");
+  const [showList, setShowList] = useState(true);
 
   return (
     <WorkspaceShell eyebrow="Inbox" title="Messages">
-      <div className="grid h-[calc(100vh-200px)] min-h-[560px] overflow-hidden rounded-2xl border border-border bg-card md:grid-cols-[280px_1fr]">
+      <div className="grid h-[calc(100dvh-12rem)] min-h-[480px] overflow-hidden rounded-2xl border border-border bg-card md:h-[calc(100vh-200px)] md:min-h-[560px] md:grid-cols-[280px_1fr]">
         {/* Sidebar */}
-        <aside className="flex flex-col border-r border-border">
+        <aside className={`${showList ? "flex" : "hidden"} min-h-0 flex-col border-r border-border md:flex`}>
           <div className="border-b border-border p-3">
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
+            <div className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
               <Search className="size-3.5 shrink-0 text-muted-foreground" />
               <input
                 placeholder="Search conversations..."
-                className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground/60"
+                className="min-h-11 w-full min-w-0 bg-transparent text-xs outline-none placeholder:text-muted-foreground/60"
               />
             </div>
           </div>
@@ -195,7 +199,8 @@ function MessagesPage() {
             {messages.map((m, i) => (
               <button
                 key={m.id}
-                className={`flex w-full items-center gap-3 border-b border-border p-3 text-left transition-default hover:bg-secondary/30 ${
+                onClick={() => setShowList(false)}
+                className={`touch-target flex w-full items-center gap-3 border-b border-border p-3 text-left transition-default hover:bg-secondary/30 ${
                   i === 0 ? "bg-primary/5" : ""
                 }`}
               >
@@ -225,50 +230,58 @@ function MessagesPage() {
         </aside>
 
         {/* Chat area */}
-        <div className="flex min-h-0 flex-col">
+        <div className={`${showList ? "hidden" : "flex"} min-h-0 flex-col md:flex`}>
           {/* Header */}
-          <header className="flex items-center justify-between border-b border-border px-5 py-3">
-            <div className="flex items-center gap-3">
+          <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 sm:px-5">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setShowList(true)}
+                className="touch-target inline-flex shrink-0 items-center justify-center rounded-lg border border-border md:hidden"
+                aria-label="Back to conversations"
+              >
+                <ChevronLeft className="size-4" />
+              </button>
               <GradientAvatar name="Nargiza Akhmedova" hue={250} size={36} />
-              <div>
-                <div className="text-sm font-semibold">Nargiza Akhmedova</div>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold">Nargiza Akhmedova</div>
                 <div className="font-mono flex items-center gap-1.5 text-[10px] text-success">
                   <span className="size-1.5 rounded-full bg-success" />
                   Online · typing...
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-default hover:border-primary/20 focus-ring">
+            <div className="flex shrink-0 items-center gap-1">
+              <button className="touch-target hidden items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring sm:inline-flex">
                 <Lock className="size-3.5 text-primary" /> Escrow
               </button>
-              <button className="inline-flex size-8 items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring">
+              <button className="touch-target inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="Call">
                 <Phone className="size-4" />
               </button>
-              <button className="inline-flex size-8 items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring">
+              <button className="touch-target hidden items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring sm:inline-flex" aria-label="Video call">
                 <Video className="size-4" />
               </button>
-              <button className="inline-flex size-8 items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring">
+              <button className="touch-target inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="More options">
                 <MoreHorizontal className="size-4" />
               </button>
             </div>
           </header>
 
           {/* Context banner */}
-          <div className="flex items-center justify-between border-b border-border bg-primary/5 px-5 py-2.5">
-            <div className="flex items-center gap-2 text-xs">
-              <Lock className="size-3.5 text-primary" />
+          <div className="flex flex-col gap-2 border-b border-border bg-primary/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
+              <Lock className="size-3.5 shrink-0 text-primary" />
               <span className="font-medium">Fintech App Redesign</span>
-              <span className="text-muted-foreground">·</span>
+              <span className="hidden text-muted-foreground sm:inline">·</span>
               <span className="text-muted-foreground">$12,000 escrow funded</span>
             </div>
-            <button className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-default hover:opacity-80">
+            <button className="touch-target inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-primary transition-default hover:opacity-80 sm:self-auto">
               View contract <ChevronRight className="size-3" />
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
             {thread.map((m, i) => {
               if (m.type === "escrow") return <EscrowNotification key={i} m={m} />;
               if (m.type === "offer") return <OfferCard key={i} m={m} />;
@@ -290,35 +303,35 @@ function MessagesPage() {
           </div>
 
           {/* Composer */}
-          <div className="border-t border-border p-3">
+          <div className="border-t border-border p-2 sm:p-3">
             <div className="rounded-xl border border-border bg-background focus-within:border-primary/30 transition-default">
-              <div className="flex items-center gap-2 px-3 pt-3">
+              <div className="flex items-center gap-2 px-3 pt-2 sm:pt-3">
                 <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Write a message..."
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+                  className="min-h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
                 />
               </div>
-              <div className="flex items-center justify-between px-3 pb-2 pt-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-2">
                 <div className="flex items-center gap-0.5">
-                  <button className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring">
+                  <button className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach file">
                     <Paperclip className="size-4" />
                   </button>
-                  <button className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring">
+                  <button className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach image">
                     <ImageIcon className="size-4" />
                   </button>
-                  <button className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring">
+                  <button className="touch-target hidden items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring sm:inline-flex" aria-label="Add emoji">
                     <Smile className="size-4" />
                   </button>
-                  <div className="mx-1 h-4 w-px bg-border" />
-                  <button className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring">
+                  <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
+                  <button className="touch-target hidden items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring sm:inline-flex">
                     <DollarSign className="size-3" /> Send offer
                   </button>
                 </div>
                 <button
                   disabled={!input.trim()}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus-ring"
+                  className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 focus-ring"
                 >
                   Send <Send className="size-3.5" />
                 </button>

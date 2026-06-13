@@ -25,7 +25,7 @@ export function PackageCard({
             key={p.tier}
             type="button"
             onClick={() => setSelected(i)}
-            className={`relative py-3 font-mono uppercase tracking-widest transition-default focus-ring ${
+            className={`relative py-3.5 font-mono text-[10px] uppercase tracking-widest transition-default focus-ring sm:text-xs ${
               selected === i
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-primary/5 hover:text-foreground"

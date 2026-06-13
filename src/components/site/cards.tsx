@@ -11,10 +11,10 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
       params={{ username: f.username }}
       className="group block rounded-2xl border border-border bg-card p-5 transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]"
     >
-      <div className="mb-4 flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          <GradientAvatar name={f.name} hue={f.hue} size={48} rounded="rounded-xl" />
-          <div className="min-w-0">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <GradientAvatar name={f.name} hue={f.hue} size={48} rounded="rounded-xl" className="shrink-0" />
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <h3 className="truncate font-display text-sm font-semibold leading-tight">
                 {f.name}
@@ -26,18 +26,19 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{f.title}</p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="flex shrink-0 items-center justify-between gap-4 sm:block sm:text-right">
           <div className="font-mono text-sm font-medium">
             ${f.rate}
             <span className="text-muted-foreground">/h</span>
           </div>
-          <div className="mt-0.5 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1 text-[10px] text-muted-foreground sm:mt-0.5 sm:justify-end">
             <Star className="size-3 fill-gold text-gold" />
             <span className="font-mono">{f.rating.toFixed(2)}</span>
             <span>({f.reviews})</span>
           </div>
         </div>
       </div>
+
 
       <div className="flex flex-wrap gap-1.5">
         {f.skills.slice(0, 3).map((s) => (
@@ -147,7 +148,7 @@ export function ServiceCard({ s }: { s: Service }) {
 export function ProjectCard({ p }: { p: Project }) {
   return (
     <div className="group rounded-2xl border border-border bg-card p-5 transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]">
-      <div className="mb-4 flex items-start justify-between gap-4">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
@@ -173,14 +174,14 @@ export function ProjectCard({ p }: { p: Project }) {
             <span>{p.postedAgo}</span>
           </div>
         </div>
-        <div className="shrink-0 text-right">
+        <div className="flex shrink-0 items-center justify-between gap-3 sm:block sm:text-right">
           <div className="font-display text-lg font-semibold">
             {p.budgetType === "hourly" ? "$" : ""}{p.budget.toLocaleString()}{p.budgetType === "hourly" ? "/h" : ""}
           </div>
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             {p.budgetType} · {p.duration}
           </div>
-          <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+          <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground sm:mt-1">
             {p.experienceLevel}
           </div>
         </div>
@@ -217,7 +218,7 @@ export function ProjectCard({ p }: { p: Project }) {
         <Link
           to="/projects/$slug"
           params={{ slug: p.slug }}
-          className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
+          className="touch-target inline-flex items-center rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
         >
           Send proposal
         </Link>

@@ -175,6 +175,12 @@
     text-rendering: optimizeLegibility;
   }
 
+  html,
+  body {
+    overflow-x: clip;
+    max-width: 100%;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -321,4 +327,19 @@
   transition-property: color, background-color, border-color, box-shadow, transform, opacity;
   transition-timing-function: var(--ease-out-expo);
   transition-duration: 200ms;
+}
+
+/* Mobile utilities — Phase 7 */
+@utility touch-target {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+@utility mobile-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

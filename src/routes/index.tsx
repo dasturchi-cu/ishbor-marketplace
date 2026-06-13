@@ -74,11 +74,11 @@ function Landing() {
           }}
         />
         <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
-          <div className="font-mono mx-auto mb-5 inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-foreground backdrop-blur-sm">
+          <div className="font-mono mx-auto mb-5 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-foreground backdrop-blur-sm sm:text-[10px] sm:tracking-[0.2em]">
             <span className="size-1.5 rounded-full bg-primary animate-pulse-subtle" />
             Live in Tashkent · Almaty · Bishkek · Dushanbe
           </div>
-          <h1 className="font-display mx-auto max-w-4xl text-balance text-5xl font-extrabold leading-[1.04] tracking-[-0.03em] sm:text-6xl md:text-7xl">
+          <h1 className="font-display mx-auto max-w-4xl text-balance text-[2rem] font-extrabold leading-[1.06] tracking-[-0.03em] sm:text-4xl sm:leading-[1.04] md:text-5xl lg:text-6xl">
             Central Asia's <span className="text-primary">premier</span> freelance marketplace.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-balance text-base text-muted-foreground sm:text-lg">

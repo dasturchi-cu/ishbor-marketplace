@@ -54,7 +54,7 @@ function ServiceDetail() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
           <div>
-            <h1 className="font-display max-w-2xl text-balance text-3xl font-extrabold tracking-tight sm:text-4xl">
+            <h1 className="font-display max-w-2xl text-balance text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
               {service.title}
             </h1>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">

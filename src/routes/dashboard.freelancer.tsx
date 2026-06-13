@@ -51,16 +51,16 @@ function FreelancerDashboard() {
       eyebrow="Freelancer workspace"
       title="Welcome back, Nargiza."
       actions={
-        <div className="flex items-center gap-3">
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
+          <button className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
             <Plus className="size-4" /> New service listing
           </button>
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
+          <div className="mobile-scroll-x flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
             {availabilityOptions.map((opt) => (
               <button
                 key={opt.key}
                 onClick={() => setAvailability(opt.key)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-default focus-ring ${
+                className={`touch-target inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-default focus-ring ${
                   availability === opt.key
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -81,8 +81,8 @@ function FreelancerDashboard() {
         <StatCard label="Avg. rating" value="4.98" trend="184 reviews" icon={Star} />
       </div>
 
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6">
-        <div className="mb-6 flex items-end justify-between">
+      <section className="mt-8 rounded-2xl border border-border bg-card p-4 sm:p-6">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="font-display text-base font-semibold">Earnings · last 6 months</h2>
           <div className="text-right">
             <div className="eyebrow">Total earned</div>
@@ -111,7 +111,7 @@ function FreelancerDashboard() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1fr]">
         <section className="rounded-2xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
             <h2 className="font-display text-base font-semibold">Active orders</h2>
             <Link to="/projects" className="text-xs font-medium text-primary transition-default hover:text-primary/80">View all</Link>
           </div>
@@ -146,11 +146,11 @@ function FreelancerDashboard() {
         </section>
 
         <section className="rounded-2xl border border-border bg-card">
-          <div className="border-b border-border px-6 py-4">
-            <div className="flex gap-2">
+          <div className="border-b border-border px-4 py-4 sm:px-6">
+            <div className="mobile-scroll-x flex gap-2">
               <button
                 onClick={() => setActiveTab("applications")}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-default ${
+                className={`touch-target shrink-0 rounded-lg px-4 text-sm font-medium transition-default ${
                   activeTab === "applications" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -158,7 +158,7 @@ function FreelancerDashboard() {
               </button>
               <button
                 onClick={() => setActiveTab("reviews")}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-default ${
+                className={`touch-target shrink-0 rounded-lg px-4 text-sm font-medium transition-default ${
                   activeTab === "reviews" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >

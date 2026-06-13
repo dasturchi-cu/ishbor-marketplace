@@ -117,7 +117,7 @@ export function OnboardingNav({
         type="button"
         onClick={onContinue}
         disabled={disabled}
-        className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="touch-target inline-flex items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         {continueLabel}
       </button>

@@ -137,7 +137,7 @@ function NotificationsPage() {
       actions={
         <button
           onClick={() => setAllRead(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+          className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
         >
           <CheckCheck className="size-4" /> Mark all read
         </button>
@@ -163,7 +163,7 @@ function NotificationsPage() {
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card">
         {/* Tabs */}
-        <div className="flex items-center gap-1 border-b border-border px-4 py-2.5">
+        <div className="mobile-scroll-x flex items-center gap-1 border-b border-border px-3 py-2.5 sm:px-4">
           {filters.map((f) => {
             const isActive = activeFilter === f;
             const kindKey = filterMap[f];
@@ -174,7 +174,7 @@ function NotificationsPage() {
               <button
                 key={f}
                 onClick={() => setActiveFilter(f)}
-                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-default ${
+                className={`touch-target inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-default ${
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"

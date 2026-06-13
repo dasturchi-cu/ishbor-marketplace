@@ -37,14 +37,14 @@ function WalletPage() {
       eyebrow="Treasury"
       title="Wallet"
       actions={
-        <div className="flex items-center gap-2">
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <button className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
             <Download className="size-4" /> Statement
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+          <button className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
             Withdraw
           </button>
-          <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring">
+          <button className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring sm:flex-none">
             <Plus className="size-4" /> Top up
           </button>
         </div>
@@ -53,7 +53,7 @@ function WalletPage() {
       {/* Balance cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {/* Available Balance — hero card */}
-        <div className="relative col-span-2 overflow-hidden rounded-2xl bg-foreground p-6 text-background">
+        <div className="relative col-span-full overflow-hidden rounded-2xl bg-foreground p-5 text-background sm:col-span-2 sm:p-6">
           {/* Decorative gradient blobs */}
           <div
             aria-hidden
@@ -71,9 +71,9 @@ function WalletPage() {
                 <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-background/50">
                   Available balance
                 </div>
-                <div className="font-display mt-2 text-5xl font-extrabold tracking-tight">
+                <div className="font-display mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                   $14,284
-                  <span className="text-3xl text-background/50">.40</span>
+                  <span className="text-2xl text-background/50 sm:text-3xl">.40</span>
                 </div>
                 <div className="mt-1 text-sm text-background/50">
                   = 178,242,500 UZS
@@ -83,7 +83,7 @@ function WalletPage() {
                 <ShieldCheck className="size-5 text-background" />
               </div>
             </div>
-            <div className="mt-8 grid grid-cols-3 gap-4 border-t border-white/10 pt-5">
+            <div className="mt-6 grid grid-cols-1 gap-4 border-t border-white/10 pt-4 sm:mt-8 sm:grid-cols-3 sm:pt-5">
               <div>
                 <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">In escrow</div>
                 <div className="font-display mt-1 text-xl font-bold" style={{ color: "oklch(0.7 0.175 257)" }}>
@@ -194,15 +194,15 @@ function WalletPage() {
 
       {/* Transactions */}
       <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <h2 className="font-display text-base font-bold">Transactions</h2>
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-border bg-background p-0.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="mobile-scroll-x flex max-w-full rounded-lg border border-border bg-background p-0.5">
               {txFilters.map((f) => (
                 <button
                   key={f}
                   onClick={() => setTxFilter(f)}
-                  className={`rounded-md px-3 py-1 text-xs font-medium transition-default ${
+                  className={`touch-target shrink-0 rounded-md px-3 text-xs font-medium transition-default ${
                     txFilter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -210,16 +210,16 @@ function WalletPage() {
                 </button>
               ))}
             </div>
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition-default hover:border-primary/20 focus-ring">
+            <button className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring">
               <Filter className="size-3.5" /> Filter
             </button>
-            <button className="text-xs font-medium text-primary transition-default hover:opacity-80">
-              Export CSV
+            <button className="touch-target text-xs font-medium text-primary transition-default hover:opacity-80">
+              Export
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="-mx-px overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
             <thead>
               <tr className="border-b border-border bg-elevated/30 text-left">
                 <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">

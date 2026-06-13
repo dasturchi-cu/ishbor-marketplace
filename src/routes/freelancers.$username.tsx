@@ -125,24 +125,24 @@ function FreelancerProfile() {
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                 <button
                   type="button"
-                  className="inline-flex size-10 items-center justify-center rounded-lg border border-border bg-surface transition-default hover:border-primary/20 focus-ring"
+                  className="touch-target inline-flex items-center justify-center rounded-lg border border-border bg-surface transition-default hover:border-primary/20 focus-ring"
                   aria-label="Save profile"
                 >
                   <Heart className="size-4" />
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+                  className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
                 >
                   <MessageSquare className="size-4" /> Message
                 </button>
                 <Link
                   to="/checkout"
                   search={{ type: "hire" as const, freelancer: f.username }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring"
+                  className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
                 >
                   Hire — ${f.rate}/h <ArrowRight className="size-3.5" />
                 </Link>

@@ -24,7 +24,7 @@ function ClientDashboard() {
       eyebrow="Client workspace"
       title="Good evening, Sardor."
       actions={
-        <button className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring">
+        <button className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
           <Plus className="size-4" />
           Post a project
         </button>
@@ -37,8 +37,8 @@ function ClientDashboard() {
         <StatCard label="Avg. hire time" value="1.4h" trend="Faster than 92%" />
       </div>
 
-      <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-5 py-3">
-        <EscrowShield size="md" />
+      <div className="mt-4 flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
+        <EscrowShield size="md" className="shrink-0" />
         <span className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">$10,800</span> is securely held in escrow across 3 active milestones. Funds are released only on your approval.
         </span>
@@ -47,7 +47,7 @@ function ClientDashboard() {
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
         <div className="flex flex-col gap-8">
           <section className="rounded-2xl border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
               <h2 className="font-display text-base font-semibold">Active orders</h2>
               <Link to="/projects" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
                 View all
@@ -55,7 +55,7 @@ function ClientDashboard() {
             </div>
             <div className="divide-y divide-border">
               {activeOrders.map((order) => (
-                <div key={order.id} className="p-6 transition-default hover:bg-secondary/20">
+                <div key={order.id} className="p-4 transition-default hover:bg-secondary/20 sm:p-6">
                   <div className="mb-4 flex items-center gap-3">
                     <GradientAvatar name={order.client} hue={order.clientHue} size={40} rounded="rounded-lg" />
                     <div className="min-w-0 flex-1">
@@ -80,8 +80,8 @@ function ClientDashboard() {
                       style={{ width: `${order.progress}%` }}
                     />
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground sm:gap-3 sm:text-[11px]">
                       <span className="flex items-center gap-1">
                         <Clock className="size-3" /> Due {order.dueDate}
                       </span>
@@ -96,10 +96,10 @@ function ClientDashboard() {
           </section>
 
           <section className="rounded-2xl border border-border bg-card">
-            <div className="border-b border-border px-6 py-4">
+            <div className="border-b border-border px-4 py-4 sm:px-6">
               <h2 className="font-display text-base font-semibold">Hiring pipeline</h2>
             </div>
-            <div className="grid grid-cols-4 gap-4 p-6">
+            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
               {[
                 { label: "Reviewing", leads: reviewingLeads },
                 { label: "Shortlisted", leads: shortlistedLeads },
@@ -126,10 +126,10 @@ function ClientDashboard() {
 
         <div className="flex flex-col gap-8">
           <section className="rounded-2xl border border-border bg-card">
-            <div className="border-b border-border px-6 py-4">
+            <div className="border-b border-border px-4 py-4 sm:px-6">
               <h2 className="font-display text-base font-semibold">Escrow overview</h2>
             </div>
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="mb-6">
                 <div className="eyebrow">In escrow</div>
                 <div className="font-display mt-2 text-3xl font-bold">${totalEscrow.toLocaleString()}</div>
@@ -166,7 +166,7 @@ function ClientDashboard() {
           </section>
 
           <section className="rounded-2xl border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
               <h2 className="font-display text-base font-semibold">Recent messages</h2>
               <Link to="/messages" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
                 All
