@@ -1,13 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, Plus } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus, FolderOpen } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { ProjectCard } from "@/components/site/cards";
-import { CardSkeleton } from "@/components/site/feedback";
-import { projects } from "@/lib/mock-data";
+import { CardSkeleton, EmptyState } from "@/components/site/feedback";
+import { projects, categories } from "@/lib/mock-data";
 import { usePageReady } from "@/hooks/use-page-ready";
+import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { filterProjects, normalizeSearch } from "@/lib/marketplace";
 
 export const Route = createFileRoute("/projects")({
+  validateSearch: (search) => normalizeSearch(search),
   head: () => ({
     meta: [
       { title: "Projects — Ishbor Marketplace" },
@@ -17,10 +20,19 @@ export const Route = createFileRoute("/projects")({
   component: ProjectsPage,
 });
 
-const tabs = ["All", "Design", "Development", "Strategy", "Architecture", "Legal", "Marketing"];
+const projectCategories = [
+  { key: "design", label: "Design" },
+  { key: "development", label: "Development" },
+  { key: "consulting", label: "Strategy" },
+  { key: "architecture", label: "Architecture" },
+  { key: "marketing", label: "Marketing" },
+];
 
 function ProjectsPage() {
   const ready = usePageReady();
+  const search = Route.useSearch();
+  const setSearch = useMarketplaceSearch(search, "/projects");
+  const filtered = filterProjects(projects, search);
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,47 +50,48 @@ function ProjectsPage() {
                 Vetted clients. Funded escrow. Bid with confidence.
               </p>
             </div>
-            <button className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:w-auto">
+            <Link
+              to="/register"
+              className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:w-auto"
+            >
               <Plus className="size-4" /> Post a project
-            </button>
+            </Link>
           </div>
 
-          <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:gap-3">
-            <div className="flex min-h-11 flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 focus-ring">
-              <Search className="size-4 shrink-0 text-muted-foreground" />
-              <input
-                placeholder="Search projects…"
-                className="min-h-11 w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
-              />
-            </div>
-            <button className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-              <SlidersHorizontal className="size-4" /> Filters · Budget · Duration
-            </button>
-          </div>
-
-          <div className="mobile-scroll-x -mx-1 mt-4 flex gap-2 px-1 sm:flex-wrap sm:px-0">
-            {tabs.map((t, i) => (
-              <button
-                key={t}
-                className={`touch-target shrink-0 rounded-lg border px-3 text-xs font-medium transition-default ${
-                  i === 0
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-surface text-foreground/80 hover:text-foreground hover:border-primary/20"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <MarketplaceToolbar
+            placeholder="Search projects…"
+            q={search.q ?? ""}
+            sort={search.sort ?? "newest"}
+            activeCategory={search.category}
+            categories={projectCategories}
+            resultCount={filtered.length}
+            resultLabel="projects"
+            onSearchChange={setSearch}
+          />
         </div>
       </div>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <div className="grid gap-4 lg:grid-cols-2 stagger-children">
-          {!ready
-            ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
-            : [...projects, ...projects].map((p, i) => <ProjectCard key={i} p={p} />)}
-        </div>
+        {!ready ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={FolderOpen}
+            title="No projects found"
+            description="Try adjusting your search or filters."
+            action={
+              <button onClick={() => setSearch({ q: "", category: "", sort: "newest" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                Clear filters
+              </button>
+            }
+          />
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2 stagger-children">
+            {filtered.map((p) => <ProjectCard key={p.id} p={p} />)}
+          </div>
+        )}
       </section>
 
       <SiteFooter />

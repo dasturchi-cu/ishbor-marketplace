@@ -23,9 +23,9 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleButton({ label = "Continue with Google", onClick }: { label?: string; onClick?: () => void }) {
   return (
-    <AuthButton type="button" variant="secondary">
+    <AuthButton type="button" variant="secondary" onClick={onClick}>
       <GoogleIcon />
       {label}
     </AuthButton>

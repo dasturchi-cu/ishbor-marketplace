@@ -15,13 +15,17 @@ import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 import { EmptyState } from "@/components/site/feedback";
 import { orders, applications, reviews } from "@/lib/mock-data";
+import { requireAuth } from "@/lib/guards";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/dashboard/freelancer")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Freelancer Dashboard — Ishbor" }] }),
   component: FreelancerDashboard,
 });
 
 function FreelancerDashboard() {
+  const { user } = useAuth();
   const [availability, setAvailability] = useState<"available" | "busy" | "away">("available");
   const [activeTab, setActiveTab] = useState<"applications" | "reviews">("applications");
 
@@ -51,7 +55,7 @@ function FreelancerDashboard() {
   return (
     <WorkspaceShell
       eyebrow="Freelancer workspace"
-      title="Welcome back, Nargiza."
+      title={`Welcome back, ${user?.fullName.split(" ")[0] ?? "there"}.`}
       actions={
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
           <button className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
@@ -115,7 +119,7 @@ function FreelancerDashboard() {
         <section className="rounded-2xl border border-border bg-card">
           <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
             <h2 className="font-display text-base font-semibold">Active orders</h2>
-            <Link to="/projects" className="text-xs font-medium text-primary transition-default hover:text-primary/80">View all</Link>
+            <Link to="/orders" className="text-xs font-medium text-primary transition-default hover:text-primary/80">View all</Link>
           </div>
           <div className="divide-y divide-border">
             {activeOrders.map((order) => (
@@ -148,7 +152,8 @@ function FreelancerDashboard() {
 
         <section className="rounded-2xl border border-border bg-card">
           <div className="border-b border-border px-4 py-4 sm:px-6">
-            <div className="mobile-scroll-x flex gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="mobile-scroll-x flex gap-2">
               <button
                 onClick={() => setActiveTab("applications")}
                 className={`touch-target shrink-0 rounded-lg px-4 text-sm font-medium transition-default ${
@@ -165,11 +170,13 @@ function FreelancerDashboard() {
               >
                 Reviews ({reviewCount})
               </button>
+              </div>
+              <Link to="/applications" className="shrink-0 text-xs font-medium text-primary hover:underline">View all</Link>
             </div>
           </div>
           <div className="max-h-96 divide-y divide-border overflow-y-auto">
             {activeTab === "applications" && applications.map((app) => (
-              <div key={app.id} className="p-4 transition-default hover:bg-secondary/20">
+              <Link key={app.id} to="/applications/$id" params={{ id: app.id }} className="block p-4 transition-default hover:bg-secondary/20">
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-semibold">{app.projectTitle}</div>
@@ -181,7 +188,7 @@ function FreelancerDashboard() {
                   <span>${app.budget.toLocaleString()}</span>
                   <span>{app.submittedAgo}</span>
                 </div>
-              </div>
+              </Link>
             ))}
             {activeTab === "reviews" && reviews.length === 0 && (
               <EmptyState

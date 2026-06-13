@@ -3,9 +3,9 @@ import { Search } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 const modes = [
-  { key: "services" as const, label: "Services", placeholder: "Search services…" },
-  { key: "freelancers" as const, label: "Talent", placeholder: "Find talent…" },
-  { key: "projects" as const, label: "Projects", placeholder: "Find work…" },
+  { key: "services" as const, label: "Services", placeholder: "Search services…", path: "/services" as const },
+  { key: "freelancers" as const, label: "Talent", placeholder: "Find talent…", path: "/freelancers" as const },
+  { key: "projects" as const, label: "Projects", placeholder: "Find work…", path: "/projects" as const },
 ];
 
 const popular = ["iOS Development", "Brand Identity", "Webflow", "Pitch Decks", "Cyrillic Type"];
@@ -15,10 +15,9 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
   const [q, setQ] = useState("");
   const nav = useNavigate();
 
-  const submit = () => {
-    if (mode === "services") nav({ to: "/services" });
-    else if (mode === "freelancers") nav({ to: "/freelancers" });
-    else nav({ to: "/projects" });
+  const submit = (query = q) => {
+    const m = modes.find((x) => x.key === mode)!;
+    nav({ to: m.path, search: { q: query.trim() || undefined, sort: "newest" } });
   };
 
   return (
@@ -49,7 +48,7 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
             className="min-h-11 w-full min-w-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground/50 focus-ring"
           />
           <button
-            onClick={submit}
+            onClick={() => submit()}
             className="touch-target shrink-0 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
           >
             <span className="sm:hidden">Go</span>
@@ -62,7 +61,10 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
         {popular.map((p) => (
           <button
             key={p}
-            onClick={() => setQ(p)}
+            onClick={() => {
+              setQ(p);
+              submit(p);
+            }}
             className="touch-target shrink-0 rounded-lg border border-border bg-surface px-2.5 text-xs transition-default hover:border-primary/20 hover:text-foreground focus-ring"
           >
             {p}

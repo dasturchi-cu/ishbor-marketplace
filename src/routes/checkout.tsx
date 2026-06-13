@@ -6,8 +6,10 @@ import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield, LevelBadge, VerifiedIdentityBadge, CompactTrustRow } from "@/components/site/trust";
 import { freelancers, services } from "@/lib/mock-data";
+import { requireAuth } from "@/lib/guards";
 
 export const Route = createFileRoute("/checkout")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Checkout — Ishbor" }] }),
   component: CheckoutPage,
 });

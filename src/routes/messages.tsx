@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -20,9 +20,12 @@ import {
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
+import { EmojiPickerModal, FileAttachModal, SendOfferModal, EscrowActionModal } from "@/components/site/modals";
 import { messages } from "@/lib/mock-data";
+import { requireAuth } from "@/lib/guards";
 
 export const Route = createFileRoute("/messages")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Messages — Ishbor" }] }),
   component: MessagesPage,
 });
@@ -181,6 +184,12 @@ function EscrowNotification({ m }: { m: Message }) {
 function MessagesPage() {
   const [input, setInput] = useState("");
   const [showList, setShowList] = useState(true);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [fileOpen, setFileOpen] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [escrowOpen, setEscrowOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [read, setRead] = useState(true);
 
   return (
     <WorkspaceShell eyebrow="Inbox" title="Messages">
@@ -248,22 +257,32 @@ function MessagesPage() {
                 <div className="truncate text-sm font-semibold">Nargiza Akhmedova</div>
                 <div className="font-mono flex items-center gap-1.5 text-[10px] text-success">
                   <span className="size-1.5 rounded-full bg-success" />
-                  Online · typing...
+                  Online {read ? "· Read" : "· Delivered"}
                 </div>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1">
-              <button className="touch-target hidden items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring sm:inline-flex">
+              <button
+                onClick={() => setEscrowOpen(true)}
+                className="touch-target hidden items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring sm:inline-flex"
+              >
                 <Lock className="size-3.5 text-primary" /> Escrow
               </button>
-              <button className="touch-target inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="Call">
+              <button onClick={() => toast.info("Voice call connecting…")} className="touch-target inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="Call">
                 <Phone className="size-4" />
               </button>
-              <button className="touch-target hidden items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring sm:inline-flex" aria-label="Video call">
+              <button onClick={() => toast.info("Video call connecting…")} className="touch-target hidden items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring sm:inline-flex" aria-label="Video call">
                 <Video className="size-4" />
               </button>
-              <button className="touch-target inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="More options">
+              <button onClick={() => setMenuOpen(!menuOpen)} className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="More options">
                 <MoreHorizontal className="size-4" />
+                {menuOpen && (
+                  <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-card py-1 shadow-lg">
+                    <button onClick={() => { toast.success("Conversation archived"); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50">Archive</button>
+                    <button onClick={() => { toast.success("Marked as unread"); setRead(false); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50">Mark unread</button>
+                    <button onClick={() => { toast.success("Report submitted"); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-xs text-destructive hover:bg-secondary/50">Report</button>
+                  </div>
+                )}
               </button>
             </div>
           </header>
@@ -276,9 +295,9 @@ function MessagesPage() {
               <span className="hidden text-muted-foreground sm:inline">·</span>
               <span className="text-muted-foreground">$12,000 escrow funded</span>
             </div>
-            <button className="touch-target inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-primary transition-default hover:opacity-80 sm:self-auto">
+            <Link to="/escrow/$id" params={{ id: "ew1" }} className="touch-target inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-primary transition-default hover:opacity-80 sm:self-auto">
               View contract <ChevronRight className="size-3" />
-            </button>
+            </Link>
           </div>
 
           {/* Messages */}
@@ -316,17 +335,17 @@ function MessagesPage() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-2">
                 <div className="flex items-center gap-0.5">
-                  <button className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach file">
+                  <button onClick={() => setFileOpen(true)} className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach file">
                     <Paperclip className="size-4" />
                   </button>
-                  <button className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach image">
+                  <button onClick={() => setFileOpen(true)} className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach image">
                     <ImageIcon className="size-4" />
                   </button>
-                  <button className="touch-target hidden items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring sm:inline-flex" aria-label="Add emoji">
+                  <button onClick={() => setEmojiOpen(true)} className="touch-target hidden items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring sm:inline-flex" aria-label="Add emoji">
                     <Smile className="size-4" />
                   </button>
                   <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
-                  <button className="touch-target hidden items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring sm:inline-flex">
+                  <button onClick={() => setOfferOpen(true)} className="touch-target hidden items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring sm:inline-flex">
                     <DollarSign className="size-3" /> Send offer
                   </button>
                 </div>
@@ -336,6 +355,8 @@ function MessagesPage() {
                     if (!input.trim()) return;
                     toast.success("Message sent");
                     setInput("");
+                    setRead(false);
+                    setTimeout(() => setRead(true), 1200);
                   }}
                   className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 focus-ring"
                 >
@@ -346,6 +367,11 @@ function MessagesPage() {
           </div>
         </div>
       </div>
+
+      <EmojiPickerModal open={emojiOpen} onClose={() => setEmojiOpen(false)} onSelect={(e) => setInput((v) => v + e)} />
+      <FileAttachModal open={fileOpen} onClose={() => setFileOpen(false)} onAttach={() => toast.success("File attached")} />
+      <SendOfferModal open={offerOpen} onClose={() => setOfferOpen(false)} onSend={() => toast.success("Offer sent")} />
+      <EscrowActionModal open={escrowOpen} onClose={() => setEscrowOpen(false)} mode="fund" amount={6000} project="Fintech App Redesign" onConfirm={() => toast.success("Escrow funded")} />
     </WorkspaceShell>
   );
 }

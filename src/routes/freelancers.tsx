@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { FreelancerCard } from "@/components/site/cards";
-import { CardSkeleton } from "@/components/site/feedback";
+import { CardSkeleton, EmptyState } from "@/components/site/feedback";
 import { freelancers } from "@/lib/mock-data";
 import { usePageReady } from "@/hooks/use-page-ready";
+import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { filterFreelancers, normalizeSearch } from "@/lib/marketplace";
+import { Users } from "lucide-react";
 
 export const Route = createFileRoute("/freelancers")({
+  validateSearch: (search) => normalizeSearch(search),
   head: () => ({
     meta: [
       { title: "Find talent — Ishbor Marketplace" },
@@ -17,10 +20,19 @@ export const Route = createFileRoute("/freelancers")({
   component: FreelancersPage,
 });
 
-const filters = ["All", "Top Rated", "Available Now", "Under $50/h", "Tashkent", "Verified Identity"];
+const filterChips = [
+  { key: "top-rated", label: "Top Rated" },
+  { key: "available", label: "Available Now" },
+  { key: "under-50", label: "Under $50/h" },
+  { key: "tashkent", label: "Tashkent" },
+  { key: "verified", label: "Verified Identity" },
+];
 
 function FreelancersPage() {
   const ready = usePageReady();
+  const search = Route.useSearch();
+  const setSearch = useMarketplaceSearch(search, "/freelancers");
+  const filtered = filterFreelancers(freelancers, search);
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,47 +48,40 @@ function FreelancersPage() {
             Every freelancer is identity-verified and vetted for craft. Hourly or fixed.
           </p>
 
-          <div className="mt-6 flex flex-col gap-2 sm:mt-8 sm:gap-3">
-            <div className="flex min-h-11 flex-1 items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 focus-ring">
-              <Search className="size-4 shrink-0 text-muted-foreground" />
-              <input
-                placeholder="Search talent…"
-                className="min-h-11 w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button className="touch-target inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-                <SlidersHorizontal className="size-4" /> Filters
-              </button>
-              <button className="touch-target inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-                Sort <ChevronDown className="size-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="mobile-scroll-x -mx-1 mt-4 flex gap-2 px-1 sm:flex-wrap sm:px-0">
-            {filters.map((f, i) => (
-              <button
-                key={f}
-                className={`touch-target shrink-0 rounded-lg border px-3 text-xs font-medium transition-default ${
-                  i === 0
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-surface text-foreground/80 hover:text-foreground hover:border-primary/20"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
+          <MarketplaceToolbar
+            placeholder="Search talent…"
+            q={search.q ?? ""}
+            sort={search.sort ?? "newest"}
+            activeFilter={search.filter}
+            chips={filterChips}
+            resultCount={filtered.length}
+            resultLabel="freelancers"
+            onSearchChange={setSearch}
+          />
         </div>
       </div>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-          {!ready
-            ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
-            : [...freelancers, ...freelancers].map((f, i) => <FreelancerCard key={i} f={f} />)}
-        </div>
+        {!ready ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No freelancers found"
+            description="Try adjusting your search or filters."
+            action={
+              <button onClick={() => setSearch({ q: "", filter: "", sort: "newest" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                Clear filters
+              </button>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
+            {filtered.map((f) => <FreelancerCard key={f.id} f={f} />)}
+          </div>
+        )}
       </section>
 
       <SiteFooter />

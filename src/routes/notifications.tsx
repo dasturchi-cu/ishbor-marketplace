@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Bell,
@@ -17,7 +17,10 @@ import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { notifications } from "@/lib/mock-data";
 
+import { requireAuth } from "@/lib/guards";
+
 export const Route = createFileRoute("/notifications")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Notifications — Ishbor" }] }),
   component: NotificationsPage,
 });
@@ -239,9 +242,9 @@ function NotificationsPage() {
           <Bell className="size-4 text-muted-foreground" />
           <span className="text-sm text-muted-foreground">Notification preferences</span>
         </div>
-        <button className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-default hover:opacity-80">
+        <Link to="/settings" className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-default hover:opacity-80">
           Manage <ExternalLink className="size-3" />
-        </button>
+        </Link>
       </div>
     </WorkspaceShell>
   );

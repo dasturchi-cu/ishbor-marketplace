@@ -127,9 +127,11 @@ export type Order = {
   title: string;
   client: string;
   clientHue: number;
+  clientSlug?: string;
   freelancer: string;
   freelancerHue: number;
-  status: "in_progress" | "review" | "revision" | "completed" | "disputed";
+  freelancerUsername?: string;
+  status: "in_progress" | "review" | "revision" | "completed" | "disputed" | "cancelled";
   progress: number;
   dueDate: string;
   amount: number;
@@ -140,13 +142,54 @@ export type Order = {
 export type Application = {
   id: string;
   projectTitle: string;
+  projectSlug?: string;
   client: string;
   clientHue: number;
+  clientSlug?: string;
   budget: number;
   category: string;
   submittedAgo: string;
-  status: "pending" | "shortlisted" | "rejected" | "hired";
+  status: "pending" | "shortlisted" | "rejected" | "accepted";
   coverNote: string;
+  proposalAmount?: number;
+};
+
+export type ClientCompany = {
+  slug: string;
+  name: string;
+  hue: number;
+  industry: string;
+  location: string;
+  teamSize: string;
+  memberSince: string;
+  verified: boolean;
+  spent: number;
+  hires: number;
+  bio: string;
+  website?: string;
+  team: { name: string; role: string; hue: number }[];
+};
+
+export type EscrowWorkflow = {
+  id: string;
+  orderId: string;
+  project: string;
+  client: string;
+  clientHue: number;
+  freelancer: string;
+  freelancerHue: number;
+  amount: number;
+  status: "proposal" | "accepted" | "funded" | "in_progress" | "delivered" | "review" | "released" | "completed" | "disputed";
+  milestones: { label: string; amount: number; status: "pending" | "funded" | "released" | "disputed" }[];
+  timeline: { step: string; date: string; done: boolean }[];
+};
+
+export type PaymentMethod = {
+  id: string;
+  type: "humo" | "uzcard" | "visa";
+  label: string;
+  last4: string;
+  default: boolean;
 };
 
 export type Review = {
@@ -255,10 +298,100 @@ export const transactions = [
   { id: "t8", kind: "fee" as const, label: "Platform fee", project: "iOS App Development", amount: -192, date: "May 25", status: "Completed" },
 ];
 
+export const clients: ClientCompany[] = [
+  {
+    slug: "asaka-capital",
+    name: "Asaka Capital",
+    hue: 215,
+    industry: "Fintech",
+    location: "Tashkent, Uzbekistan",
+    teamSize: "51–200",
+    memberSince: "2022",
+    verified: true,
+    spent: 184200,
+    hires: 12,
+    bio: "National retail bank transforming mobile experiences for 2M+ customers across Uzbekistan.",
+    website: "asaka.uz",
+    team: [
+      { name: "Sardor Mirkomilov", role: "Head of Product", hue: 215 },
+      { name: "Aisha Karimova", role: "Design Lead", hue: 320 },
+      { name: "Daniyar Bekov", role: "Engineering Manager", hue: 22 },
+    ],
+  },
+  {
+    slug: "hunar-bazaar",
+    name: "Hunar Bazaar",
+    hue: 290,
+    industry: "E-commerce",
+    location: "Tashkent, Uzbekistan",
+    teamSize: "11–50",
+    memberSince: "2023",
+    verified: true,
+    spent: 42800,
+    hires: 6,
+    bio: "Upscale regional lifestyle brand with Arabic and Cyrillic localization needs.",
+    team: [
+      { name: "Laylo Rahimova", role: "Brand Director", hue: 290 },
+      { name: "Jasur Tursunov", role: "Operations", hue: 250 },
+    ],
+  },
+  {
+    slug: "tezda",
+    name: "Tezda",
+    hue: 250,
+    industry: "On-demand",
+    location: "Tashkent, Uzbekistan",
+    teamSize: "11–50",
+    memberSince: "2022",
+    verified: true,
+    spent: 88000,
+    hires: 4,
+    bio: "On-demand delivery startup scaling iOS and logistics across Central Asia.",
+    team: [
+      { name: "Bobur Nazarov", role: "CTO", hue: 250 },
+      { name: "Nilufar Saidova", role: "Product", hue: 210 },
+    ],
+  },
+  {
+    slug: "aralink-labs",
+    name: "Aralink Labs",
+    hue: 160,
+    industry: "Climate Tech",
+    location: "Nukus, Uzbekistan",
+    teamSize: "2–10",
+    memberSince: "2024",
+    verified: true,
+    spent: 8500,
+    hires: 3,
+    bio: "Climate tech restoring the Aral basin. Series A in progress.",
+    team: [{ name: "Elena Voronova", role: "CEO", hue: 160 }],
+  },
+  {
+    slug: "soliq-pro",
+    name: "Soliq Pro",
+    hue: 210,
+    industry: "SaaS",
+    location: "Tashkent, Uzbekistan",
+    teamSize: "2–10",
+    memberSince: "2025",
+    verified: false,
+    spent: 6500,
+    hires: 1,
+    bio: "Tax-automation SaaS for SMBs in Uzbekistan.",
+    team: [{ name: "Rustam Aliyev", role: "Founder", hue: 210 }],
+  },
+];
+
+export const paymentMethods: PaymentMethod[] = [
+  { id: "pm1", type: "humo", label: "Humo", last4: "4421", default: true },
+  { id: "pm2", type: "uzcard", label: "Uzcard", last4: "8829", default: false },
+  { id: "pm3", type: "visa", label: "Visa", last4: "1044", default: false },
+];
+
 export const orders: Order[] = [
   {
-    id: "o1", title: "Fintech App Redesign — Phase 1", client: "Asaka Capital", clientHue: 215,
-    freelancer: "Nargiza Akhmedova", freelancerHue: 250, status: "in_progress", progress: 60,
+    id: "o1", title: "Fintech App Redesign — Phase 1", client: "Asaka Capital", clientHue: 215, clientSlug: "asaka-capital",
+    freelancer: "Nargiza Akhmedova", freelancerHue: 250, freelancerUsername: "nargiza", status: "in_progress", progress: 60,
     dueDate: "Jun 24", amount: 12000, escrowFunded: true,
     milestones: [
       { label: "Research & wireframes", done: true, amount: 2000 },
@@ -267,8 +400,8 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "o2", title: "Brand Identity System", client: "Hunar Bazaar", clientHue: 290,
-    freelancer: "Nargiza Akhmedova", freelancerHue: 250, status: "review", progress: 90,
+    id: "o2", title: "Brand Identity System", client: "Hunar Bazaar", clientHue: 290, clientSlug: "hunar-bazaar",
+    freelancer: "Nargiza Akhmedova", freelancerHue: 250, freelancerUsername: "nargiza", status: "review", progress: 90,
     dueDate: "Jun 15", amount: 1200, escrowFunded: true,
     milestones: [
       { label: "Logo & mark", done: true, amount: 400 },
@@ -277,8 +410,8 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "o3", title: "iOS App — On-demand delivery", client: "Tezda", clientHue: 250,
-    freelancer: "Farrukh Saidov", freelancerHue: 210, status: "in_progress", progress: 35,
+    id: "o3", title: "iOS App — On-demand delivery", client: "Tezda", clientHue: 250, clientSlug: "tezda",
+    freelancer: "Farrukh Saidov", freelancerHue: 210, freelancerUsername: "farrukh", status: "in_progress", progress: 35,
     dueDate: "Aug 01", amount: 8800, escrowFunded: true,
     milestones: [
       { label: "Architecture & sprint 1", done: true, amount: 2200 },
@@ -287,21 +420,137 @@ export const orders: Order[] = [
     ],
   },
   {
-    id: "o4", title: "Growth Strategy Audit", client: "Aralink Labs", clientHue: 160,
-    freelancer: "Madina Azimova", freelancerHue: 290, status: "completed", progress: 100,
+    id: "o4", title: "Growth Strategy Audit", client: "Aralink Labs", clientHue: 160, clientSlug: "aralink-labs",
+    freelancer: "Madina Azimova", freelancerHue: 290, freelancerUsername: "madina", status: "completed", progress: 100,
     dueDate: "Jun 05", amount: 850, escrowFunded: false,
     milestones: [
       { label: "Audit & findings", done: true, amount: 425 },
       { label: "90-day playbook", done: true, amount: 425 },
     ],
   },
+  {
+    id: "o5", title: "Webflow Marketing Site", client: "Soliq Pro", clientHue: 210, clientSlug: "soliq-pro",
+    freelancer: "Nargiza Akhmedova", freelancerHue: 250, freelancerUsername: "nargiza", status: "cancelled", progress: 10,
+    dueDate: "May 20", amount: 6500, escrowFunded: false,
+    milestones: [
+      { label: "Discovery", done: true, amount: 500 },
+      { label: "Build", done: false, amount: 6000 },
+    ],
+  },
 ];
 
 export const applications: Application[] = [
-  { id: "a1", projectTitle: "B2B SaaS Marketing Site (Webflow)", client: "Soliq Pro", clientHue: 210, budget: 6500, category: "Web Design", submittedAgo: "2d ago", status: "shortlisted", coverNote: "I've built 12 Webflow marketing sites for SaaS companies including Alif and Payme." },
-  { id: "a2", projectTitle: "Series A Pitch Deck — Climate Tech", client: "Aralink Labs", clientHue: 160, budget: 4500, category: "Strategy & Design", submittedAgo: "3d ago", status: "pending", coverNote: "I specialize in investor narratives for climate and impact-driven startups." },
-  { id: "a3", projectTitle: "Arabic & Cyrillic Localization", client: "Hunar Bazaar", clientHue: 290, budget: 3500, category: "Localization", submittedAgo: "5d ago", status: "pending", coverNote: "Native Uzbek speaker with deep i18n experience across Central Asian markets." },
-  { id: "a4", projectTitle: "Madrasa Restoration 3D Documentation", client: "UNESCO CA Bureau", clientHue: 280, budget: 8000, category: "Architecture", submittedAgo: "1w ago", status: "rejected", coverNote: "Led photogrammetry documentation for three UNESCO heritage sites in Uzbekistan." },
+  { id: "a1", projectTitle: "B2B SaaS Marketing Site (Webflow)", projectSlug: "b2b-saas-webflow", client: "Soliq Pro", clientHue: 210, clientSlug: "soliq-pro", budget: 6500, proposalAmount: 6200, category: "Web Design", submittedAgo: "2d ago", status: "shortlisted", coverNote: "I've built 12 Webflow marketing sites for SaaS companies including Alif and Payme." },
+  { id: "a2", projectTitle: "Series A Pitch Deck — Climate Tech", projectSlug: "series-a-pitch-deck", client: "Aralink Labs", clientHue: 160, clientSlug: "aralink-labs", budget: 4500, proposalAmount: 4200, category: "Strategy & Design", submittedAgo: "3d ago", status: "pending", coverNote: "I specialize in investor narratives for climate and impact-driven startups." },
+  { id: "a3", projectTitle: "Arabic & Cyrillic Localization", projectSlug: "arabic-cyrillic-localization", client: "Hunar Bazaar", clientHue: 290, clientSlug: "hunar-bazaar", budget: 3500, proposalAmount: 3400, category: "Localization", submittedAgo: "5d ago", status: "pending", coverNote: "Native Uzbek speaker with deep i18n experience across Central Asian markets." },
+  { id: "a4", projectTitle: "Madrasa Restoration 3D Documentation", projectSlug: "madrasa-restoration-3d", client: "UNESCO CA Bureau", clientHue: 280, budget: 8000, proposalAmount: 7800, category: "Architecture", submittedAgo: "1w ago", status: "rejected", coverNote: "Led photogrammetry documentation for three UNESCO heritage sites in Uzbekistan." },
+  { id: "a5", projectTitle: "Fintech App Redesign for National Bank", projectSlug: "fintech-app-redesign", client: "Asaka Capital", clientHue: 215, clientSlug: "asaka-capital", budget: 12000, proposalAmount: 11500, category: "Product Design", submittedAgo: "2w ago", status: "accepted", coverNote: "Led mobile transformation for two regional neobanks with full design system delivery." },
+];
+
+export const escrowWorkflows: EscrowWorkflow[] = [
+  {
+    id: "ew1",
+    orderId: "o1",
+    project: "Fintech App Redesign — Phase 1",
+    client: "Asaka Capital",
+    clientHue: 215,
+    freelancer: "Nargiza Akhmedova",
+    freelancerHue: 250,
+    amount: 12000,
+    status: "in_progress",
+    milestones: [
+      { label: "Research & wireframes", amount: 2000, status: "released" },
+      { label: "High-fidelity screens", amount: 4000, status: "released" },
+      { label: "Prototype & handoff", amount: 6000, status: "funded" },
+    ],
+    timeline: [
+      { step: "Proposal submitted", date: "May 28", done: true },
+      { step: "Proposal accepted", date: "May 29", done: true },
+      { step: "Escrow funded", date: "May 30", done: true },
+      { step: "Work started", date: "Jun 01", done: true },
+      { step: "Milestone delivered", date: "Jun 10", done: true },
+      { step: "Client review", date: "Jun 12", done: false },
+      { step: "Funds released", date: "—", done: false },
+      { step: "Completed", date: "—", done: false },
+    ],
+  },
+  {
+    id: "ew2",
+    orderId: "o2",
+    project: "Brand Identity System",
+    client: "Hunar Bazaar",
+    clientHue: 290,
+    freelancer: "Nargiza Akhmedova",
+    freelancerHue: 250,
+    amount: 1200,
+    status: "review",
+    milestones: [
+      { label: "Logo & mark", amount: 400, status: "released" },
+      { label: "Color & type system", amount: 400, status: "released" },
+      { label: "Brand guidelines PDF", amount: 400, status: "funded" },
+    ],
+    timeline: [
+      { step: "Proposal submitted", date: "May 20", done: true },
+      { step: "Proposal accepted", date: "May 21", done: true },
+      { step: "Escrow funded", date: "May 22", done: true },
+      { step: "Work started", date: "May 23", done: true },
+      { step: "Milestone delivered", date: "Jun 11", done: true },
+      { step: "Client review", date: "Jun 12", done: true },
+      { step: "Funds released", date: "—", done: false },
+      { step: "Completed", date: "—", done: false },
+    ],
+  },
+  {
+    id: "ew3",
+    orderId: "o3",
+    project: "iOS App — On-demand delivery",
+    client: "Tezda",
+    clientHue: 250,
+    freelancer: "Farrukh Saidov",
+    freelancerHue: 210,
+    amount: 8800,
+    status: "in_progress",
+    milestones: [
+      { label: "Architecture & sprint 1", amount: 2200, status: "released" },
+      { label: "Core feature build", amount: 4400, status: "funded" },
+      { label: "Testing & App Store", amount: 2200, status: "pending" },
+    ],
+    timeline: [
+      { step: "Proposal submitted", date: "Apr 15", done: true },
+      { step: "Proposal accepted", date: "Apr 18", done: true },
+      { step: "Escrow funded", date: "Apr 20", done: true },
+      { step: "Work started", date: "Apr 22", done: true },
+      { step: "Milestone delivered", date: "Jun 08", done: false },
+      { step: "Client review", date: "—", done: false },
+      { step: "Funds released", date: "—", done: false },
+      { step: "Completed", date: "—", done: false },
+    ],
+  },
+  {
+    id: "ew4",
+    orderId: "o5",
+    project: "Webflow Marketing Site",
+    client: "Soliq Pro",
+    clientHue: 210,
+    freelancer: "Nargiza Akhmedova",
+    freelancerHue: 250,
+    amount: 6500,
+    status: "disputed",
+    milestones: [
+      { label: "Discovery", amount: 500, status: "released" },
+      { label: "Build", amount: 6000, status: "disputed" },
+    ],
+    timeline: [
+      { step: "Proposal submitted", date: "Apr 01", done: true },
+      { step: "Proposal accepted", date: "Apr 03", done: true },
+      { step: "Escrow funded", date: "Apr 05", done: true },
+      { step: "Work started", date: "Apr 06", done: true },
+      { step: "Milestone delivered", date: "May 10", done: true },
+      { step: "Client review", date: "May 12", done: true },
+      { step: "Dispute opened", date: "May 15", done: true },
+      { step: "Completed", date: "—", done: false },
+    ],
+  },
 ];
 
 export const reviews: Review[] = [
@@ -505,4 +754,44 @@ export function getSimilarServices(slug: string, limit = 4): Service[] {
   const sameCategory = services.filter((s) => s.slug !== slug && s.category === current.category);
   const rest = services.filter((s) => s.slug !== slug && s.category !== current.category);
   return [...sameCategory, ...rest].slice(0, limit);
+}
+
+export function getClient(slug: string): ClientCompany | undefined {
+  return clients.find((c) => c.slug === slug);
+}
+
+export function getClientProjects(slug: string): Project[] {
+  const client = getClient(slug);
+  if (!client) return [];
+  return projects.filter((p) => p.client === client.name);
+}
+
+export function getClientReviews(slug: string): Review[] {
+  const client = getClient(slug);
+  if (!client) return [];
+  return reviews.filter((r) => r.from === client.name);
+}
+
+export function getOrder(id: string): Order | undefined {
+  return orders.find((o) => o.id === id);
+}
+
+export function getApplication(id: string): Application | undefined {
+  return applications.find((a) => a.id === id);
+}
+
+export function getEscrowWorkflow(id: string): EscrowWorkflow | undefined {
+  return escrowWorkflows.find((e) => e.id === id);
+}
+
+export function getEscrowByOrderId(orderId: string): EscrowWorkflow | undefined {
+  return escrowWorkflows.find((e) => e.orderId === orderId);
+}
+
+export function getFreelancerServices(username: string): Service[] {
+  return services.filter((s) => s.sellerUsername === username);
+}
+
+export function getClientByName(name: string): ClientCompany | undefined {
+  return clients.find((c) => c.name === name);
 }

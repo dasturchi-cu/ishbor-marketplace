@@ -7,20 +7,29 @@ import {
   Wallet,
   Shield,
   ChevronLeft,
+  ClipboardList,
+  FileText,
+  Lock,
+  User,
+  Settings,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { SiteNav } from "./nav";
+import { useAuth } from "@/hooks/use-auth";
 
-const nav = [
-  { to: "/dashboard", label: "Client", icon: LayoutDashboard, exact: true },
-  { to: "/dashboard/freelancer", label: "Freelancer", icon: Briefcase, exact: true },
-  { to: "/messages", label: "Messages", icon: MessageSquare, exact: false, badge: 3 },
-  { to: "/notifications", label: "Notifications", icon: Bell, exact: false, badge: 3 },
-  { to: "/wallet", label: "Wallet", icon: Wallet, exact: false },
-  { to: "/admin", label: "Admin", icon: Shield, exact: false },
+const allNav = [
+  { to: "/dashboard", label: "Client", icon: LayoutDashboard, exact: true, roles: ["client"] as const },
+  { to: "/dashboard/freelancer", label: "Freelancer", icon: Briefcase, exact: true, roles: ["freelancer"] as const },
+  { to: "/orders", label: "Orders", icon: ClipboardList, exact: false, roles: ["client", "freelancer"] as const },
+  { to: "/applications", label: "Applications", icon: FileText, exact: false, roles: ["freelancer"] as const },
+  { to: "/escrow", label: "Escrow", icon: Lock, exact: false, roles: ["client", "freelancer"] as const },
+  { to: "/messages", label: "Messages", icon: MessageSquare, exact: false, roles: ["client", "freelancer"] as const, badge: 3 },
+  { to: "/notifications", label: "Notifications", icon: Bell, exact: false, roles: ["client", "freelancer"] as const, badge: 3 },
+  { to: "/wallet", label: "Wallet", icon: Wallet, exact: false, roles: ["client", "freelancer"] as const },
+  { to: "/profile", label: "Profile", icon: User, exact: false, roles: ["client", "freelancer"] as const },
+  { to: "/settings", label: "Settings", icon: Settings, exact: false, roles: ["client", "freelancer"] as const },
+  { to: "/admin", label: "Admin", icon: Shield, exact: false, roles: ["client", "freelancer"] as const },
 ];
-
-const mobileNav = nav.filter((n) => n.to !== "/admin");
 
 export function WorkspaceShell({
   title,
@@ -34,12 +43,15 @@ export function WorkspaceShell({
   children: ReactNode;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
+  const role = user?.userType ?? "client";
+  const nav = allNav.filter((n) => n.roles.includes(role));
+  const mobileNav = nav.filter((n) => !["/admin", "/settings", "/profile", "/escrow"].includes(n.to));
 
   return (
     <div className="min-h-screen overflow-x-clip bg-background pb-[4.5rem] lg:pb-0">
       <SiteNav />
       <div className="mx-auto grid max-w-7xl gap-6 px-3 py-5 sm:gap-8 sm:px-6 sm:py-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-        {/* Sidebar */}
         <aside className="hidden lg:block">
           <nav className="sticky top-20 space-y-0.5">
             <Link
@@ -69,7 +81,7 @@ export function WorkspaceShell({
                     <n.icon className={`size-4 ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
                     {n.label}
                   </span>
-                  {n.badge && !active && (
+                  {"badge" in n && n.badge && !active && (
                     <span className="font-mono inline-flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                       {n.badge}
                     </span>
@@ -80,7 +92,6 @@ export function WorkspaceShell({
           </nav>
         </aside>
 
-        {/* Main */}
         <main className="min-w-0">
           <div className="mb-5 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
@@ -99,7 +110,6 @@ export function WorkspaceShell({
         </main>
       </div>
 
-      {/* Mobile workspace navigation */}
       <nav
         className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-lg lg:hidden"
         aria-label="Workspace navigation"
@@ -117,10 +127,8 @@ export function WorkspaceShell({
               >
                 <n.icon className="size-5" />
                 <span className="truncate">{n.label}</span>
-                {n.badge && !active && (
-                  <span className="absolute right-2 top-1 font-mono inline-flex size-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground">
-                    {n.badge}
-                  </span>
+                {"badge" in n && n.badge && !active && (
+                  <span className="absolute right-1 top-1 size-1.5 rounded-full bg-primary" />
                 )}
               </Link>
             );

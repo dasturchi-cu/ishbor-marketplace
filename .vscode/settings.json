@@ -1,0 +1,10 @@
+{
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+  "css.lint.unknownAtRules": "ignore",
+  "files.associations": {
+    "src/styles.css": "tailwindcss"
+  },
+  "tailwindCSS.experimental.configFile": "src/styles.css"
+}

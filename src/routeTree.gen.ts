@@ -13,23 +13,29 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FreelancersRouteImport } from './routes/freelancers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as EscrowRouteImport } from './routes/escrow'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
+import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as OnboardingTeamSizeRouteImport } from './routes/onboarding.team-size'
 import { Route as OnboardingSkillsRouteImport } from './routes/onboarding.skills'
 import { Route as OnboardingPortfolioRouteImport } from './routes/onboarding.portfolio'
@@ -40,7 +46,10 @@ import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.compa
 import { Route as OnboardingCategoriesRouteImport } from './routes/onboarding.categories'
 import { Route as OnboardingAvailabilityRouteImport } from './routes/onboarding.availability'
 import { Route as FreelancersUsernameRouteImport } from './routes/freelancers.$username'
+import { Route as EscrowIdRouteImport } from './routes/escrow.$id'
 import { Route as DashboardFreelancerRouteImport } from './routes/dashboard.freelancer'
+import { Route as ClientsCompanyRouteImport } from './routes/clients.$company'
+import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -62,6 +71,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
@@ -80,6 +94,16 @@ const RegisterRoute = RegisterRouteImport.update({
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -112,6 +136,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EscrowRoute = EscrowRouteImport.update({
+  id: '/escrow',
+  path: '/escrow',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -120,6 +149,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplicationsRoute = ApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -146,6 +180,11 @@ const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ProjectsRoute,
+} as any)
+const OrdersIdRoute = OrdersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OrdersRoute,
 } as any)
 const OnboardingTeamSizeRoute = OnboardingTeamSizeRouteImport.update({
   id: '/team-size',
@@ -197,32 +236,55 @@ const FreelancersUsernameRoute = FreelancersUsernameRouteImport.update({
   path: '/$username',
   getParentRoute: () => FreelancersRoute,
 } as any)
+const EscrowIdRoute = EscrowIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => EscrowRoute,
+} as any)
 const DashboardFreelancerRoute = DashboardFreelancerRouteImport.update({
   id: '/freelancer',
   path: '/freelancer',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ClientsCompanyRoute = ClientsCompanyRouteImport.update({
+  id: '/clients/$company',
+  path: '/clients/$company',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApplicationsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/orders': typeof OrdersRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/applications/$id': typeof ApplicationsIdRoute
+  '/clients/$company': typeof ClientsCompanyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
+  '/escrow/$id': typeof EscrowIdRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
   '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
@@ -233,6 +295,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/portfolio': typeof OnboardingPortfolioRoute
   '/onboarding/skills': typeof OnboardingSkillsRoute
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/onboarding/': typeof OnboardingIndexRoute
@@ -240,22 +303,30 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
+  '/orders': typeof OrdersRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/applications/$id': typeof ApplicationsIdRoute
+  '/clients/$company': typeof ClientsCompanyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
+  '/escrow/$id': typeof EscrowIdRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
   '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
@@ -266,6 +337,7 @@ export interface FileRoutesByTo {
   '/onboarding/portfolio': typeof OnboardingPortfolioRoute
   '/onboarding/skills': typeof OnboardingSkillsRoute
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/onboarding': typeof OnboardingIndexRoute
@@ -274,23 +346,31 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
+  '/orders': typeof OrdersRouteWithChildren
+  '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
+  '/settings': typeof SettingsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/applications/$id': typeof ApplicationsIdRoute
+  '/clients/$company': typeof ClientsCompanyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
+  '/escrow/$id': typeof EscrowIdRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
   '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
@@ -301,6 +381,7 @@ export interface FileRoutesById {
   '/onboarding/portfolio': typeof OnboardingPortfolioRoute
   '/onboarding/skills': typeof OnboardingSkillsRoute
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
+  '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/onboarding/': typeof OnboardingIndexRoute
@@ -310,23 +391,31 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/applications'
     | '/checkout'
     | '/dashboard'
+    | '/escrow'
     | '/forgot-password'
     | '/freelancers'
     | '/login'
     | '/messages'
     | '/notifications'
     | '/onboarding'
+    | '/orders'
+    | '/profile'
     | '/projects'
     | '/register'
     | '/reset-password'
     | '/services'
+    | '/settings'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/applications/$id'
+    | '/clients/$company'
     | '/dashboard/freelancer'
+    | '/escrow/$id'
     | '/freelancers/$username'
     | '/onboarding/availability'
     | '/onboarding/categories'
@@ -337,6 +426,7 @@ export interface FileRouteTypes {
     | '/onboarding/portfolio'
     | '/onboarding/skills'
     | '/onboarding/team-size'
+    | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
     | '/onboarding/'
@@ -344,22 +434,30 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/applications'
     | '/checkout'
     | '/dashboard'
+    | '/escrow'
     | '/forgot-password'
     | '/freelancers'
     | '/login'
     | '/messages'
     | '/notifications'
+    | '/orders'
+    | '/profile'
     | '/projects'
     | '/register'
     | '/reset-password'
     | '/services'
+    | '/settings'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/applications/$id'
+    | '/clients/$company'
     | '/dashboard/freelancer'
+    | '/escrow/$id'
     | '/freelancers/$username'
     | '/onboarding/availability'
     | '/onboarding/categories'
@@ -370,6 +468,7 @@ export interface FileRouteTypes {
     | '/onboarding/portfolio'
     | '/onboarding/skills'
     | '/onboarding/team-size'
+    | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
     | '/onboarding'
@@ -377,23 +476,31 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/applications'
     | '/checkout'
     | '/dashboard'
+    | '/escrow'
     | '/forgot-password'
     | '/freelancers'
     | '/login'
     | '/messages'
     | '/notifications'
     | '/onboarding'
+    | '/orders'
+    | '/profile'
     | '/projects'
     | '/register'
     | '/reset-password'
     | '/services'
+    | '/settings'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/applications/$id'
+    | '/clients/$company'
     | '/dashboard/freelancer'
+    | '/escrow/$id'
     | '/freelancers/$username'
     | '/onboarding/availability'
     | '/onboarding/categories'
@@ -404,6 +511,7 @@ export interface FileRouteTypes {
     | '/onboarding/portfolio'
     | '/onboarding/skills'
     | '/onboarding/team-size'
+    | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
     | '/onboarding/'
@@ -412,22 +520,28 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  ApplicationsRoute: typeof ApplicationsRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  EscrowRoute: typeof EscrowRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FreelancersRoute: typeof FreelancersRouteWithChildren
   LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
+  OrdersRoute: typeof OrdersRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ServicesRoute: typeof ServicesRouteWithChildren
+  SettingsRoute: typeof SettingsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   VerifyOtpRoute: typeof VerifyOtpRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  ClientsCompanyRoute: typeof ClientsCompanyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -460,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/services': {
       id: '/services'
       path: '/services'
@@ -486,6 +607,20 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -530,6 +665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/escrow': {
+      id: '/escrow'
+      path: '/escrow'
+      fullPath: '/escrow'
+      preLoaderRoute: typeof EscrowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -542,6 +684,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/applications': {
+      id: '/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof ApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -578,6 +727,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$slug'
       preLoaderRoute: typeof ProjectsSlugRouteImport
       parentRoute: typeof ProjectsRoute
+    }
+    '/orders/$id': {
+      id: '/orders/$id'
+      path: '/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof OrdersIdRouteImport
+      parentRoute: typeof OrdersRoute
     }
     '/onboarding/team-size': {
       id: '/onboarding/team-size'
@@ -649,6 +805,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FreelancersUsernameRouteImport
       parentRoute: typeof FreelancersRoute
     }
+    '/escrow/$id': {
+      id: '/escrow/$id'
+      path: '/$id'
+      fullPath: '/escrow/$id'
+      preLoaderRoute: typeof EscrowIdRouteImport
+      parentRoute: typeof EscrowRoute
+    }
     '/dashboard/freelancer': {
       id: '/dashboard/freelancer'
       path: '/freelancer'
@@ -656,8 +819,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardFreelancerRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/clients/$company': {
+      id: '/clients/$company'
+      path: '/clients/$company'
+      fullPath: '/clients/$company'
+      preLoaderRoute: typeof ClientsCompanyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/applications/$id': {
+      id: '/applications/$id'
+      path: '/$id'
+      fullPath: '/applications/$id'
+      preLoaderRoute: typeof ApplicationsIdRouteImport
+      parentRoute: typeof ApplicationsRoute
+    }
   }
 }
+
+interface ApplicationsRouteChildren {
+  ApplicationsIdRoute: typeof ApplicationsIdRoute
+}
+
+const ApplicationsRouteChildren: ApplicationsRouteChildren = {
+  ApplicationsIdRoute: ApplicationsIdRoute,
+}
+
+const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
+  ApplicationsRouteChildren,
+)
 
 interface DashboardRouteChildren {
   DashboardFreelancerRoute: typeof DashboardFreelancerRoute
@@ -670,6 +859,17 @@ const DashboardRouteChildren: DashboardRouteChildren = {
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
+
+interface EscrowRouteChildren {
+  EscrowIdRoute: typeof EscrowIdRoute
+}
+
+const EscrowRouteChildren: EscrowRouteChildren = {
+  EscrowIdRoute: EscrowIdRoute,
+}
+
+const EscrowRouteWithChildren =
+  EscrowRoute._addFileChildren(EscrowRouteChildren)
 
 interface FreelancersRouteChildren {
   FreelancersUsernameRoute: typeof FreelancersUsernameRoute
@@ -713,6 +913,17 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
   OnboardingRouteChildren,
 )
 
+interface OrdersRouteChildren {
+  OrdersIdRoute: typeof OrdersIdRoute
+}
+
+const OrdersRouteChildren: OrdersRouteChildren = {
+  OrdersIdRoute: OrdersIdRoute,
+}
+
+const OrdersRouteWithChildren =
+  OrdersRoute._addFileChildren(OrdersRouteChildren)
+
 interface ProjectsRouteChildren {
   ProjectsSlugRoute: typeof ProjectsSlugRoute
 }
@@ -740,22 +951,28 @@ const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  ApplicationsRoute: ApplicationsRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  EscrowRoute: EscrowRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   FreelancersRoute: FreelancersRouteWithChildren,
   LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
+  OrdersRoute: OrdersRouteWithChildren,
+  ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ServicesRoute: ServicesRouteWithChildren,
+  SettingsRoute: SettingsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   VerifyOtpRoute: VerifyOtpRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  ClientsCompanyRoute: ClientsCompanyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

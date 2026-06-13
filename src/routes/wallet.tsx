@@ -1,27 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Building2, Banknote, Download, ListFilter as Filter, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield } from "@/components/site/trust";
 import { InlineBanner } from "@/components/site/feedback";
-import { transactions, escrowItems } from "@/lib/mock-data";
+import { DepositModal, WithdrawModal } from "@/components/site/modals";
+import { transactions, escrowItems, paymentMethods as mockPaymentMethods } from "@/lib/mock-data";
+import { requireAuth } from "@/lib/guards";
 
 export const Route = createFileRoute("/wallet")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Wallet — Ishbor" }] }),
   component: WalletPage,
 });
-
-const paymentMethods = [
-  { id: "pm1", kind: "card", label: "Humo", last4: "4421", isDefault: true, verified: true },
-  { id: "pm2", kind: "card", label: "Uzcard", last4: "8829", isDefault: false, verified: true },
-  { id: "pm3", kind: "swift", label: "SWIFT USD", last4: null, isDefault: false, verified: true },
-];
 
 const txFilters = ["All", "Incoming", "Outgoing", "Fees"];
 
 function WalletPage() {
   const [txFilter, setTxFilter] = useState("All");
+  const [depositOpen, setDepositOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const filteredTx = transactions.filter((t) => {
     if (txFilter === "All") return true;
@@ -39,13 +39,13 @@ function WalletPage() {
       title="Wallet"
       actions={
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <button className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
+          <button onClick={() => toast.success("Statement downloaded")} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
             <Download className="size-4" /> Statement
           </button>
-          <button className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
+          <button onClick={() => setWithdrawOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
             Withdraw
           </button>
-          <button className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring sm:flex-none">
+          <button onClick={() => setDepositOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring sm:flex-none">
             <Plus className="size-4" /> Top up
           </button>
         </div>
@@ -110,23 +110,23 @@ function WalletPage() {
             <button className="text-xs font-medium text-primary transition-default hover:opacity-80">Manage</button>
           </div>
           <ul className="space-y-2">
-            {paymentMethods.map((pm) => {
-              const Icon = pm.kind === "swift" ? Building2 : CreditCard;
+            {mockPaymentMethods.map((pm) => {
+              const Icon = pm.type === "visa" ? CreditCard : Banknote;
               return (
                 <li
                   key={pm.id}
-                  className={`flex items-center gap-3 rounded-xl border p-3 transition-default ${pm.isDefault ? "border-primary/30 bg-primary/5" : "border-border bg-background"}`}
+                  className={`flex items-center gap-3 rounded-xl border p-3 transition-default ${pm.default ? "border-primary/30 bg-primary/5" : "border-border bg-background"}`}
                 >
-                  <div className={`inline-flex size-8 items-center justify-center rounded-lg ${pm.isDefault ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+                  <div className={`inline-flex size-8 items-center justify-center rounded-lg ${pm.default ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
                     <Icon className="size-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-semibold">
-                      {pm.label}{pm.last4 ? ` ···· ${pm.last4}` : ""}
+                      {pm.label} ···· {pm.last4}
                     </div>
                     <div className="font-mono flex items-center gap-1 text-[10px] text-muted-foreground">
-                      {pm.verified && <CheckCircle2 className="size-2.5 text-success" />}
-                      {pm.isDefault ? "Default" : pm.verified ? "Verified" : "Pending"}
+                      <CheckCircle2 className="size-2.5 text-success" />
+                      {pm.default ? "Default" : "Verified"}
                     </div>
                   </div>
                   <ChevronRight className="size-3.5 text-muted-foreground" />
@@ -285,6 +285,9 @@ function WalletPage() {
           </table>
         </div>
       </section>
+
+      <DepositModal open={depositOpen} onClose={() => setDepositOpen(false)} onConfirm={() => toast.success("Deposit initiated — funds available in 1–2 minutes")} />
+      <WithdrawModal open={withdrawOpen} onClose={() => setWithdrawOpen(false)} balance={14284} onConfirm={() => toast.success("Withdrawal submitted")} />
     </WorkspaceShell>
   );
 }

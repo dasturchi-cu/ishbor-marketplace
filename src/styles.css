@@ -254,6 +254,32 @@
   }
 }
 
+@utility touch-target {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+@utility mobile-scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer utilities {
+  .section-y {
+    padding-block: 3.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .section-y {
+      padding-block: 4rem;
+    }
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -296,69 +322,6 @@
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
-/* Staggered fade-up for card grids */
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
-.stagger-children > *:nth-child(9) { animation-delay: 320ms; }
-
-/* Focus ring utility — Stripe-style */
-.focus-ring {
-  outline: none;
-  &:focus-visible {
-    box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-primary);
-    border-radius: inherit;
-  }
-}
-
-/* Glass card effect */
-.glass {
-  backdrop-filter: blur(12px) saturate(1.2);
-  background-color: color-mix(in oklab, var(--color-card) 80%, transparent);
-}
-
-/* Transition defaults — Linear-style */
-.transition-default {
-  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
-  transition-timing-function: var(--ease-out-expo);
-  transition-duration: 200ms;
-}
-
-/* Phase 8 — Launch polish */
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-secondary) 0%,
-    color-mix(in oklab, var(--color-secondary) 60%, var(--color-elevated)) 50%,
-    var(--color-secondary) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.4s ease-in-out infinite;
-}
-
-.hover-lift {
-  transition-property: transform, box-shadow, border-color;
-  transition-duration: 200ms;
-  transition-timing-function: var(--ease-out-expo);
-  &:hover {
-    transform: translateY(-2px);
-  }
-}
-
-@utility section-y {
-  padding-top: 3.5rem;
-  padding-bottom: 3.5rem;
-  @media (min-width: 640px) {
-    padding-top: 4rem;
-    padding-bottom: 4rem;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .animate-shimmer,
@@ -373,17 +336,58 @@
   }
 }
 
-/* Mobile utilities — Phase 7 */
-@utility touch-target {
-  min-height: 2.75rem;
-  min-width: 2.75rem;
-}
+/* Staggered fade-up for card grids */
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+.stagger-children > *:nth-child(9) { animation-delay: 320ms; }
 
-@utility mobile-scroll-x {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
+/* Focus ring utility — Stripe-style */
+@layer components {
+  .focus-ring {
+    outline: none;
+    &:focus-visible {
+      box-shadow: 0 0 0 2px var(--color-background), 0 0 0 4px var(--color-primary);
+      border-radius: inherit;
+    }
+  }
+
+  /* Glass card effect */
+  .glass {
+    backdrop-filter: blur(12px) saturate(1.2);
+    background-color: color-mix(in oklab, var(--color-card) 80%, transparent);
+  }
+
+  /* Transition defaults — Linear-style */
+  .transition-default {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-timing-function: var(--ease-out-expo);
+    transition-duration: 200ms;
+  }
+
+  /* Phase 8 — Launch polish */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-secondary) 0%,
+      color-mix(in oklab, var(--color-secondary) 60%, var(--color-elevated)) 50%,
+      var(--color-secondary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+  }
+
+  .hover-lift {
+    transition-property: transform, box-shadow, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-out-expo);
+    &:hover {
+      transform: translateY(-2px);
+    }
   }
 }

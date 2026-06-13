@@ -105,12 +105,15 @@ export function EscrowFundedBadge({ className = "" }: { className?: string }) {
   );
 }
 
-type OrderStatus = "in_progress" | "review" | "completed";
+type OrderStatus = "in_progress" | "review" | "revision" | "completed" | "disputed" | "cancelled";
 
 const orderStatusConfig: Record<OrderStatus, { label: string; className: string }> = {
   in_progress: { label: "In Progress", className: "bg-primary/10 text-primary ring-primary/15" },
   review: { label: "In Review", className: "bg-warning/10 text-warning ring-warning/15" },
+  revision: { label: "Revision", className: "bg-warning/10 text-warning ring-warning/15" },
   completed: { label: "Completed", className: "bg-success/10 text-success ring-success/15" },
+  disputed: { label: "Disputed", className: "bg-destructive/10 text-destructive ring-destructive/15" },
+  cancelled: { label: "Cancelled", className: "bg-secondary text-muted-foreground ring-border" },
 };
 
 export function OrderStatusBadge({ status, className = "" }: { status: OrderStatus; className?: string }) {
@@ -122,12 +125,13 @@ export function OrderStatusBadge({ status, className = "" }: { status: OrderStat
   );
 }
 
-type ApplicationStatus = "pending" | "shortlisted" | "rejected";
+type ApplicationStatus = "pending" | "shortlisted" | "rejected" | "accepted";
 
 const applicationStatusConfig: Record<ApplicationStatus, { label: string; className: string }> = {
   pending: { label: "Pending", className: "bg-secondary text-muted-foreground ring-border" },
-  shortlisted: { label: "Shortlisted", className: "bg-success/10 text-success ring-success/15" },
+  shortlisted: { label: "Shortlisted", className: "bg-primary/10 text-primary ring-primary/15" },
   rejected: { label: "Rejected", className: "bg-destructive/10 text-destructive ring-destructive/15" },
+  accepted: { label: "Accepted", className: "bg-success/10 text-success ring-success/15" },
 };
 
 export function ApplicationStatusBadge({ status, className = "" }: { status: ApplicationStatus; className?: string }) {
