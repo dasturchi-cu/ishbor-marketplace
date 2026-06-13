@@ -1,5 +1,8 @@
 import type { UserType } from "./auth-constants";
 import { loadOnboardingState } from "./auth-constants";
+import { persistOnboardingToProfile } from "./profile-store";
+import { applyReferralCode } from "./referral-store";
+import { freelancers } from "./mock-data";
 
 export const SESSION_STORAGE_KEY = "ishbor-session";
 
@@ -13,6 +16,7 @@ export type AuthUser = {
   company?: string;
   avatarHue: number;
   verified: boolean;
+  isAdmin?: boolean;
   bio?: string;
   location?: string;
 };
@@ -50,6 +54,22 @@ const demoUsers: Record<string, { password: string; user: AuthUser }> = {
       avatarHue: 250,
       verified: true,
       bio: "Senior Brand Strategist & UI Designer. 8 years, 120+ projects across Central Asia.",
+      location: "Tashkent, Uzbekistan",
+    },
+  },
+  "admin@ishbor.uz": {
+    password: "demo1234",
+    user: {
+      id: "u-admin-1",
+      email: "admin@ishbor.uz",
+      fullName: "Bobur Niyazov",
+      userType: "client",
+      company: "Ishbor Platform",
+      companySlug: "ishbor",
+      avatarHue: 200,
+      verified: true,
+      isAdmin: true,
+      bio: "Platform administrator for Ishbor marketplace operations.",
       location: "Tashkent, Uzbekistan",
     },
   },
@@ -105,8 +125,25 @@ function writeStorage(session: AuthSession | null) {
   cachedSession = session;
 }
 
+let storageListenerAttached = false;
+
+function onCrossTabStorage(e: StorageEvent) {
+  if (e.key === SESSION_STORAGE_KEY || e.key === null) {
+    cachedRaw = undefined;
+    cachedSession = undefined;
+    notify();
+  }
+}
+
+function attachStorageListener() {
+  if (typeof window === "undefined" || storageListenerAttached) return;
+  window.addEventListener("storage", onCrossTabStorage);
+  storageListenerAttached = true;
+}
+
 export function subscribe(listener: Listener) {
   listeners.add(listener);
+  attachStorageListener();
   return () => listeners.delete(listener);
 }
 
@@ -141,6 +178,7 @@ export function loginWithCredentials(
       loggedInAt: new Date().toISOString(),
     };
     writeStorage(session);
+    persistOnboardingToProfile(session.user.id);
     notify();
     return { ok: true, session };
   }
@@ -165,10 +203,18 @@ export function loginWithCredentials(
       loggedInAt: new Date().toISOString(),
     };
     writeStorage(session);
+    persistOnboardingToProfile(session.user.id);
+    if (typeof window !== "undefined") {
+      const ref = new URLSearchParams(window.location.search).get("ref") ?? sessionStorage.getItem("ishbor-pending-ref");
+      if (ref) {
+        applyReferralCode(session.user.id, normalized, ref);
+        sessionStorage.removeItem("ishbor-pending-ref");
+      }
+    }
     notify();
     return { ok: true, session };
   }
-  return { ok: false, error: "Invalid email or password." };
+  return { ok: false, error: "Email yoki parol noto'g'ri." };
 }
 
 export function loginDemo(userType: UserType, remember = false): AuthSession {
@@ -197,6 +243,10 @@ export function getDefaultDashboard(userType: UserType): string {
   return userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard";
 }
 
+export function isAdminUser(user?: AuthUser | null): boolean {
+  return !!user?.isAdmin;
+}
+
 export function getProfilePath(user: AuthUser): string {
   if (user.userType === "freelancer" && user.username) {
     return `/freelancers/${user.username}`;
@@ -205,4 +255,11 @@ export function getProfilePath(user: AuthUser): string {
     return `/clients/${user.companySlug}`;
   }
   return "/profile";
+}
+
+/** Map marketplace freelancer username to wallet/session user id. */
+export function resolveFreelancerUserId(username: string): string {
+  if (username === "nargiza") return "u-freelancer-1";
+  const match = freelancers.find((f) => f.username === username);
+  return match ? `u-${match.id}` : `u-freelancer-${username}`;
 }

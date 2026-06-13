@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useSyncExternalStore, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Send,
@@ -16,57 +16,69 @@ import {
   MoreHorizontal,
   Smile,
   DollarSign,
-  X,
+  Archive,
+  Inbox,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
+import { EmptyState, confirmDestructive } from "@/components/site/feedback";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EmojiPickerModal, FileAttachModal, SendOfferModal, EscrowActionModal } from "@/components/site/modals";
-import { messages } from "@/lib/mock-data";
+import { freelancers, escrowWorkflows } from "@/lib/mock-data";
+import { ProtectedGate } from "@/components/auth/protected-gate";
+import { downloadDemoFile } from "@/lib/export-utils";
 import { requireAuth } from "@/lib/guards";
+import { useAuth } from "@/hooks/use-auth";
+import { createOrder } from "@/lib/orders-store";
+import { createEscrowFromOrder } from "@/lib/escrow-store";
+import { addNotification } from "@/lib/notifications-store";
+import {
+  subscribeMessages,
+  getMessagesState,
+  getThread,
+  searchConversations,
+  sendMessage,
+  attachFile,
+  sendOffer,
+  fundEscrowMessage,
+  updateOfferState,
+  markConversationRead,
+  archiveConversation,
+  pinConversation,
+  setTyping,
+  isTyping,
+  formatLastSeen,
+  getActiveConversationId,
+  getConversationsByInbox,
+  type ThreadMessage,
+  type Conversation,
+  type ConversationInbox,
+} from "@/lib/messages-store";
 
 export const Route = createFileRoute("/messages")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: "Messages — Ishbor" }] }),
-  component: MessagesPage,
+  head: () => ({ meta: [{ title: "Xabarlar — Ishbor" }] }),
+  component: () => (
+    <ProtectedGate>
+      <MessagesPage />
+    </ProtectedGate>
+  ),
 });
 
-type Message = {
-  from: "me" | "them";
-  body?: string;
-  time: string;
-  type: "text" | "offer" | "escrow" | "file";
-  offer?: { title: string; amount: number; duration: string };
-  escrow?: { event: string; amount: number; project: string };
-  file?: { name: string; size: string; kind: "pdf" | "image" };
-};
+function getParticipantDisplay(conversation: Conversation) {
+  if (conversation.participantUsername) {
+    const freelancer = freelancers.find((f) => f.username === conversation.participantUsername);
+    if (freelancer) {
+      return { name: freelancer.name, hue: freelancer.hue, username: freelancer.username };
+    }
+  }
+  return {
+    name: conversation.name,
+    hue: conversation.hue,
+    username: conversation.participantUsername,
+  };
+}
 
-const thread: Message[] = [
-  { from: "them", type: "text", body: "I've prepared three direction explorations for the dashboard. Want me to walk through them on a call?", time: "10:12" },
-  { from: "me", type: "text", body: "Yes please — Thursday 3pm Tashkent time work?", time: "10:14" },
-  { from: "them", type: "text", body: "Perfect. I'll send a calendar invite with the Figma link.", time: "10:15" },
-  {
-    from: "them",
-    type: "file",
-    body: "Here are the direction explorations:",
-    time: "10:16",
-    file: { name: "Dashboard_Explorations_v3.pdf", size: "4.2 MB", kind: "pdf" },
-  },
-  {
-    from: "them",
-    type: "offer",
-    time: "10:18",
-    offer: { title: "Fintech App Redesign — Phase 2", amount: 4000, duration: "3 weeks" },
-  },
-  {
-    from: "them",
-    type: "escrow",
-    time: "10:22",
-    escrow: { event: "Milestone funded", amount: 4000, project: "Fintech App Redesign" },
-  },
-  { from: "me", type: "text", body: "Looks great. Accepting the offer now.", time: "10:24" },
-];
-
-function TextBubble({ m }: { m: Message }) {
+function TextBubble({ m }: { m: ThreadMessage }) {
   const isMe = m.from === "me";
   return (
     <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
@@ -78,18 +90,20 @@ function TextBubble({ m }: { m: Message }) {
         }`}
       >
         <p className="leading-relaxed">{m.body}</p>
-        <div className={`mt-1 text-[10px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-          {m.time}
+        <div className={`mt-1 flex items-center gap-1 text-[10px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+          <span>{m.time}</span>
+          {isMe && m.read && <span title="O'qildi">✓✓</span>}
         </div>
       </div>
     </div>
   );
 }
 
-function FileBubble({ m }: { m: Message }) {
-  if (!m.file) return null;
+function FileBubble({ m }: { m: ThreadMessage }) {
+  const file = m.file;
+  if (!file) return null;
   const isMe = m.from === "me";
-  const FileIcon = m.file.kind === "image" ? ImageIcon : FileText;
+  const FileIcon = file.kind === "image" ? ImageIcon : FileText;
   return (
     <div className={`flex flex-col gap-1.5 ${isMe ? "items-end" : "items-start"}`}>
       {m.body && (
@@ -97,19 +111,24 @@ function FileBubble({ m }: { m: Message }) {
           <p>{m.body}</p>
         </div>
       )}
-      <div className="flex max-w-[72%] items-center gap-3 rounded-xl border border-border bg-background p-3">
+      <div className="flex max-w-[72%] flex-col gap-2 rounded-xl border border-border bg-background p-3 sm:flex-row sm:items-center">
         <div className="inline-flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
           <FileIcon className="size-5" />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-semibold">{m.file.name}</div>
-          <div className="font-mono text-[11px] text-muted-foreground">{m.file.size}</div>
+          <div className="truncate text-sm font-semibold">{file.name}</div>
+          <div className="font-mono text-[11px] text-muted-foreground">{file.size}</div>
         </div>
         <button
-          onClick={() => toast.info(`Opening ${m.file.name}`)}
+          onClick={() => {
+            downloadDemoFile(
+              file.name,
+              `Ishbor demo fayl: ${file.name}\nHajm: ${file.size}\n\nBu demo muhitda haqiqiy fayl saqlanmaydi.`,
+            );
+          }}
           className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
         >
-          Open
+          Ochish
         </button>
       </div>
       <div className="font-mono text-[10px] text-muted-foreground">{m.time}</div>
@@ -117,276 +136,635 @@ function FileBubble({ m }: { m: Message }) {
   );
 }
 
-function OfferCard({ m }: { m: Message }) {
+function OfferCard({
+  m,
+  canRespond,
+  onAccept,
+  onDecline,
+}: {
+  m: ThreadMessage;
+  canRespond?: boolean;
+  onAccept?: () => void;
+  onDecline?: () => void;
+}) {
   if (!m.offer) return null;
-  const [state, setState] = useState<"pending" | "accepted" | "declined">("pending");
+  const state = m.offer.state ?? "pending";
   return (
     <div className="flex justify-start">
-      <div className="w-72 overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+      <div className="w-full max-w-72 overflow-hidden rounded-2xl border border-border bg-background shadow-sm sm:w-72">
         <div className="border-b border-border bg-primary/5 px-4 py-3">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-primary">Custom Offer</div>
+          <div className="font-mono text-[10px] uppercase tracking-widest text-primary">Maxsus taklif</div>
           <div className="mt-1 text-sm font-semibold">{m.offer.title}</div>
         </div>
         <div className="px-4 py-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Amount</div>
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Summa</div>
               <div className="font-display mt-0.5 text-xl font-bold">${m.offer.amount.toLocaleString()}</div>
             </div>
             <div>
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Duration</div>
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Muddat</div>
               <div className="mt-0.5 font-semibold">{m.offer.duration}</div>
             </div>
           </div>
           <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
             <Lock className="size-3" />
-            Funds released via escrow milestones
+            Mablag' eskrou bosqichlari orqali chiqariladi
           </div>
         </div>
-        {state === "pending" ? (
+        {state === "pending" && canRespond ? (
           <div className="flex gap-2 border-t border-border px-4 py-3">
             <button
-              onClick={() => setState("declined")}
+              onClick={onDecline}
               className="flex-1 rounded-lg border border-border py-2 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
             >
-              Decline
+              Rad etish
             </button>
             <button
-              onClick={() => setState("accepted")}
+              onClick={onAccept}
               className="flex-1 rounded-lg bg-primary py-2 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring"
             >
-              Accept
+              Qabul qilish
             </button>
           </div>
-        ) : (
-          <div className={`flex items-center justify-center gap-2 border-t border-border px-4 py-3 text-sm font-medium ${state === "accepted" ? "text-success" : "text-muted-foreground"}`}>
+        ) : state !== "pending" ? (
+          <div
+            className={`flex items-center justify-center gap-2 border-t border-border px-4 py-3 text-sm font-medium ${
+              state === "accepted" ? "text-success" : "text-muted-foreground"
+            }`}
+          >
             <CheckCircle2 className="size-4" />
-            {state === "accepted" ? "Offer accepted" : "Offer declined"}
+            {state === "accepted"
+              ? "Taklif qabul qilindi"
+              : state === "expired"
+                ? "Taklif muddati tugadi"
+                : "Taklif rad etildi"}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
 }
 
-function EscrowNotification({ m }: { m: Message }) {
+function EscrowNotification({ m }: { m: ThreadMessage }) {
   if (!m.escrow) return null;
   return (
     <div className="flex justify-center">
       <div className="flex justify-center px-2">
-      <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-success/20 bg-success/8 px-3 py-2 text-xs font-medium text-success shadow-sm sm:px-4">
-        <Lock className="size-3.5" />
-        <span className="font-semibold">{m.escrow.event}:</span>
-        <span className="truncate">${m.escrow.amount.toLocaleString()} funded · {m.escrow.project}</span>
-      </div>
+        <div className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-success/20 bg-success/8 px-3 py-2 text-xs font-medium text-success shadow-sm sm:px-4">
+          <Lock className="size-3.5" />
+          <span className="font-semibold">{m.escrow.event}:</span>
+          <span className="truncate">
+            ${m.escrow.amount.toLocaleString()} moliyalashtirildi · {m.escrow.project}
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
 function MessagesPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [input, setInput] = useState("");
   const [showList, setShowList] = useState(true);
-  const [activeId, setActiveId] = useState(messages[0]!.id);
+  const [activeId, setActiveId] = useState(getActiveConversationId);
   const [searchQuery, setSearchQuery] = useState("");
-  const [emojiOpen, setEmojiOpen] = useState(false);
-  const [fileOpen, setFileOpen] = useState(false);
-  const [offerOpen, setOfferOpen] = useState(false);
-  const [escrowOpen, setEscrowOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [read, setRead] = useState(true);
+  const [emojiOchish, setEmojiOchish] = useState(false);
+  const [fileOchish, setFileOchish] = useState(false);
+  const [offerOchish, setOfferOchish] = useState(false);
+  const [escrowOchish, setEscrowOchish] = useState(false);
+  const [menuOchish, setMenuOchish] = useState(false);
+  const [inboxTab, setInboxTab] = useState<ConversationInbox>("active");
+  const [listLimit, setListLimit] = useState(50);
 
-  const activeConversation = messages.find((m) => m.id === activeId) ?? messages[0]!;
-  const filteredMessages = messages.filter((m) =>
-    !searchQuery.trim() || m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.snippet.toLowerCase().includes(searchQuery.toLowerCase()),
+  const messagesState = useSyncExternalStore(subscribeMessages, getMessagesState, getMessagesState);
+
+  const archivedCount = useMemo(
+    () => getConversationsByInbox("archived").length,
+    [messagesState],
   );
 
+  const filteredConversations = useMemo(
+    () => searchConversations(searchQuery, inboxTab),
+    [messagesState, searchQuery, inboxTab],
+  );
+
+  const visibleConversations = useMemo(
+    () => filteredConversations.slice(0, listLimit),
+    [filteredConversations, listLimit],
+  );
+
+  useEffect(() => {
+    setListLimit(50);
+  }, [searchQuery, inboxTab]);
+
+  const thread = useMemo(() => getThread(activeId), [messagesState, activeId]);
+
+  const activeConversation =
+    filteredConversations.find((c) => c.id === activeId) ?? filteredConversations[0] ?? null;
+
+  const participant = activeConversation ? getParticipantDisplay(activeConversation) : null;
+  const isClient = user?.userType === "client";
+  const projectTitle = activeConversation?.projectContext ?? "Faol loyiha";
+  const escrowTotal = activeConversation?.escrowAmount ?? 0;
+  const matchedEscrow = activeConversation?.projectContext
+    ? escrowWorkflows.find((ew) => ew.project === activeConversation.projectContext)
+    : undefined;
+  const hasAnyConversations = getMessagesState().conversations.length > 0;
+
+  const handleSelectConversation = (id: string) => {
+    setActiveId(id);
+    setShowList(false);
+    markConversationRead(id);
+  };
+
+  const handleInboxTabChange = (tab: ConversationInbox) => {
+    setInboxTab(tab);
+    setSearchQuery("");
+    const next = getConversationsByInbox(tab)[0];
+    if (next) {
+      setActiveId(next.id);
+      markConversationRead(next.id);
+    }
+  };
+
+  const handleArchiveConversation = () => {
+    if (!activeId) return;
+    if (!confirmDestructive("Suhbatni arxivlashni tasdiqlaysizmi?")) return;
+    archiveConversation(activeId, true);
+    setMenuOchish(false);
+    toast.success("Suhbat arxivlandi", {
+      description: "Arxivlangan suhbatlarni chap paneldagi «Arxivlangan» tabida topasiz.",
+    });
+    const remaining = getConversationsByInbox("active");
+    if (remaining[0]) {
+      setActiveId(remaining[0].id);
+      markConversationRead(remaining[0].id);
+    }
+  };
+
+  const handleUnarchiveConversation = () => {
+    if (!activeId) return;
+    archiveConversation(activeId, false);
+    setMenuOchish(false);
+    toast.success("Suhbat faol qutiga qaytarildi");
+    setInboxTab("active");
+    const active = getConversationsByInbox("active");
+    if (active[0]) {
+      setActiveId(active[0].id);
+      markConversationRead(active[0].id);
+    }
+  };
+
+  const handleAcceptOffer = (messageId: string, offer: NonNullable<ThreadMessage["offer"]>) => {
+    if (!user || !isClient || !activeConversation) return;
+
+    const freelancer = activeConversation.participantUsername
+      ? freelancers.find((f) => f.username === activeConversation.participantUsername)
+      : undefined;
+
+    const order = createOrder({
+      title: offer.title,
+      client: user.company ?? user.fullName,
+      clientHue: user.avatarHue,
+      clientSlug: user.companySlug,
+      freelancer: freelancer?.name ?? activeConversation.name,
+      freelancerHue: freelancer?.hue ?? activeConversation.hue,
+      freelancerUsername: freelancer?.username ?? activeConversation.participantUsername,
+      amount: offer.amount,
+      dueDate: offer.duration,
+    });
+
+    createEscrowFromOrder(order);
+    updateOfferState(activeId, messageId, "accepted", order.id);
+
+    addNotification({
+      kind: "order",
+      title: "Taklif qabul qilindi",
+      body: `Siz "${offer.title}" qabul qildingiz. Eskrouni moliyalashtirish uchun to'lovni yakunlang.`,
+      priority: "high",
+      href: `/checkout?type=order&order=${order.id}`,
+    });
+
+    toast.success("Taklif qabul qilindi — to'lov sahifasiga yo'naltirilmoqda");
+    navigate({ to: "/checkout", search: { type: "order", order: order.id } });
+  };
+
+  const handleDeclineOffer = (messageId: string) => {
+    updateOfferState(activeId, messageId, "declined");
+    toast.success("Taklif rad etildi");
+  };
+
+  if (!hasAnyConversations) {
+    return (
+      <WorkspaceShell eyebrow="Kirish qutisi" title="Xabarlar">
+        <EmptyState
+          icon={Inbox}
+          title="Hali suhbatlar yo'q"
+          description="Frilanser yoki mijoz bilan bog'laning — takliflar va eskrou yangiliklari shu yerda ko'rinadi."
+          action={
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link to="/freelancers" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                Frilanser topish
+              </Link>
+              <Link to="/projects" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:border-primary/30">
+                Loyihalarni ko'rish
+              </Link>
+            </div>
+          }
+        />
+      </WorkspaceShell>
+    );
+  }
+
   return (
-    <WorkspaceShell eyebrow="Inbox" title="Messages">
-      <div className="grid h-[calc(100dvh-12rem)] min-h-[480px] overflow-hidden rounded-2xl border border-border bg-card md:h-[calc(100vh-200px)] md:min-h-[560px] md:grid-cols-[280px_1fr]">
+    <WorkspaceShell eyebrow="Kirish qutisi" title="Xabarlar">
+      <div className="grid h-[calc(100dvh-12rem)] min-h-0 overflow-hidden rounded-2xl border border-border bg-card md:h-[calc(100vh-200px)] md:min-h-[560px] md:grid-cols-[280px_1fr]">
         {/* Sidebar */}
         <aside className={`${showList ? "flex" : "hidden"} min-h-0 flex-col border-r border-border md:flex`}>
-          <div className="border-b border-border p-3">
+          <div className="space-y-2 border-b border-border p-3">
             <div className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
               <Search className="size-3.5 shrink-0 text-muted-foreground" />
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search conversations..."
+                placeholder="Suhbatlarni qidirish..."
                 className="min-h-11 w-full min-w-0 bg-transparent text-xs outline-none placeholder:text-muted-foreground/60"
               />
             </div>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {filteredMessages.map((m) => (
+            <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
               <button
-                key={m.id}
-                onClick={() => {
-                  setActiveId(m.id);
-                  setShowList(false);
-                }}
-                className={`touch-target flex w-full items-center gap-3 border-b border-border p-3 text-left transition-default hover:bg-secondary/30 ${
-                  m.id === activeId ? "bg-primary/5" : ""
+                type="button"
+                onClick={() => handleInboxTabChange("active")}
+                className={`touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium transition-default ${
+                  inboxTab === "active"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50"
                 }`}
               >
-                <div className="relative shrink-0">
-                  <GradientAvatar name={m.name} hue={m.hue} size={40} />
-                  {m.online && (
-                    <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-success ring-2 ring-card" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={`truncate text-sm ${m.unread > 0 ? "font-semibold" : "font-medium"}`}>
-                      {m.name}
-                    </span>
-                    <span className="font-mono shrink-0 text-[10px] text-muted-foreground">{m.time}</span>
-                  </div>
-                  <div className="mt-0.5 truncate text-xs text-muted-foreground">{m.snippet}</div>
-                </div>
-                {m.unread > 0 && (
-                  <span className="font-mono inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                    {m.unread}
-                  </span>
+                <Inbox className="size-3.5" />
+                Faol
+              </button>
+              <button
+                type="button"
+                onClick={() => handleInboxTabChange("archived")}
+                className={`touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium transition-default ${
+                  inboxTab === "archived"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary/50"
+                }`}
+              >
+                <Archive className="size-3.5" />
+                Arxivlangan
+                {archivedCount > 0 && (
+                  <span className="font-mono text-[10px] opacity-80">{archivedCount}</span>
                 )}
               </button>
-            ))}
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {filteredConversations.length === 0 ? (
+              <div className="space-y-3 p-4 text-center text-xs text-muted-foreground">
+                <p>
+                  {inboxTab === "archived"
+                    ? "Arxivlangan suhbatlar yo'q."
+                    : searchQuery
+                      ? "Qidiruvingizga mos suhbatlar topilmadi."
+                      : archivedCount > 0
+                        ? "Barcha suhbatlar arxivlangan."
+                        : "Faol suhbatlar yo'q."}
+                </p>
+                {inboxTab === "active" && archivedCount > 0 && !searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => handleInboxTabChange("archived")}
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Arxivlangan suhbatlarni ko'rish ({archivedCount})
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+              {visibleConversations.map((m) => {
+                const display = getParticipantDisplay(m);
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => handleSelectConversation(m.id)}
+                    className={`touch-target flex w-full items-center gap-3 border-b border-border p-3 text-left transition-default hover:bg-secondary/30 ${
+                      m.id === activeId ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      <GradientAvatar name={display.name} hue={display.hue} size={40} />
+                      {m.online && (
+                        <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-success ring-2 ring-card" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`truncate text-sm ${m.unread > 0 ? "font-semibold" : "font-medium"}`}>
+                          {display.name}
+                          {m.pinned && <span className="ml-1 text-[10px] text-primary">📌</span>}
+                        </span>
+                        <span className="font-mono shrink-0 text-[10px] text-muted-foreground">{m.time}</span>
+                      </div>
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">{m.snippet}</div>
+                    </div>
+                    {m.unread > 0 && (
+                      <span className="font-mono inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                        {m.unread}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+              {filteredConversations.length > listLimit && (
+                <button
+                  type="button"
+                  onClick={() => setListLimit((l) => l + 50)}
+                  className="w-full border-b border-border px-3 py-3 text-center text-xs font-medium text-primary hover:bg-secondary/30"
+                >
+                  Yana {Math.min(50, filteredConversations.length - listLimit)} ta suhbat
+                </button>
+              )}
+              </>
+            )}
           </div>
         </aside>
 
         {/* Chat area */}
-        <div className={`${showList ? "hidden" : "flex"} min-h-0 flex-col md:flex`}>
-          {/* Header */}
-          <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 sm:px-5">
-            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => setShowList(true)}
-                className="touch-target inline-flex shrink-0 items-center justify-center rounded-lg border border-border md:hidden"
-                aria-label="Back to conversations"
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <GradientAvatar name={activeConversation.name} hue={activeConversation.hue} size={36} />
-              <div className="min-w-0">
-                <div className="truncate text-sm font-semibold">{activeConversation.name}</div>
-                <div className="font-mono flex items-center gap-1.5 text-[10px] text-success">
-                  <span className="size-1.5 rounded-full bg-success" />
-                  {activeConversation.online ? "Online" : "Offline"} {read ? "· Read" : "· Delivered"}
-                </div>
+        <div className="flex min-h-0 flex-col md:flex">
+          {showList && (
+            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground md:hidden">
+              Suhbatni tanlang
+            </div>
+          )}
+          <div className={`${showList ? "hidden md:flex" : "flex"} min-h-0 flex-1 flex-col`}>
+            {!activeConversation || !participant ? (
+              <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
+                {inboxTab === "archived"
+                  ? "Arxivdan suhbat tanlang yoki faol qutiga qaytaring."
+                  : "Chap paneldan suhbat tanlang."}
               </div>
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                onClick={() => setEscrowOpen(true)}
-                className="touch-target hidden items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring sm:inline-flex"
-              >
-                <Lock className="size-3.5 text-primary" /> Escrow
-              </button>
-              <button onClick={() => toast.info("Voice call connecting…")} className="touch-target inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="Call">
-                <Phone className="size-4" />
-              </button>
-              <button onClick={() => toast.info("Video call connecting…")} className="touch-target hidden items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring sm:inline-flex" aria-label="Video call">
-                <Video className="size-4" />
-              </button>
-              <button onClick={() => setMenuOpen(!menuOpen)} className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring" aria-label="More options">
-                <MoreHorizontal className="size-4" />
-                {menuOpen && (
-                  <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-card py-1 shadow-lg">
-                    <button onClick={() => { toast.success("Conversation archived"); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50">Archive</button>
-                    <button onClick={() => { toast.success("Marked as unread"); setRead(false); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50">Mark unread</button>
-                    <button onClick={() => { toast.success("Report submitted"); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-xs text-destructive hover:bg-secondary/50">Report</button>
-                  </div>
-                )}
-              </button>
-            </div>
-          </header>
-
-          {/* Context banner */}
-          <div className="flex flex-col gap-2 border-b border-border bg-primary/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
-              <Lock className="size-3.5 shrink-0 text-primary" />
-              <span className="font-medium">Fintech App Redesign</span>
-              <span className="hidden text-muted-foreground sm:inline">·</span>
-              <span className="text-muted-foreground">$12,000 escrow funded</span>
-            </div>
-            <Link to="/escrow/$id" params={{ id: "ew1" }} className="touch-target inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-primary transition-default hover:opacity-80 sm:self-auto">
-              View contract <ChevronRight className="size-3" />
-            </Link>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
-            {thread.map((m, i) => {
-              if (m.type === "escrow") return <EscrowNotification key={i} m={m} />;
-              if (m.type === "offer") return <OfferCard key={i} m={m} />;
-              if (m.type === "file") return <FileBubble key={i} m={m} />;
-              return <TextBubble key={i} m={m} />;
-            })}
-            {/* Typing indicator */}
-            <div className="flex justify-start">
-              <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3">
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    className="size-1.5 rounded-full bg-muted-foreground/40"
-                    style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Composer */}
-          <div className="border-t border-border p-2 sm:p-3">
-            <div className="rounded-xl border border-border bg-background focus-within:border-primary/30 transition-default">
-              <div className="flex items-center gap-2 px-3 pt-2 sm:pt-3">
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Write a message..."
-                  className="min-h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
-                />
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-2">
-                <div className="flex items-center gap-0.5">
-                  <button onClick={() => setFileOpen(true)} className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach file">
-                    <Paperclip className="size-4" />
-                  </button>
-                  <button onClick={() => setFileOpen(true)} className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring" aria-label="Attach image">
-                    <ImageIcon className="size-4" />
-                  </button>
-                  <button onClick={() => setEmojiOpen(true)} className="touch-target hidden items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring sm:inline-flex" aria-label="Add emoji">
-                    <Smile className="size-4" />
-                  </button>
-                  <div className="mx-1 hidden h-4 w-px bg-border sm:block" />
-                  <button onClick={() => setOfferOpen(true)} className="touch-target hidden items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring sm:inline-flex">
-                    <DollarSign className="size-3" /> Send offer
-                  </button>
-                </div>
+            ) : (
+              <>
+            {/* Header */}
+            <header className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 sm:px-5">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <button
-                  disabled={!input.trim()}
-                  onClick={() => {
-                    if (!input.trim()) return;
-                    toast.success("Message sent");
-                    setInput("");
-                    setRead(false);
-                    setTimeout(() => setRead(true), 1200);
-                  }}
-                  className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 focus-ring"
+                  type="button"
+                  onClick={() => setShowList(true)}
+                  className="touch-target inline-flex shrink-0 items-center justify-center rounded-lg border border-border md:hidden"
+                  aria-label="Suhbatlarga qaytish"
                 >
-                  Send <Send className="size-3.5" />
+                  <ChevronLeft className="size-4" />
+                </button>
+                <GradientAvatar name={participant.name} hue={participant.hue} size={36} />
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">{participant.name}</div>
+                  <div className="font-mono flex items-center gap-1.5 text-[10px] text-success">
+                    <span className="size-1.5 rounded-full bg-success" />
+                    {activeConversation.online ? "Onlayn" : "Oflayn"}{" "}
+                    {activeConversation.unread === 0 ? "· O'qilgan" : "· Yetkazilgan"}
+                  </div>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={() => setEscrowOchish(true)}
+                  className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
+                >
+                  <Lock className="size-3.5 text-primary" /> <span className="hidden sm:inline">Eskrou</span>
+                </button>
+                <button
+                  onClick={() => toast.info("Ovozli qo'ng'iroq tez orada qo'shiladi")}
+                  className="touch-target hidden items-center justify-center rounded-lg border border-border opacity-60 transition-default sm:inline-flex"
+                  aria-label="Qo'ng'iroq (tez orada)"
+                  title="Tez orada"
+                  disabled
+                >
+                  <Phone className="size-4" />
+                </button>
+                <button
+                  onClick={() => toast.info("Video qo'ng'iroq tez orada qo'shiladi")}
+                  className="touch-target hidden items-center justify-center rounded-lg border border-border opacity-60 transition-default sm:inline-flex"
+                  aria-label="Video qo'ng'iroq (tez orada)"
+                  title="Tez orada"
+                  disabled
+                >
+                  <Video className="size-4" />
+                </button>
+                <button
+                  onClick={() => setMenuOchish(!menuOchish)}
+                  className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring"
+                  aria-label="Boshqa variantlar"
+                >
+                  <MoreHorizontal className="size-4" />
+                  {menuOchish && (
+                    <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-card py-1 shadow-lg">
+                      {inboxTab === "archived" || activeConversation.archived ? (
+                        <button
+                          onClick={handleUnarchiveConversation}
+                          className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50"
+                        >
+                          Arxivdan chiqarish
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleArchiveConversation}
+                          className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50"
+                        >
+                          Arxivlash
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          pinConversation(activeId, !activeConversation.pinned);
+                          toast.success(activeConversation.pinned ? "Suhbat qadadan olindi" : "Suhbat qadalandi");
+                          setMenuOchish(false);
+                        }}
+                        className="block w-full px-3 py-2 text-left text-xs hover:bg-secondary/50"
+                      >
+                        {activeConversation.pinned ? "Qadadan olish" : "Qadalash"}
+                      </button>
+                    </div>
+                  )}
                 </button>
               </div>
+            </header>
+
+            {/* Context banner */}
+            {activeConversation.projectContext && (
+              <div className="flex flex-col gap-2 border-b border-border bg-primary/5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs">
+                  <Lock className="size-3.5 shrink-0 text-primary" />
+                  <span className="font-medium">{projectTitle}</span>
+                  {escrowTotal > 0 && (
+                    <>
+                      <span className="hidden text-muted-foreground sm:inline">·</span>
+                      <span className="text-muted-foreground">${escrowTotal.toLocaleString()} eskrou moliyalashtirilgan</span>
+                    </>
+                  )}
+                </div>
+                {matchedEscrow ? (
+                  <Link
+                    to="/escrow/$id"
+                    params={{ id: matchedEscrow.id }}
+                    className="touch-target inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-primary transition-default hover:opacity-80 sm:self-auto"
+                  >
+                    Shartnomani ko'rish <ChevronRight className="size-3" />
+                  </Link>
+                ) : (
+                  <Link
+                    to="/escrow"
+                    className="touch-target inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-primary transition-default hover:opacity-80 sm:self-auto"
+                  >
+                    Eskrou ro'yxati <ChevronRight className="size-3" />
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {/* Messages */}
+            <div className="flex-1 space-y-4 overflow-y-auto px-3 py-4 sm:px-5 sm:py-5">
+              {thread.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  Hali xabarlar yo'q. Salom bering!
+                </div>
+              ) : (
+                thread.map((m) => {
+                  if (m.type === "escrow") return <EscrowNotification key={m.id} m={m} />;
+                  if (m.type === "offer") {
+                    return (
+                      <OfferCard
+                        key={m.id}
+                        m={m}
+                        canRespond={isClient && m.from === "them" && (m.offer?.state ?? "pending") === "pending"}
+                        onAccept={() => m.offer && handleAcceptOffer(m.id, m.offer)}
+                        onDecline={() => handleDeclineOffer(m.id)}
+                      />
+                    );
+                  }
+                  if (m.type === "file") return <FileBubble key={m.id} m={m} />;
+                  return <TextBubble key={m.id} m={m} />;
+                })
+              )}
+              {isTyping(activeId) && (
+              <div className="flex justify-start">
+                <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-sm border border-border bg-background px-4 py-3">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="size-1.5 rounded-full bg-muted-foreground/40"
+                      style={{ animation: `pulse 1.4s ease-in-out ${i * 0.2}s infinite` }}
+                    />
+                  ))}
+                </div>
+              </div>
+              )}
             </div>
+
+            {/* Composer */}
+            <div className="border-t border-border p-2 sm:p-3">
+              <div className="rounded-xl border border-border bg-background transition-default focus-within:border-primary/30">
+                <div className="flex items-center gap-2 px-3 pt-2 sm:pt-3">
+                  <input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Xabar yozing..."
+                    className="min-h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey && input.trim()) {
+                        e.preventDefault();
+                        sendMessage(activeId, input.trim());
+                        setInput("");
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-2 pt-2">
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => setFileOchish(true)}
+                      className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring"
+                      aria-label="Fayl biriktirish"
+                    >
+                      <Paperclip className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setFileOchish(true)}
+                      className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring"
+                      aria-label="Rasm biriktirish"
+                    >
+                      <ImageIcon className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setEmojiOchish(true)}
+                      className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring"
+                      aria-label="Emoji qo'shish"
+                    >
+                      <Smile className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => setOfferOchish(true)}
+                      className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring"
+                    >
+                      <DollarSign className="size-3" />
+                      <span className="hidden sm:inline">Taklif yuborish</span>
+                      <span className="sm:hidden">Taklif</span>
+                    </button>
+                  </div>
+                  <button
+                    disabled={!input.trim()}
+                    onClick={() => {
+                      if (!input.trim()) return;
+                      sendMessage(activeId, input.trim());
+                      setInput("");
+                    }}
+                    className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 focus-ring"
+                  >
+                    Yuborish <Send className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      <EmojiPickerModal open={emojiOpen} onClose={() => setEmojiOpen(false)} onSelect={(e) => setInput((v) => v + e)} />
-      <FileAttachModal open={fileOpen} onClose={() => setFileOpen(false)} onAttach={() => toast.success("File attached")} />
-      <SendOfferModal open={offerOpen} onClose={() => setOfferOpen(false)} onSend={() => toast.success("Offer sent")} />
-      <EscrowActionModal open={escrowOpen} onClose={() => setEscrowOpen(false)} mode="fund" amount={6000} project="Fintech App Redesign" onConfirm={() => toast.success("Escrow funded")} />
+      <EmojiPickerModal open={emojiOchish} onClose={() => setEmojiOchish(false)} onSelect={(e) => setInput((v) => v + e)} />
+      <FileAttachModal
+        open={fileOchish}
+        onClose={() => setFileOchish(false)}
+        onAttach={(file) => {
+          attachFile(activeId, file);
+          toast.success(`${file.name} biriktirildi`);
+        }}
+      />
+      <SendOfferModal
+        open={offerOchish}
+        onClose={() => setOfferOchish(false)}
+        onSend={(offer) => {
+          sendOffer(activeId, offer);
+          toast.success("Taklif yuborildi");
+        }}
+      />
+      <EscrowActionModal
+        open={escrowOchish}
+        onClose={() => setEscrowOchish(false)}
+        mode="fund"
+        amount={escrowTotal || 6000}
+        project={projectTitle}
+        onConfirm={() => {
+          fundEscrowMessage(activeId, escrowTotal || 6000, projectTitle);
+          toast.success("Eskrou moliyalashtirildi");
+        }}
+      />
     </WorkspaceShell>
   );
 }

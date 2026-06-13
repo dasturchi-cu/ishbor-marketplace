@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/categories")({
   head: () => ({
-    meta: [{ title: "Select categories — Ishbor" }],
+    meta: [{ title: "Kategoriyalarni tanlang — Ishbor" }],
   }),
   component: OnboardingCategoriesPage,
 });
@@ -32,11 +32,11 @@ function OnboardingCategoriesPage() {
   return (
     <OnboardingLayout
       stepId="categories"
-      title="Which categories do you work in?"
-      subtitle="Choose up to 5 categories where you offer services or apply to projects."
+      title="Qaysi kategoriyalarda ishlaysiz?"
+      subtitle="Xizmat ko'rsatadigan yoki loyihalarga ariza beradigan 5 tagacha kategoriyani tanlang."
     >
       <p className="mb-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {selected.length}/5 selected
+        {selected.length}/5 tanlandi
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         {categories.map((cat) => {
@@ -57,7 +57,7 @@ function OnboardingCategoriesPage() {
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold">{cat.name}</div>
                 <div className="font-mono text-[10px] text-muted-foreground">
-                  {cat.count.toLocaleString()} listings
+                  {cat.count.toLocaleString()} e'lon
                 </div>
               </div>
               {isSelected && <Check className="size-4 shrink-0 text-primary" />}

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/languages")({
   head: () => ({
-    meta: [{ title: "Languages — Ishbor" }],
+    meta: [{ title: "Tillar — Ishbor" }],
   }),
   component: OnboardingLanguagesPage,
 });
@@ -22,7 +22,7 @@ function OnboardingLanguagesPage() {
   const navigate = useNavigate();
   const saved = loadOnboardingState();
   const [languages, setLanguages] = useState<LanguageEntry[]>(
-    saved.languages.length > 0 ? saved.languages : [{ language: "Uzbek", level: "Native" }],
+    saved.languages.length > 0 ? saved.languages : [{ language: "O'zbek", level: "Ona tili" }],
   );
 
   const update = (index: number, field: keyof LanguageEntry, value: string) => {
@@ -49,8 +49,8 @@ function OnboardingLanguagesPage() {
   return (
     <OnboardingLayout
       stepId="languages"
-      title="What languages do you speak?"
-      subtitle="Central Asia's marketplace — multilingual freelancers get 2× more inquiries."
+      title="Qaysi tillarni bilasiz?"
+      subtitle="Markaziy Osiyo bozori — ko'p tilli frilanserlar 2 baravar ko'proq murojaat oladi."
     >
       <div className="space-y-3">
         {languages.map((lang, i) => (
@@ -58,14 +58,14 @@ function OnboardingLanguagesPage() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Globe className="size-4 text-primary" />
-                Language {i + 1}
+                {i + 1}-til
               </div>
               {languages.length > 1 && (
                 <button
                   type="button"
                   onClick={() => remove(i)}
                   className="text-muted-foreground hover:text-destructive"
-                  aria-label="Remove language"
+                  aria-label="Tilni o'chirish"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -74,14 +74,14 @@ function OnboardingLanguagesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <label className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Language
+                  Til
                 </label>
                 <select
                   value={lang.language}
                   onChange={(e) => update(i, "language", e.target.value)}
                   className="w-full rounded-xl border border-border bg-surface px-4 py-3 text-sm transition-default focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="">Select language</option>
+                  <option value="">Tilni tanlang</option>
                   {languageOptions.map((l) => (
                     <option key={l} value={l}>{l}</option>
                   ))}
@@ -89,7 +89,7 @@ function OnboardingLanguagesPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  Proficiency
+                  Daraja
                 </label>
                 <div className="flex flex-wrap gap-1.5">
                   {languageLevels.map((level) => (
@@ -119,7 +119,7 @@ function OnboardingLanguagesPage() {
             onClick={add}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border py-3 text-sm font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-foreground"
           >
-            <Plus className="size-4" /> Add another language
+            <Plus className="size-4" /> Yana til qo'shish
           </button>
         )}
       </div>

@@ -1,6 +1,6 @@
 import type { SkillEntry } from "@/lib/mock-data";
 
-const levelLabels = ["Beginner", "Intermediate", "Proficient", "Advanced", "Expert"];
+const levelLabels = ["Boshlang'ich", "O'rta", "Yaxshi", "Ilg'or", "Mutaxassis"];
 
 export function SkillsMatrix({ skills }: { skills: SkillEntry[] }) {
   const categories = [...new Set(skills.map((s) => s.category))];

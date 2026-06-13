@@ -1,19 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { Lock, ShieldCheck, CircleCheck as CheckCircle2, ArrowRight, ChevronLeft, CreditCard, Building2, Clock } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield, LevelBadge, CompactTrustRow, TrustGuaranteeCard } from "@/components/site/trust";
 import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
-import { freelancers, services } from "@/lib/mock-data";
-import { requireAuth } from "@/lib/guards";
+import { enrichService, freelancers, services, type Service, type Freelancer } from "@/lib/mock-data";
+import { requireRole } from "@/lib/guards";
+import { ProtectedGate } from "@/components/auth/protected-gate";
 import { getOrderById, fundOrderEscrow } from "@/lib/orders-store";
 import { fundEscrow, getEscrowByOrderId } from "@/lib/escrow-store";
 import { getProjectBySlug } from "@/lib/projects-store";
 import { createOrder } from "@/lib/orders-store";
 import { createEscrowFromOrder } from "@/lib/escrow-store";
+import { holdEscrowFunds } from "@/lib/wallet-store";
+import { addNotification } from "@/lib/notifications-store";
 import { useAuth } from "@/hooks/use-auth";
+import { formatPackageTier } from "@/lib/project-validation";
+import { recordConversionEvent } from "@/lib/conversion-store";
+import { recordServiceOrder } from "@/lib/analytics-utils";
+import { recordAnalyticsEvent } from "@/lib/analytics-events-store";
+import { getAllServices } from "@/lib/services-store";
 
 type CheckoutSearch = {
   type?: "service" | "hire" | "order";
@@ -25,7 +33,7 @@ type CheckoutSearch = {
 };
 
 export const Route = createFileRoute("/checkout")({
-  beforeLoad: requireAuth,
+  beforeLoad: requireRole(["client"]),
   validateSearch: (search: Record<string, unknown>): CheckoutSearch => ({
     type:
       search.type === "hire" ? "hire"
@@ -41,8 +49,12 @@ export const Route = createFileRoute("/checkout")({
         ? search.package
         : undefined,
   }),
-  head: () => ({ meta: [{ title: "Checkout — Ishbor" }] }),
-  component: CheckoutPage,
+  head: () => ({ meta: [{ title: "To'lov — Ishbor" }] }),
+  component: () => (
+    <ProtectedGate roles={["client"]}>
+      <CheckoutPage />
+    </ProtectedGate>
+  ),
 });
 
 function CheckoutPage() {
@@ -51,7 +63,7 @@ function CheckoutPage() {
   const type = search.type ?? "service";
 
   const service = type === "service" && search.service
-    ? services.find((s) => s.slug === search.service) ?? services[0]
+    ? getAllServices().find((s) => s.slug === search.service) ?? services.find((s) => s.slug === search.service) ?? services[0]
     : null;
   const freelancer = search.freelancer
     ? freelancers.find((f) => f.username === search.freelancer)
@@ -64,23 +76,44 @@ function CheckoutPage() {
   const [confirmedOrderId, setConfirmedOrderId] = useState("o1");
   const [confirmedEscrowId, setConfirmedEscrowId] = useState("ew1");
 
+  const selectedPaket =
+    type === "service" && service
+      ? enrichService(service).packages.find(
+          (p) => p.tier.toLowerCase() === (search.package ?? "premium"),
+        ) ?? enrichService(service).packages.find((p) => p.popular) ?? enrichService(service).packages[0]
+      : null;
+
   const total =
     type === "order" && existingOrder ? existingOrder.amount
     : type === "hire" && project && freelancer ? project.budget
     : type === "hire" && freelancer ? freelancer.rate * 20
+    : type === "service" && selectedPaket ? selectedPaket.price
     : service?.price ?? 0;
   const platformFee = Math.round(total * 0.05);
-  const escrowAmount = total;
+  const escrowSumma = total;
+
+  useEffect(() => {
+    recordConversionEvent("checkout_start", search.service ?? search.freelancer ?? search.order);
+  }, [search.service, search.freelancer, search.order]);
 
   const handleConfirmPayment = () => {
+    let orderTitle = "";
+    let newOrderId = confirmedOrderId;
+    let newEscrowId = confirmedEscrowId;
     if (type === "order" && existingOrder) {
       fundOrderEscrow(existingOrder.id);
       const escrow = fundEscrow(existingOrder.id) ?? getEscrowByOrderId(existingOrder.id);
-      setConfirmedOrderId(existingOrder.id);
-      setConfirmedEscrowId(escrow?.id ?? "ew1");
+      newOrderId = existingOrder.id;
+      newEscrowId = escrow?.id ?? "ew1";
+      setConfirmedOrderId(newOrderId);
+      setConfirmedEscrowId(newEscrowId);
+      orderTitle = existingOrder.title;
+      if (user) {
+        holdEscrowFunds(user.id, existingOrder.amount + Math.round(existingOrder.amount * 0.05), existingOrder.title);
+      }
     } else if (type === "hire" && freelancer && user) {
       const order = createOrder({
-        title: project ? project.title : `Hire ${freelancer.name}`,
+        title: project ? project.title : `Yollash ${freelancer.name}`,
         client: user.company ?? user.fullName,
         clientHue: user.avatarHue,
         clientSlug: user.companySlug,
@@ -94,6 +127,57 @@ function CheckoutPage() {
       fundEscrow(order.id);
       setConfirmedOrderId(order.id);
       setConfirmedEscrowId(escrow.id);
+      newOrderId = order.id;
+      newEscrowId = escrow.id;
+      orderTitle = order.title;
+      holdEscrowFunds(user.id, total + platformFee, order.title);
+    } else if (type === "service" && service && user) {
+      const pkg = selectedPaket ?? enrichService(service).packages[0]!;
+      const order = createOrder({
+        title: `${service.title} — ${formatPackageTier(pkg.tier)}`,
+        client: user.company ?? user.fullName,
+        clientHue: user.avatarHue,
+        clientSlug: user.companySlug,
+        freelancer: service.seller,
+        freelancerHue: service.sellerHue,
+        freelancerUsername: service.sellerUsername,
+        amount: pkg.price,
+        dueDate: pkg.delivery,
+      });
+      const escrow = createEscrowFromOrder(order);
+      fundOrderEscrow(order.id);
+      fundEscrow(order.id);
+      setConfirmedOrderId(order.id);
+      setConfirmedEscrowId(escrow.id);
+      newOrderId = order.id;
+      newEscrowId = escrow.id;
+      orderTitle = order.title;
+      holdEscrowFunds(user.id, pkg.price + platformFee, order.title);
+      recordConversionEvent("order_created", order.id, pkg.price);
+      recordAnalyticsEvent({ type: "escrow_funded", entityId: order.id, value: pkg.price });
+      recordServiceOrder(service.slug, service.sellerUsername, pkg.price);
+    }
+    if (newOrderId && type !== "service") {
+      recordConversionEvent("order_created", newOrderId, total);
+      recordAnalyticsEvent({ type: "escrow_funded", entityId: newOrderId, value: total });
+    }
+    if (user && orderTitle) {
+      addNotification({
+        kind: "escrow",
+        title: "Eskrou moliyalashtirildi",
+        body: `$${escrowSumma.toLocaleString()} eskrouda saqlanmoqda — ${orderTitle}.`,
+        priority: "high",
+        href: `/escrow/${newEscrowId}`,
+        userId: user.id,
+      });
+      addNotification({
+        kind: "order",
+        title: "Buyurtma tasdiqlandi",
+        body: `Buyurtmangiz "${orderTitle}" endi faol.`,
+        priority: "high",
+        href: `/orders/${newOrderId}`,
+        userId: user.id,
+      });
     }
     setStep("confirmed");
   };
@@ -103,41 +187,40 @@ function CheckoutPage() {
       <div className="min-h-screen bg-background">
         <SiteNav />
         <div className="mx-auto flex max-w-xl flex-col items-center px-4 py-20 text-center">
-          <div className="mb-5 inline-flex size-16 items-center justify-center rounded-full bg-success/10 text-success">
+          <div className="mb-5 grid size-16 place-items-center rounded-2xl border border-success/25 bg-success/10 text-success">
             <CheckCircle2 className="size-8" />
           </div>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">Order confirmed</h1>
+          <div className="eyebrow text-success">To'lov tasdiqlandi</div>
+          <h1 className="font-display mt-2 text-3xl font-extrabold tracking-tight">Buyurtma tasdiqlandi</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Your payment of ${escrowAmount.toLocaleString()} is now held in escrow. The seller will be notified immediately.
+            To'lovingiz ${escrowSumma.toLocaleString()} endi eskrouda saqlanmoqda. Sotuvchiga darhol xabar beriladi.
           </p>
-          <div className="mt-5 rounded-xl border border-success/20 bg-success/5 px-5 py-3 text-sm">
-            <div className="flex items-center gap-2 text-success">
-              <EscrowShield size="md" />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-              Funds will be released to the seller only after you approve the milestone delivery. Full refund if delivery terms are not met.
+          <div className="mt-5 w-full rounded-2xl border border-success/20 bg-success/5 p-5 text-left">
+            <EscrowShield size="md" />
+            <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+              Mablag'lar faqat bosqich yetkazilishini tasdiqlaganingizdan keyin sotuvchiga chiqariladi. Yetkazish shartlari bajarilmasa to'liq qaytarish.
             </p>
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/orders/$id" params={{ id: confirmedOrderId }} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring">
-              View order <ArrowRight className="size-3.5" />
+            <Link to="/orders/$id" params={{ id: confirmedOrderId }} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring">
+              Buyurtmani ko'rish <ArrowRight className="size-3.5" />
             </Link>
             <Link to="/escrow/$id" params={{ id: confirmedEscrowId }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-              View escrow
+              Eskrouni ko'rish
             </Link>
             <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-              Dashboard
+              Boshqaruv paneli
             </Link>
             <Link to="/messages" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-              Message seller
+              Sotuvchiga xabar
             </Link>
           </div>
           <ConversionFlowBanner
-            title="Hiring complete"
+            title="Yollash yakunlandi"
             steps={CLIENT_HIRE_FLOW}
             currentStep="order"
-            nextHint="Track milestone delivery in Orders and release escrow when work is approved."
-            className="mt-8 text-left"
+            nextHint="Buyurtmalarda bosqich yetkazilishini kuzating va ish tasdiqlanganda eskrouni chiqaring."
+            className="mt-8 w-full text-left shadow-[0_8px_32px_-16px_oklch(0.546_0.185_257/0.12)]"
           />
         </div>
         <SiteFooter />
@@ -145,261 +228,184 @@ function CheckoutPage() {
     );
   }
 
+  const sellerName = service?.seller ?? freelancer?.name ?? existingOrder?.freelancer ?? "";
+  const sellerHue = service?.sellerHue ?? freelancer?.hue ?? existingOrder?.freelancerHue ?? 250;
+  const orderTitle =
+    type === "order" && existingOrder ? existingOrder.title
+    : type === "service" ? service?.title
+    : project ? `${project.title} uchun yollash`
+    : `Yollash ${freelancer?.name}`;
+
+  const statItems =
+    service && selectedPaket
+      ? [
+          { label: "Paket", value: formatPackageTier(selectedPaket.tier) },
+          { label: "Yetkazish", value: selectedPaket.delivery },
+          { label: "Tuzatishlar", value: String(selectedPaket.revisions) },
+        ]
+      : type === "order" && existingOrder
+        ? [
+            { label: "Frilanser", value: existingOrder.freelancer },
+            { label: "Summa", value: `$${existingOrder.amount.toLocaleString()}` },
+            { label: "Muddat", value: existingOrder.dueDate },
+          ]
+        : freelancer && type === "hire"
+          ? [
+              { label: "Stavka", value: `$${freelancer.rate}/soat` },
+              { label: project ? "Loyiha byudjeti" : "Taxminiy soatlar", value: project ? `$${project.budget.toLocaleString()}` : "20 soat" },
+              { label: "Javob", value: freelancer.responseTime },
+            ]
+          : [];
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
 
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <nav className="font-mono mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <button onClick={() => window.history.back()} className="flex items-center gap-1 transition-default hover:text-foreground">
-            <ChevronLeft className="size-3" /> Back
+          <button onClick={() => window.history.back()} className="touch-target flex items-center gap-1 transition-default hover:text-foreground">
+            <ChevronLeft className="size-3" /> Orqaga
           </button>
         </nav>
 
-        <ConversionFlowBanner
-          title="Client hiring path"
-          steps={CLIENT_HIRE_FLOW}
-          currentStep="checkout"
-          nextHint={
-            step === "payment"
-              ? "Complete payment to fund escrow. Your order activates once funds are secured."
-              : "Review order details, then proceed to escrow-protected payment."
-          }
-          className="mb-8"
-        />
-
-        {/* Progress */}
-        <div className="mb-8 flex items-center gap-3">
-          {["review", "payment"].map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`inline-flex size-7 items-center justify-center rounded-full text-xs font-bold ${
-                step === s ? "bg-primary text-primary-foreground" : i < ["review", "payment"].indexOf(step) ? "bg-success text-success-foreground" : "bg-secondary text-muted-foreground"
-              }`}>
-                {i + 1}
-              </div>
-              <span className={`text-sm font-medium ${step === s ? "text-foreground" : "text-muted-foreground"}`}>
-                {s === "review" ? "Review order" : "Payment"}
-              </span>
-              {i === 0 && <div className="h-px w-8 bg-border" />}
-            </div>
-          ))}
+        <div className="mb-8 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_32px_-16px_oklch(0.546_0.185_257/0.12)]">
+          <ConversionFlowBanner
+            title="Mijoz yollash yo'li"
+            steps={CLIENT_HIRE_FLOW}
+            currentStep="checkout"
+            nextHint={
+              step === "payment"
+                ? "Eskrouni moliyalashtirish uchun to'lovni yakunlang."
+                : "Buyurtma tafsilotlarini ko'rib chiqing, keyin to'lovga o'ting."
+            }
+            className="mb-0 rounded-none border-0 bg-transparent shadow-none"
+          />
+          <div className="border-t border-border px-3 py-3 sm:px-4">
+            <CheckoutStepper step={step} />
+          </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-          <div>
+        <header className="mb-6">
+          <div className="eyebrow">{step === "payment" ? "Xavfsiz to'lov" : "To'lov oldidan"}</div>
+          <h1 className="font-display mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+            {step === "payment" ? "To'lovni yakunlang" : "Buyurtmangizni ko'rib chiqing"}
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            {step === "payment"
+              ? "To'lovingiz bosqich tasdiqlanguncha eskrouda saqlanadi."
+              : "To'lovga o'tishdan oldin tafsilotlarni tasdiqlang."}
+          </p>
+        </header>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+          <div className="space-y-6">
             {step === "review" && (
               <>
-                <h1 className="font-display text-2xl font-bold tracking-tight">Review your order</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Confirm the details before proceeding to payment.</p>
+                <SellerReviewCard
+                  orderTitle={orderTitle || "Buyurtma"}
+                  sellerName={sellerName || "Frilanser"}
+                  sellerHue={sellerHue}
+                  service={service}
+                  freelancer={freelancer ?? undefined}
+                  statItems={statItems}
+                />
 
-                {/* Order summary */}
-                <div className="mt-6 rounded-2xl border border-border bg-card overflow-hidden">
-                  <div
-                    className="h-24"
-                    style={{
-                      background: `linear-gradient(135deg, oklch(0.62 0.14 ${service?.hue ?? freelancer?.hue ?? 250}) 0%, oklch(0.36 0.10 ${(service?.hue ?? freelancer?.hue ?? 250) + 30}) 100%)`,
-                    }}
-                  />
-                  <div className="p-5">
-                    <div className="flex items-center gap-3">
-                      <GradientAvatar name={service?.seller ?? freelancer?.name ?? ""} hue={service?.sellerHue ?? freelancer?.hue ?? 250} size={40} rounded="rounded-lg" />
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-display text-sm font-bold">
-                          {type === "order" && existingOrder ? existingOrder.title
-                            : type === "service" ? service?.title
-                            : project ? `Hire for ${project.title}`
-                            : `Hire ${freelancer?.name}`}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-muted-foreground">{service?.seller ?? freelancer?.name}</span>
-                          {service && <LevelBadge level={service.sellerLevel} className="!px-1.5 !py-0 !text-[8px]" />}
-                          {freelancer && <CompactTrustRow level={freelancer.level} identityVerified={freelancer.identityVerified} businessVerified={freelancer.businessVerified} successScore={freelancer.successScore} className="!gap-1" />}
-                        </div>
-                      </div>
-                    </div>
-                    {service && (
-                      <div className="mt-4 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-elevated/40">
-                        {[
-                          { label: "Package", value: "Premium" },
-                          { label: "Delivery", value: service.delivery },
-                          { label: "Revisions", value: "4" },
-                        ].map((item) => (
-                          <div key={item.label} className="px-4 py-3 text-center sm:text-left">
-                            <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{item.label}</div>
-                            <div className="mt-1 text-sm font-semibold">{item.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {type === "order" && existingOrder && (
-                      <div className="mt-4 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-elevated/40">
-                        {[
-                          { label: "Freelancer", value: existingOrder.freelancer },
-                          { label: "Amount", value: `$${existingOrder.amount.toLocaleString()}` },
-                          { label: "Due", value: existingOrder.dueDate },
-                        ].map((item) => (
-                          <div key={item.label} className="px-4 py-3 text-center sm:text-left">
-                            <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{item.label}</div>
-                            <div className="mt-1 text-sm font-semibold">{item.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {freelancer && type === "hire" && (
-                      <div className="mt-4 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-elevated/40">
-                        {[
-                          { label: "Rate", value: `$${freelancer.rate}/h` },
-                          { label: project ? "Project budget" : "Est. hours", value: project ? `$${project.budget.toLocaleString()}` : "20h" },
-                          { label: "Response", value: freelancer.responseTime },
-                        ].map((item) => (
-                          <div key={item.label} className="px-4 py-3 text-center sm:text-left">
-                            <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{item.label}</div>
-                            <div className="mt-1 text-sm font-semibold">{item.value}</div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Trust guarantees */}
-                <div className="mt-6 grid grid-cols-1 gap-3 min-[520px]:grid-cols-3">
-                  <TrustGuaranteeCard
-                    icon={Lock}
-                    label="Escrow protected"
-                    detail="Payment held until approval"
-                    tone="primary"
-                    layout="stacked"
-                  />
-                  <TrustGuaranteeCard
-                    icon={ShieldCheck}
-                    label="Identity verified"
-                    detail="Seller credentials checked"
-                    tone="success"
-                    layout="stacked"
-                  />
-                  <TrustGuaranteeCard
-                    icon={Clock}
-                    label="24h resolution"
-                    detail="Dispute support guaranteed"
-                    tone="primary"
-                    layout="stacked"
-                  />
-                </div>
-
-                <div className="mt-8 flex items-center gap-3">
-                  <button
-                    onClick={() => setStep("payment")}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring"
-                  >
-                    Continue to payment <ArrowRight className="size-4" />
-                  </button>
-                  <button onClick={() => window.history.back()} className="rounded-lg border border-border px-5 py-3 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-                    Cancel
-                  </button>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <TrustGuaranteeCard icon={Lock} label="Eskrou himoyalangan" detail="Tasdiqlanguncha to'lov ushlab turiladi" tone="primary" layout="stacked" />
+                  <TrustGuaranteeCard icon={ShieldCheck} label="Shaxs tasdiqlangan" detail="Sotuvchi ma'lumotlari tekshirilgan" tone="success" layout="stacked" />
+                  <TrustGuaranteeCard icon={Clock} label="24 soat hal qilish" detail="Nizo yordami kafolatlangan" tone="primary" layout="stacked" />
                 </div>
               </>
             )}
 
             {step === "payment" && (
               <>
-                <h1 className="font-display text-2xl font-bold tracking-tight">Secure payment</h1>
-                <p className="mt-1 text-sm text-muted-foreground">Your payment will be held in escrow until milestone approval.</p>
+                <CheckoutSection title="To'lov usuli">
+                  <div className="space-y-2">
+                    {[
+                      { key: "humo" as const, label: "Humo karta", last4: "4421", icon: CreditCard },
+                      { key: "uzcard" as const, label: "Uzcard", last4: "8829", icon: CreditCard },
+                      { key: "swift" as const, label: "SWIFT USD o'tkazmasi", last4: null, icon: Building2 },
+                    ].map((pm) => {
+                      const active = paymentMethod === pm.key;
+                      return (
+                        <button
+                          key={pm.key}
+                          onClick={() => setPaymentMethod(pm.key)}
+                          className={`flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-default focus-ring ${
+                            active
+                              ? "border-primary/30 bg-primary/5 shadow-[0_8px_24px_-12px_oklch(0.546_0.185_257/0.15)]"
+                              : "border-border bg-surface hover:border-primary/20"
+                          }`}
+                        >
+                          <div className={`grid size-11 shrink-0 place-items-center rounded-xl transition-default ${
+                            active ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+                          }`}>
+                            <pm.icon className="size-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold">
+                              {pm.label}{pm.last4 ? ` ···· ${pm.last4}` : ""}
+                            </div>
+                            <div className="font-mono text-[10px] text-muted-foreground">
+                              {active ? "Tanlangan usul" : "Mavjud"}
+                            </div>
+                          </div>
+                          {active && <CheckCircle2 className="size-5 shrink-0 text-primary" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CheckoutSection>
 
-                {/* Payment method */}
-                <div className="mt-6 space-y-2">
-                  <h3 className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Payment method</h3>
-                  {[
-                    { key: "humo" as const, label: "Humo card", last4: "4421", icon: CreditCard },
-                    { key: "uzcard" as const, label: "Uzcard", last4: "8829", icon: CreditCard },
-                    { key: "swift" as const, label: "SWIFT USD transfer", last4: null, icon: Building2 },
-                  ].map((pm) => (
-                    <button
-                      key={pm.key}
-                      onClick={() => setPaymentMethod(pm.key)}
-                      className={`flex w-full items-center gap-3 rounded-xl border p-4 transition-default focus-ring ${
-                        paymentMethod === pm.key
-                          ? "border-primary/30 bg-primary/5"
-                          : "border-border bg-card hover:border-primary/20"
-                      }`}
-                    >
-                      <div className={`inline-flex size-10 items-center justify-center rounded-lg ${
-                        paymentMethod === pm.key ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"
-                      }`}>
-                        <pm.icon className="size-4" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="text-sm font-semibold">{pm.label}{pm.last4 ? ` ···· ${pm.last4}` : ""}</div>
-                        <div className="font-mono text-[10px] text-muted-foreground">
-                          {paymentMethod === pm.key ? "Selected" : "Available"}
-                        </div>
-                      </div>
-                      {paymentMethod === pm.key && <CheckCircle2 className="size-5 text-primary" />}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Security notice */}
-                <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                  <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
+                <div className="flex items-start gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
+                  <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary">
+                    <ShieldCheck className="size-5" />
+                  </div>
                   <div>
-                    <div className="text-sm font-semibold">Bank-grade security</div>
-                    <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                      All payments are processed through Ipoteka-bank with 256-bit encryption. Funds are held in segregated escrow accounts and released only upon your approval.
+                    <div className="font-display text-sm font-semibold">Bank darajasidagi xavfsizlik</div>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                      Barcha to'lovlar 256-bit shifrlash bilan Ipoteka-bank orqali amalga oshiriladi. Mablag'lar ajratilgan eskrou hisoblarida saqlanadi.
                     </p>
                   </div>
                 </div>
-
-                <div className="mt-8 flex items-center gap-3">
-                  <button
-                    onClick={handleConfirmPayment}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring"
-                  >
-                    <Lock className="size-4" /> Pay ${escrowAmount.toLocaleString()}
-                  </button>
-                  <button
-                    onClick={() => setStep("review")}
-                    className="rounded-lg border border-border px-5 py-3 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
-                  >
-                    Back
-                  </button>
-                </div>
               </>
             )}
+
+            <CheckoutActions
+              step={step}
+              total={total + platformFee}
+              onContinue={() => setStep("payment")}
+              onPay={handleConfirmPayment}
+              onBack={() => (step === "payment" ? setStep("review") : window.history.back())}
+            />
           </div>
 
-          {/* Order summary sidebar */}
-          <aside className="rounded-2xl border border-border bg-card p-5 lg:sticky lg:top-24">
-            <h3 className="font-display mb-4 text-sm font-bold">Order summary</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">{type === "service" ? "Service fee" : "Freelancer deposit"}</span>
-                <span className="font-semibold">${total.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Platform fee</span>
-                <span className="font-semibold">${platformFee.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Escrow protection</span>
-                <span className="text-xs text-success">Included</span>
-              </div>
-              <div className="border-t border-border pt-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-display text-xl font-bold">${(total + platformFee).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 rounded-lg border border-primary/15 bg-primary/5 px-3 py-2.5">
-              <div className="flex items-center gap-2 text-xs text-primary">
-                <Lock className="size-3.5" />
-                <span className="font-semibold">${escrowAmount.toLocaleString()} held in escrow</span>
-              </div>
-              <p className="mt-1 text-[10px] text-muted-foreground leading-relaxed">
-                Released only when you approve the delivered work. Full refund if terms aren't met.
-              </p>
-            </div>
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <OrderSummary
+              type={type}
+              total={total}
+              platformFee={platformFee}
+              escrowSumma={escrowSumma}
+            />
+            {step === "review" && (
+              <button
+                type="button"
+                onClick={() => setStep("payment")}
+                className="touch-target hidden w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring lg:inline-flex"
+              >
+                To'lovga o'tish <ArrowRight className="size-4" />
+              </button>
+            )}
+            {step === "payment" && (
+              <button
+                type="button"
+                onClick={handleConfirmPayment}
+                className="touch-target hidden w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring lg:inline-flex"
+              >
+                <Lock className="size-4" /> To'lash ${(total + platformFee).toLocaleString()}
+              </button>
+            )}
           </aside>
         </div>
       </div>
@@ -408,3 +414,218 @@ function CheckoutPage() {
     </div>
   );
 }
+
+function CheckoutStepper({ step, className = "" }: { step: "review" | "payment"; className?: string }) {
+  const steps = [
+    { key: "review" as const, label: "Ko'rib chiqish" },
+    { key: "payment" as const, label: "To'lov" },
+  ];
+  const currentIndex = steps.findIndex((s) => s.key === step);
+
+  return (
+    <div className={`grid grid-cols-2 gap-2 ${className}`}>
+      {steps.map((s, i) => {
+        const active = step === s.key;
+        const done = i < currentIndex;
+        return (
+          <div
+            key={s.key}
+            className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-default ${
+              active
+                ? "bg-primary text-primary-foreground"
+                : done
+                  ? "bg-success/10 text-success"
+                  : "bg-surface text-muted-foreground"
+            }`}
+          >
+            <span
+              className={`inline-flex size-5 items-center justify-center rounded-full text-[10px] font-bold ${
+                active
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : done
+                    ? "bg-success text-success-foreground"
+                    : "bg-secondary text-muted-foreground"
+              }`}
+            >
+              {done ? "✓" : i + 1}
+            </span>
+            <span>{s.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function SellerReviewCard({
+  orderTitle,
+  sellerName,
+  sellerHue,
+  service,
+  freelancer,
+  statItems,
+}: {
+  orderTitle: string;
+  sellerName: string;
+  sellerHue: number;
+  service: Service | null;
+  freelancer: Freelancer | undefined;
+  statItems: { label: string; value: string }[];
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card transition-default hover:border-primary/20">
+      <div className="border-b border-border bg-elevated/40 px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-4">
+          <GradientAvatar name={sellerName} hue={sellerHue} size={56} rounded="rounded-2xl" className="shrink-0 ring-2 ring-border/60" />
+          <div className="min-w-0 flex-1">
+            <div className="eyebrow">Frilanser</div>
+            <h3 className="font-display text-lg font-bold leading-tight">{sellerName}</h3>
+            <p className="mt-1 text-sm leading-snug text-muted-foreground">{orderTitle}</p>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-5 p-5 sm:p-6">
+        <div className="flex flex-wrap gap-2">
+          {service && <LevelBadge level={service.sellerLevel} className="!px-2 !py-0.5 !text-[9px]" />}
+          {freelancer && (
+            <CompactTrustRow
+              level={freelancer.level}
+              identityVerified={freelancer.identityVerified}
+              businessVerified={freelancer.businessVerified}
+              successScore={freelancer.successScore}
+            />
+          )}
+        </div>
+        {statItems.length > 0 && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            {statItems.map((item) => (
+              <CheckoutStat key={item.label} label={item.label} value={item.value} accent={item.label === "Stavka"} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrderSummary({
+  type,
+  total,
+  platformFee,
+  escrowSumma,
+}: {
+  type: string;
+  total: number;
+  platformFee: number;
+  escrowSumma: number;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card transition-default hover:border-primary/20">
+      <div className="border-b border-border bg-elevated/40 px-5 py-4">
+        <h3 className="font-display text-base font-semibold">Buyurtma xulosasi</h3>
+      </div>
+      <div className="space-y-3 p-5 text-sm">
+        <SummaryRow label={type === "service" ? "Xizmat to'lovi" : "Frilanser depoziti"} value={`$${total.toLocaleString()}`} />
+        <SummaryRow label="Platforma to'lovi" value={`$${platformFee.toLocaleString()}`} />
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-muted-foreground">Eskrou himoyasi</span>
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
+            <CheckCircle2 className="size-3" /> Kiritilgan
+          </span>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-semibold">Jami</span>
+            <span className="font-display text-2xl font-bold">${(total + platformFee).toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+      <div className="border-t border-border bg-primary/5 p-5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+          <Lock className="size-4 shrink-0" />
+          ${escrowSumma.toLocaleString()} eskrouda
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+          Faqat ish tasdiqlanganda chiqariladi. Shartlar bajarilmasa to'liq qaytarish.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CheckoutActions({
+  step,
+  total,
+  onContinue,
+  onPay,
+  onBack,
+}: {
+  step: "review" | "payment";
+  total: number;
+  onContinue: () => void;
+  onPay: () => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center lg:border-0 lg:pt-0">
+      {step === "review" ? (
+        <button
+          type="button"
+          onClick={onContinue}
+          className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring sm:w-auto lg:hidden"
+        >
+          To'lovga o'tish <ArrowRight className="size-4" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onPay}
+          className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring sm:w-auto lg:hidden"
+        >
+          <Lock className="size-4" /> To'lash ${total.toLocaleString()}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onBack}
+        className="touch-target w-full rounded-lg border border-border px-5 py-3 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
+      >
+        {step === "payment" ? "Orqaga" : "Bekor qilish"}
+      </button>
+    </div>
+  );
+}
+
+function CheckoutSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border bg-card transition-default hover:border-primary/20">
+      <div className="border-b border-border px-5 py-4 sm:px-6">
+        <h3 className="font-display text-base font-semibold">{title}</h3>
+      </div>
+      <div className="p-5 sm:p-6">{children}</div>
+    </section>
+  );
+}
+
+function CheckoutStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div
+      className={`rounded-xl border p-4 transition-default hover:border-primary/20 ${
+        accent ? "border-primary/20 bg-primary/5" : "border-border bg-surface"
+      }`}
+    >
+      <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="font-display mt-1 text-sm font-semibold">{value}</div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  );
+}
+

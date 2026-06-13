@@ -5,7 +5,7 @@ import type { Review } from "@/lib/mock-data";
 export function ProfileReviews({ reviews }: { reviews: Review[] }) {
   if (reviews.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No reviews yet. Be the first to hire and leave feedback.</p>
+      <p className="text-sm text-muted-foreground">Hali sharhlar yo'q. Birinchi bo'lib yollang va fikr qoldiring.</p>
     );
   }
 
@@ -24,8 +24,8 @@ export function ProfileReviews({ reviews }: { reviews: Review[] }) {
         </div>
         <div className="h-10 w-px bg-border" />
         <div>
-          <div className="text-sm font-semibold">{reviews.length} verified reviews</div>
-          <div className="text-xs text-muted-foreground">From completed Ishbor engagements</div>
+          <div className="text-sm font-semibold">{reviews.length} tasdiqlangan sharh</div>
+          <div className="text-xs text-muted-foreground">Yakunlangan Ishbor hamkorliklaridan</div>
         </div>
       </div>
 

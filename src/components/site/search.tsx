@@ -3,12 +3,34 @@ import { Search } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 const modes = [
-  { key: "services" as const, label: "Services", placeholder: "Search services…", path: "/services" as const },
-  { key: "freelancers" as const, label: "Talent", placeholder: "Find talent…", path: "/freelancers" as const },
-  { key: "projects" as const, label: "Projects", placeholder: "Find work…", path: "/projects" as const },
+  { key: "services" as const, label: "Xizmatlar", placeholder: "Xizmatlarni qidirish…", path: "/services" as const },
+  { key: "freelancers" as const, label: "Mutaxassislar", placeholder: "Mutaxassis topish…", path: "/freelancers" as const },
+  { key: "projects" as const, label: "Loyihalar", placeholder: "Ish topish…", path: "/projects" as const },
 ];
 
-const popular = ["iOS Development", "Brand Identity", "Webflow", "Pitch Decks", "Cyrillic Type"];
+const popularByMode = {
+  services: [
+    { label: "Mobil dizayn", query: "mobil" },
+    { label: "Brending", query: "brend" },
+    { label: "Veb dasturlash", query: "Next.js" },
+    { label: "iOS ilova", query: "iOS" },
+    { label: "Strategiya", query: "o'sish" },
+  ],
+  freelancers: [
+    { label: "UI dizayn", query: "dizayn" },
+    { label: "Next.js", query: "Next.js" },
+    { label: "Swift", query: "Swift" },
+    { label: "Tashkent", query: "Tashkent" },
+    { label: "Figma", query: "Figma" },
+  ],
+  projects: [
+    { label: "Fintech", query: "fintech" },
+    { label: "Lokalizatsiya", query: "lokal" },
+    { label: "Pitch deck", query: "pitch" },
+    { label: "Mobil ilova", query: "mobil" },
+    { label: "Mahsulot dizayni", query: "dizayn" },
+  ],
+} as const;
 
 export function UniversalSearch({ defaultMode = "services" as "services" | "freelancers" | "projects" }) {
   const [mode, setMode] = useState(defaultMode);
@@ -17,8 +39,18 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
 
   const submit = (query = q) => {
     const m = modes.find((x) => x.key === mode)!;
-    nav({ to: m.path, search: { q: query.trim() || undefined, sort: "newest" } });
+    nav({
+      to: m.path,
+      search: {
+        q: query.trim(),
+        sort: "newest",
+        category: "",
+        filter: "",
+      },
+    });
   };
+
+  const popular = popularByMode[mode];
 
   return (
     <div className="mx-auto w-full max-w-2xl">
@@ -51,23 +83,23 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
             onClick={() => submit()}
             className="touch-target shrink-0 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
           >
-            <span className="sm:hidden">Go</span>
-            <span className="hidden sm:inline">Search</span>
+            <span className="sm:hidden">Qidir</span>
+            <span className="hidden sm:inline">Qidiruv</span>
           </button>
         </div>
       </div>
       <div className="mobile-scroll-x mt-3 flex items-center gap-1.5 px-1 text-xs text-muted-foreground sm:flex-wrap sm:justify-center sm:px-0">
-        <span className="shrink-0 font-mono uppercase tracking-widest text-[10px]">Trending</span>
+        <span className="shrink-0 font-mono uppercase tracking-widest text-[10px]">Mashhur</span>
         {popular.map((p) => (
           <button
-            key={p}
+            key={p.label}
             onClick={() => {
-              setQ(p);
-              submit(p);
+              setQ(p.query);
+              submit(p.query);
             }}
             className="touch-target shrink-0 rounded-lg border border-border bg-surface px-2.5 text-xs transition-default hover:border-primary/20 hover:text-foreground focus-ring"
           >
-            {p}
+            {p.label}
           </button>
         ))}
       </div>

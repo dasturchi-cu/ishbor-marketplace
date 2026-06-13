@@ -50,31 +50,31 @@ export const defaultOnboardingState: OnboardingState = {
 };
 
 export const skillOptions = [
-  "Branding", "Figma", "Webflow", "Design Systems", "Next.js", "React", "TypeScript",
-  "PostgreSQL", "UI/UX Design", "Mobile Design", "Swift", "SwiftUI", "Python",
-  "GTM Strategy", "Market Research", "Copywriting", "SEO", "Motion Design",
-  "3D Modeling", "Illustration", "Legal Consulting", "IP Law", "Project Management",
-  "Data Analysis", "DevOps", "AWS", "Content Strategy", "Video Editing",
+  "Brendlash", "Figma", "Webflow", "Dizayn tizimlari", "Next.js", "React", "TypeScript",
+  "PostgreSQL", "UI/UX dizayn", "Mobil dizayn", "Swift", "SwiftUI", "Python",
+  "GTM strategiyasi", "Bozor tadqiqotlari", "Kopirayting", "SEO", "Motion dizayn",
+  "3D modellashtirish", "Illustratsiya", "Yuridik maslahat", "Intellektual mulk huquqi", "Loyiha boshqaruvi",
+  "Ma'lumotlar tahlili", "DevOps", "AWS", "Kontent strategiyasi", "Video montaj",
 ];
 
 export const languageOptions = [
-  "Uzbek", "Russian", "English", "Kazakh", "Kyrgyz", "Tajik", "Turkmen", "Arabic", "Chinese",
+  "O'zbek", "Rus", "Ingliz", "Qozoq", "Qirg'iz", "Tojik", "Turkman", "Arab", "Xitoy",
 ];
 
-export const languageLevels = ["Native", "Fluent", "Professional", "Conversational", "Basic"];
+export const languageLevels = ["Ona tili", "Erkin", "Professional", "Suhbat darajasi", "Boshlang'ich"];
 
 export const teamSizes = [
-  "Just me", "2–10", "11–50", "51–200", "201–500", "500+",
+  "Faqat men", "2–10", "11–50", "51–200", "201–500", "500+",
 ];
 
 export const industries = [
-  "Fintech", "E-commerce", "SaaS", "Healthcare", "Education", "Media & Entertainment",
-  "Real Estate", "Government", "Non-profit", "Retail", "Logistics", "Other",
+  "Fintex", "Elektron savdo", "SaaS", "Sog'liqni saqlash", "Ta'lim", "Media va ko'ngilochar",
+  "Ko'chmas mulk", "Davlat", "Notijorat", "Chakana savdo", "Logistika", "Boshqa",
 ];
 
-export const hoursPerWeekOptions = ["10–20 hrs", "20–30 hrs", "30–40 hrs", "40+ hrs"];
+export const hoursPerWeekOptions = ["10–20 soat", "20–30 soat", "30–40 soat", "40+ soat"];
 
-export const responseTimeOptions = ["< 30 min", "< 1 hour", "< 2 hours", "< 24 hours"];
+export const responseTimeOptions = ["< 30 daqiqa", "< 1 soat", "< 2 soat", "< 24 soat"];
 
 export const timezoneOptions = [
   "Asia/Tashkent (UTC+5)",
@@ -86,13 +86,13 @@ export const timezoneOptions = [
 ];
 
 export const hiringGoalOptions = [
-  { id: "one-off", label: "One-off projects", description: "Short engagements with clear deliverables" },
-  { id: "contractors", label: "Long-term contractors", description: "Retainers and ongoing freelance relationships" },
-  { id: "full-time", label: "Full-time hires", description: "Permanent roles through Ishbor Talent" },
-  { id: "agency", label: "Agency partnerships", description: "Vetted teams for larger initiatives" },
-  { id: "design", label: "Design & creative", description: "Brand, UI/UX, motion, and content" },
-  { id: "engineering", label: "Engineering & dev", description: "Web, mobile, and infrastructure" },
-  { id: "strategy", label: "Strategy & consulting", description: "GTM, legal, growth, and operations" },
+  { id: "one-off", label: "Bir martalik loyihalar", description: "Aniq natijalar bilan qisqa muddatli ishlar" },
+  { id: "contractors", label: "Uzoq muddatli pudratchilar", description: "Doimiy frilans hamkorliklari va retainerlar" },
+  { id: "full-time", label: "To'liq stavka yollash", description: "Ishbor Talent orqali doimiy lavozimlar" },
+  { id: "agency", label: "Agentlik hamkorliklari", description: "Katta loyihalar uchun tekshirilgan jamoalar" },
+  { id: "design", label: "Dizayn va ijod", description: "Brend, UI/UX, motion va kontent" },
+  { id: "engineering", label: "Dasturlash va texnologiya", description: "Veb, mobil va infratuzilma" },
+  { id: "strategy", label: "Strategiya va maslahat", description: "GTM, huquq, o'sish va operatsiyalar" },
 ];
 
 export type OnboardingStep = { id: string; label: string; path: string };
@@ -100,18 +100,18 @@ export type OnboardingStep = { id: string; label: string; path: string };
 export function getOnboardingSteps(userType: UserType): OnboardingStep[] {
   if (userType === "client") {
     return [
-      { id: "company", label: "Company", path: "/onboarding/company" },
-      { id: "industry", label: "Industry", path: "/onboarding/industry" },
-      { id: "team-size", label: "Team size", path: "/onboarding/team-size" },
-      { id: "hiring-goals", label: "Hiring goals", path: "/onboarding/hiring-goals" },
+      { id: "company", label: "Kompaniya", path: "/onboarding/company" },
+      { id: "industry", label: "Soha", path: "/onboarding/industry" },
+      { id: "team-size", label: "Jamoa hajmi", path: "/onboarding/team-size" },
+      { id: "hiring-goals", label: "Yollash maqsadlari", path: "/onboarding/hiring-goals" },
     ];
   }
   return [
-    { id: "skills", label: "Skills", path: "/onboarding/skills" },
-    { id: "categories", label: "Categories", path: "/onboarding/categories" },
+    { id: "skills", label: "Ko'nikmalar", path: "/onboarding/skills" },
+    { id: "categories", label: "Kategoriyalar", path: "/onboarding/categories" },
     { id: "portfolio", label: "Portfolio", path: "/onboarding/portfolio" },
-    { id: "languages", label: "Languages", path: "/onboarding/languages" },
-    { id: "availability", label: "Availability", path: "/onboarding/availability" },
+    { id: "languages", label: "Tillar", path: "/onboarding/languages" },
+    { id: "availability", label: "Mavjudlik", path: "/onboarding/availability" },
   ];
 }
 

@@ -22,18 +22,18 @@ function NotFoundComponent() {
           <SearchX className="size-6" aria-hidden />
         </div>
         <div className="font-mono mb-3 text-[11px] uppercase tracking-[0.22em] text-primary">
-          Lost on the Silk Road
+          Ipak yo&apos;ldan adashdingiz
         </div>
         <h1 className="font-display text-6xl font-extrabold tracking-tight">404</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-          This page has wandered off the trade route.
+          Bu sahifa savdo yo&apos;lidan chiqib ketgan.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="touch-target inline-flex items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
           >
-            Return to Ishbor
+            Ishbor&apos;ga qaytish
           </Link>
         </div>
       </div>
@@ -55,10 +55,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           <AlertTriangle className="size-6" aria-hidden />
         </div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">
-          Something broke
+          Nimadir buzildi
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          We&apos;re on it. Try again or head back home.
+          Biz hal qilmoqdamiz. Qayta urinib ko&apos;ring yoki bosh sahifaga qayting.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -68,13 +68,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="touch-target rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
           >
-            Try again
+            Qayta urinish
           </button>
           <Link
             to="/"
             className="touch-target rounded-lg border border-border bg-surface px-5 text-sm font-medium transition-default hover:border-foreground/20 focus-ring"
           >
-            Go home
+            Bosh sahifa
           </Link>
         </div>
       </div>
@@ -87,16 +87,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ishbor — Central Asia's premier freelance marketplace" },
+      { title: "Ishbor — Markaziy Osiyoning yetakchi frilans bozori" },
       {
         name: "description",
         content:
-          "Ishbor connects Central Asia's best freelancers with global projects. Secured by escrow, paid in UZS or USD.",
+          "Ishbor Markaziy Osiyoning eng yaxshi frilanserlarini global loyihalar bilan bog'laydi. Eskrou himoyasi, UZS yoki USD to'lov.",
       },
-      { property: "og:title", content: "Ishbor — Central Asia's premier freelance marketplace" },
+      { property: "og:title", content: "Ishbor — Markaziy Osiyoning yetakchi frilans bozori" },
       {
         property: "og:description",
-        content: "Hire vetted talent across Central Asia. Escrow-protected, identity-verified.",
+        content: "Markaziy Osiyo bo'ylab tekshirilgan mutaxassislarni yollang. Eskrou himoyasi, shaxs tasdiqlangan.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -124,7 +124,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="uz" className="dark">
       <head>
         <HeadContent />
       </head>

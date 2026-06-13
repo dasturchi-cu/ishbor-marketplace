@@ -18,12 +18,12 @@ export type Column<T> = {
 export function AdminDataTable<T extends { id: string }>({
   data,
   columns,
-  searchPlaceholder = "Search…",
+  searchPlaceholder = "Qidirish…",
   searchFilter,
   filters,
   bulkActions,
-  emptyTitle = "No results",
-  emptyDescription = "Try adjusting your filters or search query.",
+  emptyTitle = "Natija yo'q",
+  emptyDescription = "Filtrlarni yoki qidiruv so'rovini o'zgartirib ko'ring.",
   onRowClick,
 }: {
   data: T[];
@@ -61,7 +61,7 @@ export function AdminDataTable<T extends { id: string }>({
   const selectedRows = filtered.filter((r) => selected.has(r.id));
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
       <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -86,7 +86,7 @@ export function AdminDataTable<T extends { id: string }>({
             <TableRow>
               {bulkActions && (
                 <TableHead className="w-10">
-                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
+                  <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Barchasini tanlash" />
                 </TableHead>
               )}
               {columns.map((c) => (
@@ -104,7 +104,7 @@ export function AdminDataTable<T extends { id: string }>({
               >
                 {bulkActions && (
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Checkbox checked={selected.has(row.id)} onCheckedChange={() => toggle(row.id)} aria-label={`Select ${row.id}`} />
+                    <Checkbox checked={selected.has(row.id)} onCheckedChange={() => toggle(row.id)} aria-label={`${row.id} ni tanlash`} />
                   </TableCell>
                 )}
                 {columns.map((c) => (
@@ -117,16 +117,69 @@ export function AdminDataTable<T extends { id: string }>({
       )}
 
       <div className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
-        {filtered.length} of {data.length} records
+        {filtered.length} / {data.length} yozuv
       </div>
     </div>
   );
 }
 
 export function StatusBadge({ status }: { status: string }) {
+  const STATUS_LABELS: Record<string, string> = {
+    active: "faol",
+    approved: "tasdiqlangan",
+    featured: "ajratilgan",
+    hidden: "yashirilgan",
+    removed: "olib tashlangan",
+    draft: "qoralama",
+    published: "nashr etilgan",
+    completed: "yakunlangan",
+    released: "chiqarilgan",
+    resolved: "hal qilingan",
+    closed: "yopilgan",
+    healthy: "sog'lom",
+    pending: "kutilmoqda",
+    in_progress: "jarayonda",
+    review: "ko'rib chiqilmoqda",
+    suspended: "to'xtatilgan",
+    degraded: "pasaygan",
+    disputed: "nizoli",
+    open: "ochiq",
+    banned: "bloklangan",
+    rejected: "rad etilgan",
+    failed: "muvaffaqiyatsiz",
+    down: "ishlamayapti",
+    cancelled: "bekor qilingan",
+    deposit: "to'ldirish",
+    withdrawal: "yechib olish",
+    escrow_transfer: "eskrou o'tkazmasi",
+    held: "ushelgan",
+    urgent: "shoshilinch",
+    high: "yuqori",
+    normal: "oddiy",
+    low: "past",
+    freelancer: "frilanser",
+    client: "mijoz",
+    admin: "admin",
+    user: "foydalanuvchi",
+    payment: "to'lov",
+    system: "tizim",
+    escrow: "eskrou",
+    moderation: "moderatsiya",
+    identity: "shaxs",
+    business: "biznes",
+    service: "xizmat",
+    project: "loyiha",
+    funded: "moliyalashtirilgan",
+    revision: "qayta ishlash",
+  };
   const variants: Record<string, "default" | "success" | "warning" | "destructive" | "secondary"> = {
     active: "success",
     approved: "success",
+    featured: "success",
+    hidden: "secondary",
+    removed: "destructive",
+    draft: "warning",
+    published: "success",
     completed: "success",
     released: "success",
     resolved: "success",
@@ -154,7 +207,7 @@ export function StatusBadge({ status }: { status: string }) {
       variant === "secondary" ? "bg-secondary text-muted-foreground" :
       "bg-primary/15 text-primary"
     }`}>
-      {status.replace(/_/g, " ")}
+      {STATUS_LABELS[status] ?? status.replace(/_/g, " ")}
     </span>
   );
 }

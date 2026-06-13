@@ -7,11 +7,13 @@ import { getSession } from "./auth";
 import { createOrder } from "./orders-store";
 
 import { createEscrowFromOrder } from "./escrow-store";
-
-
+import { recordAnalyticsEvent } from "./analytics-events-store";
+import { getProjectBySlug } from "./projects-store";
+import { notifyProposalReceived, notifyProposalAccepted, notifyOrderCreated } from "./notification-events";
+import { canSubmitProposal, recordProposalSubmitted, getProposalUsage } from "./subscription-store";
 
 const STORAGE_KEY = "ishbor-user-applications";
-
+const EMPTY_APPLICATIONS: Application[] = [];
 const listeners = new Set<() => void>();
 
 let cachedApplications: Application[] | null = null;
@@ -48,17 +50,17 @@ export function subscribeApplications(listener: () => void) {
 
 function readStored(): Application[] {
 
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return EMPTY_APPLICATIONS;
 
   try {
 
     const raw = localStorage.getItem(STORAGE_KEY);
 
-    return raw ? (JSON.parse(raw) as Application[]) : [];
+    return raw ? (JSON.parse(raw) as Application[]) : EMPTY_APPLICATIONS;
 
   } catch {
 
-    return [];
+    return EMPTY_APPLICATIONS;
 
   }
 
@@ -166,9 +168,15 @@ export type NewApplicationInput = {
 
 
 
-export function createApplication(input: NewApplicationInput): Application {
-
+export function createApplication(input: NewApplicationInput): Application | { error: string } {
   const session = getSession();
+  if (!session) return { error: "Tizimga kiring." };
+  if (!canSubmitProposal(session.user.id)) {
+    const { used, limit } = getProposalUsage(session.user.id);
+    return {
+      error: `Oylik taklif limiti tugadi (${used}/${limit}). Pro rejaga o'ting — cheksiz takliflar.`,
+    };
+  }
 
   const app: Application = {
 
@@ -209,14 +217,28 @@ export function createApplication(input: NewApplicationInput): Application {
   const stored = readStored();
 
   writeStored([app, ...stored]);
-
   notify();
+  recordProposalSubmitted(session.user.id);
+  recordAnalyticsEvent({ type: "proposal_received", entityId: input.projectSlug });
+
+  const project = getProjectBySlug(input.projectSlug);
+  if (project?.ownerUserId) {
+    notifyProposalReceived(project.ownerUserId, input.projectTitle, input.projectSlug);
+  }
 
   return app;
 
 }
 
 
+
+export function readStoredApplications(): Application[] {
+  return readStored();
+}
+
+export function getApplicationsForFreelancer(username: string): Application[] {
+  return readStored().filter((a) => a.freelancerUsername === username && !a.archived);
+}
 
 export function updateApplicationStatus(
 
@@ -274,7 +296,7 @@ export function acceptApplication(id: string): { application: Application; order
 
     clientSlug: app.clientSlug,
 
-    freelancer: app.freelancerName ?? "Freelancer",
+    freelancer: app.freelancerName ?? "Frilanser",
 
     freelancerHue: app.freelancerHue ?? 250,
 
@@ -299,6 +321,14 @@ export function acceptApplication(id: string): { application: Application; order
   writeStored(next);
 
   notify();
+
+  const session = getSession();
+  if (session) {
+    notifyOrderCreated(session.user.id, order.title, order.id);
+  }
+  if (app.freelancerUsername && session?.user.id) {
+    notifyProposalAccepted(session.user.id, app.projectTitle, order.id);
+  }
 
   return { application: updated, orderId: order.id };
 

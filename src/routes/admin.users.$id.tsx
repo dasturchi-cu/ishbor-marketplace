@@ -1,20 +1,28 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AdminShell } from "@/components/admin/shell";
 import { useAdminActionDialog } from "@/components/admin/actions";
+import { useAdminSearchOpen } from "@/components/admin/search";
 import { StatusBadge } from "@/components/admin/data-table";
 import { GradientAvatar } from "@/components/site/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  getAdminUser, getUserOrders, getUserApplications, getUserReviews, getUserEscrow, loginHistory,
+  getUserOrders, getUserApplications, getUserReviews, getUserEscrow, loginHistory,
 } from "@/lib/admin-mock-data";
+import {
+  getAdminUsers,
+  verifyAdminUser,
+  activateAdminUser,
+  suspendAdminUser,
+  banAdminUser,
+} from "@/lib/admin-data-store";
+import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/admin/users/$id")({
-  head: () => ({ meta: [{ title: "User Detail — Ishbor Admin" }] }),
+  head: () => ({ meta: [{ title: "Foydalanuvchi tafsilotlari — Ishbor Admin" }] }),
   loader: ({ params }) => {
-    const user = getAdminUser(params.id);
-    if (!user) throw notFound();
+    const user = getAdminUsers().find((u) => u.id === params.id) ?? null;
     return { user };
   },
   component: AdminUserDetailPage,
@@ -22,7 +30,21 @@ export const Route = createFileRoute("/admin/users/$id")({
 
 function AdminUserDetailPage() {
   const { user } = Route.useLoaderData();
+  const { onSearchOpen } = useAdminSearchOpen();
   const { dialog, confirm } = useAdminActionDialog();
+
+  if (!user) {
+    return (
+      <EntityNotFound
+        title="Foydalanuvchi topilmadi"
+        description="Bu foydalanuvchi admin bazasida mavjud emas."
+        backTo="/admin/users"
+        backLabel="Foydalanuvchilarga qaytish"
+        compact
+      />
+    );
+  }
+
   const userOrders = getUserOrders(user.id);
   const userApps = getUserApplications(user.id);
   const userReviews = getUserReviews(user.id);
@@ -30,21 +52,21 @@ function AdminUserDetailPage() {
 
   return (
     <AdminShell
-      eyebrow="User Management"
+      eyebrow="Foydalanuvchi boshqaruvi"
       title={user.name}
-      onSearchOpen={() => {}}
+      onSearchOpen={onSearchOpen}
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => confirm({ title: "Verify user", description: `Verify ${user.name}?`, action: `Verified ${user.name}`, target: user.id, category: "user", successMessage: "User verified" })}>Verify</Button>
-          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Activate user", description: `Activate ${user.name}?`, action: `Activated ${user.name}`, target: user.id, category: "user" })}>Activate</Button>
-          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Suspend user", description: `Suspend ${user.name}?`, action: `Suspended ${user.name}`, target: user.id, category: "user", confirmLabel: "Suspend" })}>Suspend</Button>
-          <Button size="sm" variant="destructive" onClick={() => confirm({ title: "Ban user", description: `Permanently ban ${user.name}?`, action: `Banned ${user.name}`, target: user.id, category: "user", variant: "destructive", confirmLabel: "Ban" })}>Ban</Button>
+          <Button size="sm" onClick={() => confirm({ title: "Foydalanuvchini tasdiqlash", description: `${user.name}?`, action: `Foydalanuvchi tasdiqlandi: ${user.name}`, target: user.id, category: "user", successMessage: "Foydalanuvchi tasdiqlandi", onConfirm: () => verifyAdminUser(user.id) })}>Tasdiqlash</Button>
+          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Foydalanuvchini faollashtirish", description: `${user.name}?`, action: `Foydalanuvchi faollashtirildi: ${user.name}`, target: user.id, category: "user", onConfirm: () => activateAdminUser(user.id) })}>Faollashtirish</Button>
+          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Foydalanuvchini to'xtatish", description: `${user.name}?`, action: `Foydalanuvchi to'xtatildi: ${user.name}`, target: user.id, category: "user", confirmLabel: "To'xtatish", onConfirm: () => suspendAdminUser(user.id) })}>To'xtatish</Button>
+          <Button size="sm" variant="destructive" onClick={() => confirm({ title: "Foydalanuvchini bloklash", description: `${user.name}?`, action: `Foydalanuvchi bloklandi: ${user.name}`, target: user.id, category: "user", variant: "destructive", confirmLabel: "Bloklash", onConfirm: () => banAdminUser(user.id) })}>Bloklash</Button>
         </div>
       }
     >
-      <div className="mb-6 flex items-center gap-4 rounded-2xl border border-border bg-card p-5">
+      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-start">
         <GradientAvatar name={user.name} hue={user.hue} size={56} />
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="font-display text-xl font-bold">{user.name}</div>
           <div className="text-sm text-muted-foreground">{user.email}</div>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -53,28 +75,28 @@ function AdminUserDetailPage() {
             {user.verified && <StatusBadge status="approved" />}
           </div>
         </div>
-        <div className="ml-auto grid grid-cols-3 gap-4 text-center">
+        <div className="grid w-full grid-cols-3 gap-4 text-center sm:ml-auto sm:w-auto">
           <div><div className="font-mono text-xs text-muted-foreground">GMV</div><div className="font-display font-bold">${user.gmv.toLocaleString()}</div></div>
-          <div><div className="font-mono text-xs text-muted-foreground">Trust</div><div className="font-display font-bold">{user.trustScore}</div></div>
-          <div><div className="font-mono text-xs text-muted-foreground">Wallet</div><div className="font-display font-bold">${user.walletBalance.toLocaleString()}</div></div>
+          <div><div className="font-mono text-xs text-muted-foreground">Ishonch</div><div className="font-display font-bold">{user.trustScore}</div></div>
+          <div><div className="font-mono text-xs text-muted-foreground">Hamyon</div><div className="font-display font-bold">${user.walletBalance.toLocaleString()}</div></div>
         </div>
       </div>
 
       <Tabs defaultValue="profile">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="orders">Orders ({userOrders.length})</TabsTrigger>
-          <TabsTrigger value="applications">Applications</TabsTrigger>
-          <TabsTrigger value="wallet">Wallet</TabsTrigger>
-          <TabsTrigger value="escrow">Escrow</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
-          <TabsTrigger value="verification">Verification</TabsTrigger>
-          <TabsTrigger value="login">Login History</TabsTrigger>
+          <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="orders">Buyurtmalar ({userOrders.length})</TabsTrigger>
+          <TabsTrigger value="applications">Arizalar</TabsTrigger>
+          <TabsTrigger value="wallet">Hamyon</TabsTrigger>
+          <TabsTrigger value="escrow">Eskrou</TabsTrigger>
+          <TabsTrigger value="reviews">Sharhlar</TabsTrigger>
+          <TabsTrigger value="verification">Tasdiqlash</TabsTrigger>
+          <TabsTrigger value="login">Kirish tarixi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
           <Card><CardContent className="grid gap-3 pt-5 sm:grid-cols-2">
-            {[["Role", user.role], ["Joined", user.joined], ["Last active", user.lastActive], ["Orders", String(user.orders)], ["Company", user.company ?? "—"]].map(([k, v]) => (
+            {[["Rol", user.role], ["Qo'shilgan", user.joined], ["Oxirgi faollik", user.lastActive], ["Buyurtmalar", String(user.orders)], ["Kompaniya", user.company ?? "—"]].map(([k, v]) => (
               <div key={k}><div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{k}</div><div className="text-sm font-medium">{v}</div></div>
             ))}
           </CardContent></Card>
@@ -87,7 +109,7 @@ function AdminUserDetailPage() {
                 <div><div className="text-sm font-medium">{o.title}</div><div className="text-xs text-muted-foreground">${o.amount.toLocaleString()}</div></div>
                 <StatusBadge status={o.status} />
               </div>
-            )) : <p className="py-6 text-center text-sm text-muted-foreground">No orders</p>}
+            )) : <p className="py-6 text-center text-sm text-muted-foreground">Buyurtmalar yo'q</p>}
           </CardContent></Card>
         </TabsContent>
 
@@ -105,7 +127,7 @@ function AdminUserDetailPage() {
         <TabsContent value="wallet">
           <Card><CardContent className="pt-5">
             <div className="font-display text-3xl font-bold">${user.walletBalance.toLocaleString()}</div>
-            <p className="mt-1 text-sm text-muted-foreground">Available balance</p>
+            <p className="mt-1 text-sm text-muted-foreground">Mavjud balans</p>
           </CardContent></Card>
         </TabsContent>
 
@@ -134,7 +156,7 @@ function AdminUserDetailPage() {
         <TabsContent value="verification">
           <Card><CardContent className="pt-5">
             <StatusBadge status={user.verified ? "approved" : "pending"} />
-            <p className="mt-2 text-sm text-muted-foreground">{user.verified ? "Identity verified" : "Pending verification"}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{user.verified ? "Shaxs tasdiqlangan" : "Tasdiqlash kutilmoqda"}</p>
           </CardContent></Card>
         </TabsContent>
 

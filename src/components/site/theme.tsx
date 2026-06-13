@@ -33,7 +33,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
   return (
     <button
       onClick={toggle}
-      aria-label="Toggle theme"
+      aria-label="Mavzuni almashtirish"
       className={`touch-target inline-flex items-center justify-center rounded-full border border-border bg-surface text-foreground/70 transition-colors hover:text-foreground ${className}`}
     >
       {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}

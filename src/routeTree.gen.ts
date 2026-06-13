@@ -14,16 +14,23 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SubscriptionRouteImport } from './routes/subscription'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as SavedRouteImport } from './routes/saved'
+import { Route as RevenueRouteImport } from './routes/revenue'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as PromotionsRouteImport } from './routes/promotions'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MyServicesRouteImport } from './routes/my-services'
 import { Route as MyProjectsRouteImport } from './routes/my-projects'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
@@ -33,20 +40,29 @@ import { Route as EscrowRouteImport } from './routes/escrow'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ApplicationsRouteImport } from './routes/applications'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
+import { Route as AiRouteImport } from './routes/ai'
+import { Route as AgenciesRouteImport } from './routes/agencies'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
+import { Route as PortfolioIndexRouteImport } from './routes/portfolio.index'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as FreelancersIndexRouteImport } from './routes/freelancers.index'
 import { Route as EscrowIndexRouteImport } from './routes/escrow.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as ApplicationsIndexRouteImport } from './routes/applications.index'
+import { Route as AiIndexRouteImport } from './routes/ai.index'
+import { Route as AgenciesIndexRouteImport } from './routes/agencies.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as ServicesCreateRouteImport } from './routes/services.create'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as ProjectsCreateRouteImport } from './routes/projects.create'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
+import { Route as PortfolioCreateRouteImport } from './routes/portfolio.create'
+import { Route as PortfolioSlugRouteImport } from './routes/portfolio.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as OnboardingTeamSizeRouteImport } from './routes/onboarding.team-size'
 import { Route as OnboardingSkillsRouteImport } from './routes/onboarding.skills'
@@ -57,25 +73,44 @@ import { Route as OnboardingHiringGoalsRouteImport } from './routes/onboarding.h
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as OnboardingCategoriesRouteImport } from './routes/onboarding.categories'
 import { Route as OnboardingAvailabilityRouteImport } from './routes/onboarding.availability'
+import { Route as FreelancersManageRouteImport } from './routes/freelancers/manage'
 import { Route as FreelancersUsernameRouteImport } from './routes/freelancers.$username'
 import { Route as EscrowIdRouteImport } from './routes/escrow.$id'
 import { Route as DashboardFreelancerRouteImport } from './routes/dashboard.freelancer'
+import { Route as DashboardAgencyRouteImport } from './routes/dashboard.agency'
+import { Route as ClientsManageRouteImport } from './routes/clients/manage'
 import { Route as ClientsCompanyRouteImport } from './routes/clients.$company'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
+import { Route as AnalyticsFreelancerRouteImport } from './routes/analytics.freelancer'
+import { Route as AnalyticsClientRouteImport } from './routes/analytics/client'
+import { Route as AiTrustCoachRouteImport } from './routes/ai.trust-coach'
+import { Route as AiProposalAssistantRouteImport } from './routes/ai.proposal-assistant'
+import { Route as AiProjectGeneratorRouteImport } from './routes/ai.project-generator'
+import { Route as AiPortfolioOptimizerRouteImport } from './routes/ai.portfolio-optimizer'
+import { Route as AiOnboardingRouteImport } from './routes/ai.onboarding'
+import { Route as AgencyClientsRouteImport } from './routes/agency/clients'
+import { Route as AgenciesCreateRouteImport } from './routes/agencies.create'
+import { Route as AgenciesSlugRouteImport } from './routes/agencies.$slug'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminServicesRouteImport } from './routes/admin.services'
 import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
+import { Route as AdminPortfoliosRouteImport } from './routes/admin.portfolios'
 import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
 import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
 import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminFounderRouteImport } from './routes/admin.founder'
 import { Route as AdminEscrowRouteImport } from './routes/admin.escrow'
 import { Route as AdminDisputesRouteImport } from './routes/admin.disputes'
 import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminApplicationsRouteImport } from './routes/admin.applications'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin.users.index'
+import { Route as AdminEscrowIndexRouteImport } from './routes/admin.escrow.index'
+import { Route as PortfolioEditSlugRouteImport } from './routes/portfolio.edit.$slug'
 import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 import { Route as AdminEscrowIdRouteImport } from './routes/admin.escrow.$id'
 
@@ -104,6 +139,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SubscriptionRoute = SubscriptionRouteImport.update({
+  id: '/subscription',
+  path: '/subscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -114,6 +154,16 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RevenueRoute = RevenueRouteImport.update({
+  id: '/revenue',
+  path: '/revenue',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -122,6 +172,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PromotionsRoute = PromotionsRouteImport.update({
+  id: '/promotions',
+  path: '/promotions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectsRoute = ProjectsRouteImport.update({
@@ -139,6 +194,16 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortfolioRoute = PortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrdersRoute = OrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
@@ -152,6 +217,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyServicesRoute = MyServicesRouteImport.update({
+  id: '/my-services',
+  path: '/my-services',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyProjectsRoute = MyProjectsRouteImport.update({
@@ -199,6 +269,21 @@ const ApplicationsRoute = ApplicationsRouteImport.update({
   path: '/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgenciesRoute = AgenciesRouteImport.update({
+  id: '/agencies',
+  path: '/agencies',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -218,6 +303,11 @@ const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ProjectsRoute,
+} as any)
+const PortfolioIndexRoute = PortfolioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortfolioRoute,
 } as any)
 const OrdersIndexRoute = OrdersIndexRouteImport.update({
   id: '/',
@@ -249,10 +339,25 @@ const ApplicationsIndexRoute = ApplicationsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ApplicationsRoute,
 } as any)
+const AiIndexRoute = AiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AiRoute,
+} as any)
+const AgenciesIndexRoute = AgenciesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AgenciesRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const ServicesCreateRoute = ServicesCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => ServicesRoute,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
@@ -268,6 +373,16 @@ const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ProjectsRoute,
+} as any)
+const PortfolioCreateRoute = PortfolioCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => PortfolioRoute,
+} as any)
+const PortfolioSlugRoute = PortfolioSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => PortfolioRoute,
 } as any)
 const OrdersIdRoute = OrdersIdRouteImport.update({
   id: '/$id',
@@ -319,6 +434,11 @@ const OnboardingAvailabilityRoute = OnboardingAvailabilityRouteImport.update({
   path: '/availability',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const FreelancersManageRoute = FreelancersManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => FreelancersRoute,
+} as any)
 const FreelancersUsernameRoute = FreelancersUsernameRouteImport.update({
   id: '/$username',
   path: '/$username',
@@ -334,6 +454,16 @@ const DashboardFreelancerRoute = DashboardFreelancerRouteImport.update({
   path: '/freelancer',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardAgencyRoute = DashboardAgencyRouteImport.update({
+  id: '/agency',
+  path: '/agency',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const ClientsManageRoute = ClientsManageRouteImport.update({
+  id: '/clients/manage',
+  path: '/clients/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientsCompanyRoute = ClientsCompanyRouteImport.update({
   id: '/clients/$company',
   path: '/clients/$company',
@@ -343,6 +473,56 @@ const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApplicationsRoute,
+} as any)
+const AnalyticsFreelancerRoute = AnalyticsFreelancerRouteImport.update({
+  id: '/freelancer',
+  path: '/freelancer',
+  getParentRoute: () => AnalyticsRoute,
+} as any)
+const AnalyticsClientRoute = AnalyticsClientRouteImport.update({
+  id: '/client',
+  path: '/client',
+  getParentRoute: () => AnalyticsRoute,
+} as any)
+const AiTrustCoachRoute = AiTrustCoachRouteImport.update({
+  id: '/trust-coach',
+  path: '/trust-coach',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiProposalAssistantRoute = AiProposalAssistantRouteImport.update({
+  id: '/proposal-assistant',
+  path: '/proposal-assistant',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiProjectGeneratorRoute = AiProjectGeneratorRouteImport.update({
+  id: '/project-generator',
+  path: '/project-generator',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiPortfolioOptimizerRoute = AiPortfolioOptimizerRouteImport.update({
+  id: '/portfolio-optimizer',
+  path: '/portfolio-optimizer',
+  getParentRoute: () => AiRoute,
+} as any)
+const AiOnboardingRoute = AiOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AiRoute,
+} as any)
+const AgencyClientsRoute = AgencyClientsRouteImport.update({
+  id: '/agency/clients',
+  path: '/agency/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgenciesCreateRoute = AgenciesCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => AgenciesRoute,
+} as any)
+const AgenciesSlugRoute = AgenciesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AgenciesRoute,
 } as any)
 const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
   id: '/verifications',
@@ -374,6 +554,11 @@ const AdminProjectsRoute = AdminProjectsRouteImport.update({
   path: '/projects',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPortfoliosRoute = AdminPortfoliosRouteImport.update({
+  id: '/portfolios',
+  path: '/portfolios',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
@@ -387,6 +572,11 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
 const AdminModerationRoute = AdminModerationRouteImport.update({
   id: '/moderation',
   path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFounderRoute = AdminFounderRouteImport.update({
+  id: '/founder',
+  path: '/founder',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminEscrowRoute = AdminEscrowRouteImport.update({
@@ -414,6 +604,26 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAiRoute = AdminAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminUsersRoute,
+} as any)
+const AdminEscrowIndexRoute = AdminEscrowIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminEscrowRoute,
+} as any)
+const PortfolioEditSlugRoute = PortfolioEditSlugRouteImport.update({
+  id: '/edit/$slug',
+  path: '/edit/$slug',
+  getParentRoute: () => PortfolioRoute,
+} as any)
 const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -428,6 +638,9 @@ const AdminEscrowIdRoute = AdminEscrowIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/agencies': typeof AgenciesRouteWithChildren
+  '/ai': typeof AiRouteWithChildren
+  '/analytics': typeof AnalyticsRouteWithChildren
   '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -437,40 +650,63 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/my-projects': typeof MyProjectsRoute
+  '/my-services': typeof MyServicesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
+  '/portfolio': typeof PortfolioRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/promotions': typeof PromotionsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revenue': typeof RevenueRoute
+  '/saved': typeof SavedRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/subscription': typeof SubscriptionRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/ai': typeof AdminAiRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/escrow': typeof AdminEscrowRouteWithChildren
+  '/admin/founder': typeof AdminFounderRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/portfolios': typeof AdminPortfoliosRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/services': typeof AdminServicesRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/users': typeof AdminUsersRouteWithChildren
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/agencies/$slug': typeof AgenciesSlugRoute
+  '/agencies/create': typeof AgenciesCreateRoute
+  '/agency/clients': typeof AgencyClientsRoute
+  '/ai/onboarding': typeof AiOnboardingRoute
+  '/ai/portfolio-optimizer': typeof AiPortfolioOptimizerRoute
+  '/ai/project-generator': typeof AiProjectGeneratorRoute
+  '/ai/proposal-assistant': typeof AiProposalAssistantRoute
+  '/ai/trust-coach': typeof AiTrustCoachRoute
+  '/analytics/client': typeof AnalyticsClientRoute
+  '/analytics/freelancer': typeof AnalyticsFreelancerRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/clients/$company': typeof ClientsCompanyRoute
+  '/clients/manage': typeof ClientsManageRoute
+  '/dashboard/agency': typeof DashboardAgencyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/escrow/$id': typeof EscrowIdRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/freelancers/manage': typeof FreelancersManageRoute
   '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
@@ -481,58 +717,88 @@ export interface FileRoutesByFullPath {
   '/onboarding/skills': typeof OnboardingSkillsRoute
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/orders/$id': typeof OrdersIdRoute
+  '/portfolio/$slug': typeof PortfolioSlugRoute
+  '/portfolio/create': typeof PortfolioCreateRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/projects/create': typeof ProjectsCreateRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/services/create': typeof ServicesCreateRoute
   '/admin/': typeof AdminIndexRoute
+  '/agencies/': typeof AgenciesIndexRoute
+  '/ai/': typeof AiIndexRoute
   '/applications/': typeof ApplicationsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/escrow/': typeof EscrowIndexRoute
   '/freelancers/': typeof FreelancersIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/orders/': typeof OrdersIndexRoute
+  '/portfolio/': typeof PortfolioIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
+  '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
+  '/admin/escrow/': typeof AdminEscrowIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/analytics': typeof AnalyticsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/my-projects': typeof MyProjectsRoute
+  '/my-services': typeof MyServicesRoute
   '/notifications': typeof NotificationsRoute
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/promotions': typeof PromotionsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revenue': typeof RevenueRoute
+  '/saved': typeof SavedRoute
   '/settings': typeof SettingsRoute
+  '/subscription': typeof SubscriptionRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/ai': typeof AdminAiRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/disputes': typeof AdminDisputesRoute
-  '/admin/escrow': typeof AdminEscrowRouteWithChildren
+  '/admin/founder': typeof AdminFounderRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/portfolios': typeof AdminPortfoliosRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/services': typeof AdminServicesRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system': typeof AdminSystemRoute
-  '/admin/users': typeof AdminUsersRouteWithChildren
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/agencies/$slug': typeof AgenciesSlugRoute
+  '/agencies/create': typeof AgenciesCreateRoute
+  '/agency/clients': typeof AgencyClientsRoute
+  '/ai/onboarding': typeof AiOnboardingRoute
+  '/ai/portfolio-optimizer': typeof AiPortfolioOptimizerRoute
+  '/ai/project-generator': typeof AiProjectGeneratorRoute
+  '/ai/proposal-assistant': typeof AiProposalAssistantRoute
+  '/ai/trust-coach': typeof AiTrustCoachRoute
+  '/analytics/client': typeof AnalyticsClientRoute
+  '/analytics/freelancer': typeof AnalyticsFreelancerRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/clients/$company': typeof ClientsCompanyRoute
+  '/clients/manage': typeof ClientsManageRoute
+  '/dashboard/agency': typeof DashboardAgencyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/escrow/$id': typeof EscrowIdRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/freelancers/manage': typeof FreelancersManageRoute
   '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
@@ -543,25 +809,37 @@ export interface FileRoutesByTo {
   '/onboarding/skills': typeof OnboardingSkillsRoute
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/orders/$id': typeof OrdersIdRoute
+  '/portfolio/$slug': typeof PortfolioSlugRoute
+  '/portfolio/create': typeof PortfolioCreateRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/projects/create': typeof ProjectsCreateRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/services/create': typeof ServicesCreateRoute
   '/admin': typeof AdminIndexRoute
+  '/agencies': typeof AgenciesIndexRoute
+  '/ai': typeof AiIndexRoute
   '/applications': typeof ApplicationsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
   '/escrow': typeof EscrowIndexRoute
   '/freelancers': typeof FreelancersIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
   '/orders': typeof OrdersIndexRoute
+  '/portfolio': typeof PortfolioIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/services': typeof ServicesIndexRoute
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
+  '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
+  '/admin/escrow': typeof AdminEscrowIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/agencies': typeof AgenciesRouteWithChildren
+  '/ai': typeof AiRouteWithChildren
+  '/analytics': typeof AnalyticsRouteWithChildren
   '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -571,40 +849,63 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/my-projects': typeof MyProjectsRoute
+  '/my-services': typeof MyServicesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
+  '/portfolio': typeof PortfolioRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/promotions': typeof PromotionsRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/revenue': typeof RevenueRoute
+  '/saved': typeof SavedRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/subscription': typeof SubscriptionRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/ai': typeof AdminAiRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/escrow': typeof AdminEscrowRouteWithChildren
+  '/admin/founder': typeof AdminFounderRoute
   '/admin/moderation': typeof AdminModerationRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/portfolios': typeof AdminPortfoliosRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/services': typeof AdminServicesRoute
   '/admin/support': typeof AdminSupportRoute
   '/admin/system': typeof AdminSystemRoute
   '/admin/users': typeof AdminUsersRouteWithChildren
   '/admin/verifications': typeof AdminVerificationsRoute
+  '/agencies/$slug': typeof AgenciesSlugRoute
+  '/agencies/create': typeof AgenciesCreateRoute
+  '/agency/clients': typeof AgencyClientsRoute
+  '/ai/onboarding': typeof AiOnboardingRoute
+  '/ai/portfolio-optimizer': typeof AiPortfolioOptimizerRoute
+  '/ai/project-generator': typeof AiProjectGeneratorRoute
+  '/ai/proposal-assistant': typeof AiProposalAssistantRoute
+  '/ai/trust-coach': typeof AiTrustCoachRoute
+  '/analytics/client': typeof AnalyticsClientRoute
+  '/analytics/freelancer': typeof AnalyticsFreelancerRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/clients/$company': typeof ClientsCompanyRoute
+  '/clients/manage': typeof ClientsManageRoute
+  '/dashboard/agency': typeof DashboardAgencyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/escrow/$id': typeof EscrowIdRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/freelancers/manage': typeof FreelancersManageRoute
   '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
@@ -615,26 +916,38 @@ export interface FileRoutesById {
   '/onboarding/skills': typeof OnboardingSkillsRoute
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/orders/$id': typeof OrdersIdRoute
+  '/portfolio/$slug': typeof PortfolioSlugRoute
+  '/portfolio/create': typeof PortfolioCreateRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/projects/create': typeof ProjectsCreateRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/services/create': typeof ServicesCreateRoute
   '/admin/': typeof AdminIndexRoute
+  '/agencies/': typeof AgenciesIndexRoute
+  '/ai/': typeof AiIndexRoute
   '/applications/': typeof ApplicationsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/escrow/': typeof EscrowIndexRoute
   '/freelancers/': typeof FreelancersIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
   '/orders/': typeof OrdersIndexRoute
+  '/portfolio/': typeof PortfolioIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/services/': typeof ServicesIndexRoute
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
+  '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
+  '/admin/escrow/': typeof AdminEscrowIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/agencies'
+    | '/ai'
+    | '/analytics'
     | '/applications'
     | '/checkout'
     | '/dashboard'
@@ -644,40 +957,63 @@ export interface FileRouteTypes {
     | '/login'
     | '/messages'
     | '/my-projects'
+    | '/my-services'
     | '/notifications'
     | '/onboarding'
     | '/orders'
+    | '/portfolio'
+    | '/pricing'
     | '/privacy'
     | '/profile'
     | '/projects'
+    | '/promotions'
     | '/register'
     | '/reset-password'
+    | '/revenue'
+    | '/saved'
     | '/services'
     | '/settings'
+    | '/subscription'
     | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/admin/ai'
     | '/admin/analytics'
     | '/admin/applications'
     | '/admin/audit'
     | '/admin/disputes'
     | '/admin/escrow'
+    | '/admin/founder'
     | '/admin/moderation'
     | '/admin/orders'
     | '/admin/payments'
+    | '/admin/portfolios'
     | '/admin/projects'
     | '/admin/services'
     | '/admin/support'
     | '/admin/system'
     | '/admin/users'
     | '/admin/verifications'
+    | '/agencies/$slug'
+    | '/agencies/create'
+    | '/agency/clients'
+    | '/ai/onboarding'
+    | '/ai/portfolio-optimizer'
+    | '/ai/project-generator'
+    | '/ai/proposal-assistant'
+    | '/ai/trust-coach'
+    | '/analytics/client'
+    | '/analytics/freelancer'
     | '/applications/$id'
     | '/clients/$company'
+    | '/clients/manage'
+    | '/dashboard/agency'
     | '/dashboard/freelancer'
     | '/escrow/$id'
     | '/freelancers/$username'
+    | '/freelancers/manage'
     | '/onboarding/availability'
     | '/onboarding/categories'
     | '/onboarding/company'
@@ -688,58 +1024,88 @@ export interface FileRouteTypes {
     | '/onboarding/skills'
     | '/onboarding/team-size'
     | '/orders/$id'
+    | '/portfolio/$slug'
+    | '/portfolio/create'
     | '/projects/$slug'
     | '/projects/create'
     | '/services/$slug'
+    | '/services/create'
     | '/admin/'
+    | '/agencies/'
+    | '/ai/'
     | '/applications/'
     | '/dashboard/'
     | '/escrow/'
     | '/freelancers/'
     | '/onboarding/'
     | '/orders/'
+    | '/portfolio/'
     | '/projects/'
     | '/services/'
     | '/admin/escrow/$id'
     | '/admin/users/$id'
+    | '/portfolio/edit/$slug'
+    | '/admin/escrow/'
+    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/analytics'
     | '/checkout'
     | '/forgot-password'
     | '/login'
     | '/messages'
     | '/my-projects'
+    | '/my-services'
     | '/notifications'
+    | '/pricing'
     | '/privacy'
     | '/profile'
+    | '/promotions'
     | '/register'
     | '/reset-password'
+    | '/revenue'
+    | '/saved'
     | '/settings'
+    | '/subscription'
     | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/admin/ai'
     | '/admin/analytics'
     | '/admin/applications'
     | '/admin/audit'
     | '/admin/disputes'
-    | '/admin/escrow'
+    | '/admin/founder'
     | '/admin/moderation'
     | '/admin/orders'
     | '/admin/payments'
+    | '/admin/portfolios'
     | '/admin/projects'
     | '/admin/services'
     | '/admin/support'
     | '/admin/system'
-    | '/admin/users'
     | '/admin/verifications'
+    | '/agencies/$slug'
+    | '/agencies/create'
+    | '/agency/clients'
+    | '/ai/onboarding'
+    | '/ai/portfolio-optimizer'
+    | '/ai/project-generator'
+    | '/ai/proposal-assistant'
+    | '/ai/trust-coach'
+    | '/analytics/client'
+    | '/analytics/freelancer'
     | '/applications/$id'
     | '/clients/$company'
+    | '/clients/manage'
+    | '/dashboard/agency'
     | '/dashboard/freelancer'
     | '/escrow/$id'
     | '/freelancers/$username'
+    | '/freelancers/manage'
     | '/onboarding/availability'
     | '/onboarding/categories'
     | '/onboarding/company'
@@ -750,24 +1116,36 @@ export interface FileRouteTypes {
     | '/onboarding/skills'
     | '/onboarding/team-size'
     | '/orders/$id'
+    | '/portfolio/$slug'
+    | '/portfolio/create'
     | '/projects/$slug'
     | '/projects/create'
     | '/services/$slug'
+    | '/services/create'
     | '/admin'
+    | '/agencies'
+    | '/ai'
     | '/applications'
     | '/dashboard'
     | '/escrow'
     | '/freelancers'
     | '/onboarding'
     | '/orders'
+    | '/portfolio'
     | '/projects'
     | '/services'
     | '/admin/escrow/$id'
     | '/admin/users/$id'
+    | '/portfolio/edit/$slug'
+    | '/admin/escrow'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/agencies'
+    | '/ai'
+    | '/analytics'
     | '/applications'
     | '/checkout'
     | '/dashboard'
@@ -777,40 +1155,63 @@ export interface FileRouteTypes {
     | '/login'
     | '/messages'
     | '/my-projects'
+    | '/my-services'
     | '/notifications'
     | '/onboarding'
     | '/orders'
+    | '/portfolio'
+    | '/pricing'
     | '/privacy'
     | '/profile'
     | '/projects'
+    | '/promotions'
     | '/register'
     | '/reset-password'
+    | '/revenue'
+    | '/saved'
     | '/services'
     | '/settings'
+    | '/subscription'
     | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/admin/ai'
     | '/admin/analytics'
     | '/admin/applications'
     | '/admin/audit'
     | '/admin/disputes'
     | '/admin/escrow'
+    | '/admin/founder'
     | '/admin/moderation'
     | '/admin/orders'
     | '/admin/payments'
+    | '/admin/portfolios'
     | '/admin/projects'
     | '/admin/services'
     | '/admin/support'
     | '/admin/system'
     | '/admin/users'
     | '/admin/verifications'
+    | '/agencies/$slug'
+    | '/agencies/create'
+    | '/agency/clients'
+    | '/ai/onboarding'
+    | '/ai/portfolio-optimizer'
+    | '/ai/project-generator'
+    | '/ai/proposal-assistant'
+    | '/ai/trust-coach'
+    | '/analytics/client'
+    | '/analytics/freelancer'
     | '/applications/$id'
     | '/clients/$company'
+    | '/clients/manage'
+    | '/dashboard/agency'
     | '/dashboard/freelancer'
     | '/escrow/$id'
     | '/freelancers/$username'
+    | '/freelancers/manage'
     | '/onboarding/availability'
     | '/onboarding/categories'
     | '/onboarding/company'
@@ -821,25 +1222,37 @@ export interface FileRouteTypes {
     | '/onboarding/skills'
     | '/onboarding/team-size'
     | '/orders/$id'
+    | '/portfolio/$slug'
+    | '/portfolio/create'
     | '/projects/$slug'
     | '/projects/create'
     | '/services/$slug'
+    | '/services/create'
     | '/admin/'
+    | '/agencies/'
+    | '/ai/'
     | '/applications/'
     | '/dashboard/'
     | '/escrow/'
     | '/freelancers/'
     | '/onboarding/'
     | '/orders/'
+    | '/portfolio/'
     | '/projects/'
     | '/services/'
     | '/admin/escrow/$id'
     | '/admin/users/$id'
+    | '/portfolio/edit/$slug'
+    | '/admin/escrow/'
+    | '/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AgenciesRoute: typeof AgenciesRouteWithChildren
+  AiRoute: typeof AiRouteWithChildren
+  AnalyticsRoute: typeof AnalyticsRouteWithChildren
   ApplicationsRoute: typeof ApplicationsRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRouteWithChildren
@@ -849,22 +1262,31 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
   MyProjectsRoute: typeof MyProjectsRoute
+  MyServicesRoute: typeof MyServicesRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   OrdersRoute: typeof OrdersRouteWithChildren
+  PortfolioRoute: typeof PortfolioRouteWithChildren
+  PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
+  PromotionsRoute: typeof PromotionsRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  RevenueRoute: typeof RevenueRoute
+  SavedRoute: typeof SavedRoute
   ServicesRoute: typeof ServicesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  SubscriptionRoute: typeof SubscriptionRoute
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   VerifyOtpRoute: typeof VerifyOtpRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  AgencyClientsRoute: typeof AgencyClientsRoute
   ClientsCompanyRoute: typeof ClientsCompanyRoute
+  ClientsManageRoute: typeof ClientsManageRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -904,6 +1326,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/subscription': {
+      id: '/subscription'
+      path: '/subscription'
+      fullPath: '/subscription'
+      preLoaderRoute: typeof SubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -918,6 +1347,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/revenue': {
+      id: '/revenue'
+      path: '/revenue'
+      fullPath: '/revenue'
+      preLoaderRoute: typeof RevenueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -930,6 +1373,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/promotions': {
+      id: '/promotions'
+      path: '/promotions'
+      fullPath: '/promotions'
+      preLoaderRoute: typeof PromotionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/projects': {
@@ -953,6 +1403,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portfolio': {
+      id: '/portfolio'
+      path: '/portfolio'
+      fullPath: '/portfolio'
+      preLoaderRoute: typeof PortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orders': {
       id: '/orders'
       path: '/orders'
@@ -972,6 +1436,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-services': {
+      id: '/my-services'
+      path: '/my-services'
+      fullPath: '/my-services'
+      preLoaderRoute: typeof MyServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-projects': {
@@ -1037,6 +1508,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agencies': {
+      id: '/agencies'
+      path: '/agencies'
+      fullPath: '/agencies'
+      preLoaderRoute: typeof AgenciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -1064,6 +1556,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/'
       preLoaderRoute: typeof ProjectsIndexRouteImport
       parentRoute: typeof ProjectsRoute
+    }
+    '/portfolio/': {
+      id: '/portfolio/'
+      path: '/'
+      fullPath: '/portfolio/'
+      preLoaderRoute: typeof PortfolioIndexRouteImport
+      parentRoute: typeof PortfolioRoute
     }
     '/orders/': {
       id: '/orders/'
@@ -1107,12 +1606,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApplicationsIndexRouteImport
       parentRoute: typeof ApplicationsRoute
     }
+    '/ai/': {
+      id: '/ai/'
+      path: '/'
+      fullPath: '/ai/'
+      preLoaderRoute: typeof AiIndexRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/agencies/': {
+      id: '/agencies/'
+      path: '/'
+      fullPath: '/agencies/'
+      preLoaderRoute: typeof AgenciesIndexRouteImport
+      parentRoute: typeof AgenciesRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/services/create': {
+      id: '/services/create'
+      path: '/create'
+      fullPath: '/services/create'
+      preLoaderRoute: typeof ServicesCreateRouteImport
+      parentRoute: typeof ServicesRoute
     }
     '/services/$slug': {
       id: '/services/$slug'
@@ -1134,6 +1654,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$slug'
       preLoaderRoute: typeof ProjectsSlugRouteImport
       parentRoute: typeof ProjectsRoute
+    }
+    '/portfolio/create': {
+      id: '/portfolio/create'
+      path: '/create'
+      fullPath: '/portfolio/create'
+      preLoaderRoute: typeof PortfolioCreateRouteImport
+      parentRoute: typeof PortfolioRoute
+    }
+    '/portfolio/$slug': {
+      id: '/portfolio/$slug'
+      path: '/$slug'
+      fullPath: '/portfolio/$slug'
+      preLoaderRoute: typeof PortfolioSlugRouteImport
+      parentRoute: typeof PortfolioRoute
     }
     '/orders/$id': {
       id: '/orders/$id'
@@ -1205,6 +1739,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingAvailabilityRouteImport
       parentRoute: typeof OnboardingRoute
     }
+    '/freelancers/manage': {
+      id: '/freelancers/manage'
+      path: '/manage'
+      fullPath: '/freelancers/manage'
+      preLoaderRoute: typeof FreelancersManageRouteImport
+      parentRoute: typeof FreelancersRoute
+    }
     '/freelancers/$username': {
       id: '/freelancers/$username'
       path: '/$username'
@@ -1226,6 +1767,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardFreelancerRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/agency': {
+      id: '/dashboard/agency'
+      path: '/agency'
+      fullPath: '/dashboard/agency'
+      preLoaderRoute: typeof DashboardAgencyRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/clients/manage': {
+      id: '/clients/manage'
+      path: '/clients/manage'
+      fullPath: '/clients/manage'
+      preLoaderRoute: typeof ClientsManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clients/$company': {
       id: '/clients/$company'
       path: '/clients/$company'
@@ -1239,6 +1794,76 @@ declare module '@tanstack/react-router' {
       fullPath: '/applications/$id'
       preLoaderRoute: typeof ApplicationsIdRouteImport
       parentRoute: typeof ApplicationsRoute
+    }
+    '/analytics/freelancer': {
+      id: '/analytics/freelancer'
+      path: '/freelancer'
+      fullPath: '/analytics/freelancer'
+      preLoaderRoute: typeof AnalyticsFreelancerRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
+    '/analytics/client': {
+      id: '/analytics/client'
+      path: '/client'
+      fullPath: '/analytics/client'
+      preLoaderRoute: typeof AnalyticsClientRouteImport
+      parentRoute: typeof AnalyticsRoute
+    }
+    '/ai/trust-coach': {
+      id: '/ai/trust-coach'
+      path: '/trust-coach'
+      fullPath: '/ai/trust-coach'
+      preLoaderRoute: typeof AiTrustCoachRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/proposal-assistant': {
+      id: '/ai/proposal-assistant'
+      path: '/proposal-assistant'
+      fullPath: '/ai/proposal-assistant'
+      preLoaderRoute: typeof AiProposalAssistantRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/project-generator': {
+      id: '/ai/project-generator'
+      path: '/project-generator'
+      fullPath: '/ai/project-generator'
+      preLoaderRoute: typeof AiProjectGeneratorRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/portfolio-optimizer': {
+      id: '/ai/portfolio-optimizer'
+      path: '/portfolio-optimizer'
+      fullPath: '/ai/portfolio-optimizer'
+      preLoaderRoute: typeof AiPortfolioOptimizerRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/ai/onboarding': {
+      id: '/ai/onboarding'
+      path: '/onboarding'
+      fullPath: '/ai/onboarding'
+      preLoaderRoute: typeof AiOnboardingRouteImport
+      parentRoute: typeof AiRoute
+    }
+    '/agency/clients': {
+      id: '/agency/clients'
+      path: '/agency/clients'
+      fullPath: '/agency/clients'
+      preLoaderRoute: typeof AgencyClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agencies/create': {
+      id: '/agencies/create'
+      path: '/create'
+      fullPath: '/agencies/create'
+      preLoaderRoute: typeof AgenciesCreateRouteImport
+      parentRoute: typeof AgenciesRoute
+    }
+    '/agencies/$slug': {
+      id: '/agencies/$slug'
+      path: '/$slug'
+      fullPath: '/agencies/$slug'
+      preLoaderRoute: typeof AgenciesSlugRouteImport
+      parentRoute: typeof AgenciesRoute
     }
     '/admin/verifications': {
       id: '/admin/verifications'
@@ -1282,6 +1907,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProjectsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/portfolios': {
+      id: '/admin/portfolios'
+      path: '/portfolios'
+      fullPath: '/admin/portfolios'
+      preLoaderRoute: typeof AdminPortfoliosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/payments': {
       id: '/admin/payments'
       path: '/payments'
@@ -1301,6 +1933,13 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/admin/moderation'
       preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/founder': {
+      id: '/admin/founder'
+      path: '/founder'
+      fullPath: '/admin/founder'
+      preLoaderRoute: typeof AdminFounderRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/escrow': {
@@ -1338,6 +1977,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ai': {
+      id: '/admin/ai'
+      path: '/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AdminAiRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminUsersRoute
+    }
+    '/admin/escrow/': {
+      id: '/admin/escrow/'
+      path: '/'
+      fullPath: '/admin/escrow/'
+      preLoaderRoute: typeof AdminEscrowIndexRouteImport
+      parentRoute: typeof AdminEscrowRoute
+    }
+    '/portfolio/edit/$slug': {
+      id: '/portfolio/edit/$slug'
+      path: '/edit/$slug'
+      fullPath: '/portfolio/edit/$slug'
+      preLoaderRoute: typeof PortfolioEditSlugRouteImport
+      parentRoute: typeof PortfolioRoute
+    }
     '/admin/users/$id': {
       id: '/admin/users/$id'
       path: '/$id'
@@ -1357,10 +2024,12 @@ declare module '@tanstack/react-router' {
 
 interface AdminEscrowRouteChildren {
   AdminEscrowIdRoute: typeof AdminEscrowIdRoute
+  AdminEscrowIndexRoute: typeof AdminEscrowIndexRoute
 }
 
 const AdminEscrowRouteChildren: AdminEscrowRouteChildren = {
   AdminEscrowIdRoute: AdminEscrowIdRoute,
+  AdminEscrowIndexRoute: AdminEscrowIndexRoute,
 }
 
 const AdminEscrowRouteWithChildren = AdminEscrowRoute._addFileChildren(
@@ -1369,10 +2038,12 @@ const AdminEscrowRouteWithChildren = AdminEscrowRoute._addFileChildren(
 
 interface AdminUsersRouteChildren {
   AdminUsersIdRoute: typeof AdminUsersIdRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
 
 const AdminUsersRouteChildren: AdminUsersRouteChildren = {
   AdminUsersIdRoute: AdminUsersIdRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
 }
 
 const AdminUsersRouteWithChildren = AdminUsersRoute._addFileChildren(
@@ -1380,14 +2051,17 @@ const AdminUsersRouteWithChildren = AdminUsersRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAiRoute: typeof AdminAiRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminApplicationsRoute: typeof AdminApplicationsRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminDisputesRoute: typeof AdminDisputesRoute
   AdminEscrowRoute: typeof AdminEscrowRouteWithChildren
+  AdminFounderRoute: typeof AdminFounderRoute
   AdminModerationRoute: typeof AdminModerationRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminPortfoliosRoute: typeof AdminPortfoliosRoute
   AdminProjectsRoute: typeof AdminProjectsRoute
   AdminServicesRoute: typeof AdminServicesRoute
   AdminSupportRoute: typeof AdminSupportRoute
@@ -1398,14 +2072,17 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAiRoute: AdminAiRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminApplicationsRoute: AdminApplicationsRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminDisputesRoute: AdminDisputesRoute,
   AdminEscrowRoute: AdminEscrowRouteWithChildren,
+  AdminFounderRoute: AdminFounderRoute,
   AdminModerationRoute: AdminModerationRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminPortfoliosRoute: AdminPortfoliosRoute,
   AdminProjectsRoute: AdminProjectsRoute,
   AdminServicesRoute: AdminServicesRoute,
   AdminSupportRoute: AdminSupportRoute,
@@ -1416,6 +2093,56 @@ const AdminRouteChildren: AdminRouteChildren = {
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AgenciesRouteChildren {
+  AgenciesSlugRoute: typeof AgenciesSlugRoute
+  AgenciesCreateRoute: typeof AgenciesCreateRoute
+  AgenciesIndexRoute: typeof AgenciesIndexRoute
+}
+
+const AgenciesRouteChildren: AgenciesRouteChildren = {
+  AgenciesSlugRoute: AgenciesSlugRoute,
+  AgenciesCreateRoute: AgenciesCreateRoute,
+  AgenciesIndexRoute: AgenciesIndexRoute,
+}
+
+const AgenciesRouteWithChildren = AgenciesRoute._addFileChildren(
+  AgenciesRouteChildren,
+)
+
+interface AiRouteChildren {
+  AiOnboardingRoute: typeof AiOnboardingRoute
+  AiPortfolioOptimizerRoute: typeof AiPortfolioOptimizerRoute
+  AiProjectGeneratorRoute: typeof AiProjectGeneratorRoute
+  AiProposalAssistantRoute: typeof AiProposalAssistantRoute
+  AiTrustCoachRoute: typeof AiTrustCoachRoute
+  AiIndexRoute: typeof AiIndexRoute
+}
+
+const AiRouteChildren: AiRouteChildren = {
+  AiOnboardingRoute: AiOnboardingRoute,
+  AiPortfolioOptimizerRoute: AiPortfolioOptimizerRoute,
+  AiProjectGeneratorRoute: AiProjectGeneratorRoute,
+  AiProposalAssistantRoute: AiProposalAssistantRoute,
+  AiTrustCoachRoute: AiTrustCoachRoute,
+  AiIndexRoute: AiIndexRoute,
+}
+
+const AiRouteWithChildren = AiRoute._addFileChildren(AiRouteChildren)
+
+interface AnalyticsRouteChildren {
+  AnalyticsClientRoute: typeof AnalyticsClientRoute
+  AnalyticsFreelancerRoute: typeof AnalyticsFreelancerRoute
+}
+
+const AnalyticsRouteChildren: AnalyticsRouteChildren = {
+  AnalyticsClientRoute: AnalyticsClientRoute,
+  AnalyticsFreelancerRoute: AnalyticsFreelancerRoute,
+}
+
+const AnalyticsRouteWithChildren = AnalyticsRoute._addFileChildren(
+  AnalyticsRouteChildren,
+)
 
 interface ApplicationsRouteChildren {
   ApplicationsIdRoute: typeof ApplicationsIdRoute
@@ -1432,11 +2159,13 @@ const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
 )
 
 interface DashboardRouteChildren {
+  DashboardAgencyRoute: typeof DashboardAgencyRoute
   DashboardFreelancerRoute: typeof DashboardFreelancerRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAgencyRoute: DashboardAgencyRoute,
   DashboardFreelancerRoute: DashboardFreelancerRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
@@ -1460,11 +2189,13 @@ const EscrowRouteWithChildren =
 
 interface FreelancersRouteChildren {
   FreelancersUsernameRoute: typeof FreelancersUsernameRoute
+  FreelancersManageRoute: typeof FreelancersManageRoute
   FreelancersIndexRoute: typeof FreelancersIndexRoute
 }
 
 const FreelancersRouteChildren: FreelancersRouteChildren = {
   FreelancersUsernameRoute: FreelancersUsernameRoute,
+  FreelancersManageRoute: FreelancersManageRoute,
   FreelancersIndexRoute: FreelancersIndexRoute,
 }
 
@@ -1515,6 +2246,24 @@ const OrdersRouteChildren: OrdersRouteChildren = {
 const OrdersRouteWithChildren =
   OrdersRoute._addFileChildren(OrdersRouteChildren)
 
+interface PortfolioRouteChildren {
+  PortfolioSlugRoute: typeof PortfolioSlugRoute
+  PortfolioCreateRoute: typeof PortfolioCreateRoute
+  PortfolioIndexRoute: typeof PortfolioIndexRoute
+  PortfolioEditSlugRoute: typeof PortfolioEditSlugRoute
+}
+
+const PortfolioRouteChildren: PortfolioRouteChildren = {
+  PortfolioSlugRoute: PortfolioSlugRoute,
+  PortfolioCreateRoute: PortfolioCreateRoute,
+  PortfolioIndexRoute: PortfolioIndexRoute,
+  PortfolioEditSlugRoute: PortfolioEditSlugRoute,
+}
+
+const PortfolioRouteWithChildren = PortfolioRoute._addFileChildren(
+  PortfolioRouteChildren,
+)
+
 interface ProjectsRouteChildren {
   ProjectsSlugRoute: typeof ProjectsSlugRoute
   ProjectsCreateRoute: typeof ProjectsCreateRoute
@@ -1533,11 +2282,13 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
 
 interface ServicesRouteChildren {
   ServicesSlugRoute: typeof ServicesSlugRoute
+  ServicesCreateRoute: typeof ServicesCreateRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 const ServicesRouteChildren: ServicesRouteChildren = {
   ServicesSlugRoute: ServicesSlugRoute,
+  ServicesCreateRoute: ServicesCreateRoute,
   ServicesIndexRoute: ServicesIndexRoute,
 }
 
@@ -1548,6 +2299,9 @@ const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AgenciesRoute: AgenciesRouteWithChildren,
+  AiRoute: AiRouteWithChildren,
+  AnalyticsRoute: AnalyticsRouteWithChildren,
   ApplicationsRoute: ApplicationsRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRouteWithChildren,
@@ -1557,22 +2311,31 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
   MyProjectsRoute: MyProjectsRoute,
+  MyServicesRoute: MyServicesRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   OrdersRoute: OrdersRouteWithChildren,
+  PortfolioRoute: PortfolioRouteWithChildren,
+  PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
+  PromotionsRoute: PromotionsRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  RevenueRoute: RevenueRoute,
+  SavedRoute: SavedRoute,
   ServicesRoute: ServicesRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  SubscriptionRoute: SubscriptionRoute,
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   VerifyOtpRoute: VerifyOtpRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  AgencyClientsRoute: AgencyClientsRoute,
   ClientsCompanyRoute: ClientsCompanyRoute,
+  ClientsManageRoute: ClientsManageRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

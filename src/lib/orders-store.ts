@@ -1,12 +1,19 @@
 import type { Order } from "./mock-data";
 import { orders as mockOrders } from "./mock-data";
+import { recordConversionEvent } from "./conversion-store";
+import { recordAnalyticsEvent } from "./analytics-events-store";
+import { notifyOrderCreated } from "./notification-events";
+import { getSession } from "./auth";
 
 const STORAGE_KEY = "ishbor-user-orders";
+const EMPTY_ORDERS: Order[] = [];
 const listeners = new Set<() => void>();
 let cachedOrders: Order[] | null = null;
+let cachedStoredOrders: Order[] | null = null;
 
 function invalidateCache() {
   cachedOrders = null;
+  cachedStoredOrders = null;
 }
 
 function notify() {
@@ -20,12 +27,12 @@ export function subscribeOrders(listener: () => void) {
 }
 
 function readStored(): Order[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return EMPTY_ORDERS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Order[]) : [];
+    return raw ? (JSON.parse(raw) as Order[]) : EMPTY_ORDERS;
   } catch {
-    return [];
+    return EMPTY_ORDERS;
   }
 }
 
@@ -90,7 +97,63 @@ export function createOrder(input: NewOrderInput): Order {
   const stored = readStored();
   writeStored([order, ...stored]);
   notify();
+  const session = getSession();
+  if (session) {
+    notifyOrderCreated(session.user.id, order.title, order.id);
+  }
   return order;
+}
+
+export function readStoredOrders(): Order[] {
+  if (cachedStoredOrders === null) {
+    cachedStoredOrders = readStored();
+  }
+  return cachedStoredOrders;
+}
+
+export function getOrdersForFreelancer(username: string): Order[] {
+  return readStored().filter((o) => o.freelancerUsername === username);
+}
+
+export function getOrdersForClient(clientSlug: string, clientName?: string): Order[] {
+  return readStored().filter(
+    (o) => o.clientSlug === clientSlug || (clientName && o.client === clientName),
+  );
+}
+
+export function getOrdersForUser(userId: string, username?: string, clientSlug?: string, clientName?: string): Order[] {
+  return readStored().filter(
+    (o) =>
+      o.ownerUserId === userId ||
+      (username && o.freelancerUsername === username) ||
+      (clientSlug && o.clientSlug === clientSlug) ||
+      (clientName && o.client === clientName),
+  );
+}
+
+export function updateOrderStatus(
+  orderId: string,
+  status: Order["status"],
+  progress?: number,
+): Order | undefined {
+  const stored = readStored();
+  const idx = stored.findIndex((o) => o.id === orderId);
+  if (idx === -1) return undefined;
+  const updated: Order = {
+    ...stored[idx]!,
+    status,
+    progress: progress ?? stored[idx]!.progress,
+    completedAt: status === "completed" ? new Date().toISOString() : stored[idx]!.completedAt,
+  };
+  const next = [...stored];
+  next[idx] = updated;
+  writeStored(next);
+  notify();
+  if (status === "completed") {
+    recordConversionEvent("order_completed", orderId, updated.amount);
+    recordAnalyticsEvent({ type: "order_completed", entityId: orderId, value: updated.amount });
+  }
+  return updated;
 }
 
 export function fundOrderEscrow(orderId: string): Order | undefined {

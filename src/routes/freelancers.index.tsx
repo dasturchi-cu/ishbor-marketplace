@@ -1,0 +1,91 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { SiteNav } from "@/components/site/nav";
+import { SiteFooter } from "@/components/site/footer";
+import { FreelancerCard } from "@/components/site/cards";
+import { CardSkeleton, EmptyState } from "@/components/site/feedback";
+import { freelancers } from "@/lib/mock-data";
+import { usePageReady } from "@/hooks/use-page-ready";
+import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { filterFreelancers, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
+import { Users } from "lucide-react";
+
+export const Route = createFileRoute("/freelancers/")({
+  validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
+  head: () => ({
+    meta: [
+      { title: "Iste'dod topish — Ishbor" },
+      { name: "description", content: "Markaziy Osiyo bo'ylab tekshirilgan frilanserlar yollang." },
+    ],
+  }),
+  component: FreelancersPage,
+});
+
+const filterChips = [
+  { key: "top-rated", label: "Eng yuqori reyting" },
+  { key: "available", label: "Hozir mavjud" },
+  { key: "under-50", label: "$50/soatdan past" },
+  { key: "tashkent", label: "Tashkent" },
+  { key: "verified", label: "Shaxs tasdiqlangan" },
+  { key: "trust", label: "Yuqori ishonch" },
+];
+
+function FreelancersPage() {
+  const ready = usePageReady();
+  const search = Route.useSearch();
+  const setSearch = useMarketplaceSearch(search, "/freelancers");
+  const filtered = filterFreelancers(freelancers, search);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteNav />
+
+      <div className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+          <div className="eyebrow mb-3">Bozor · Iste'dod</div>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
+            <span className="font-serif-italic font-medium text-primary">Elita</span> Markaziy Osiyo iste'dodini yollang.
+          </h1>
+          <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+            Har bir frilanser shaxsi tasdiqlangan va kasbi tekshirilgan. Soatlik yoki belgilangan.
+          </p>
+
+          <MarketplaceToolbar
+            placeholder="Iste'dod qidirish…"
+            q={search.q ?? ""}
+            sort={search.sort ?? "newest"}
+            activeFilter={search.filter}
+            chips={filterChips}
+            resultCount={filtered.length}
+            resultLabel="frilanser"
+            onSearchChange={setSearch}
+          />
+        </div>
+      </div>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        {!ready ? (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="Frilanserlar topilmadi"
+            description="Qidiruv yoki filtrlarni o'zgartirib ko'ring."
+            action={
+              <button onClick={() => setSearch({ q: "", filter: "", sort: "newest" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                Filtrlarni tozalash
+              </button>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 stagger-children">
+            {filtered.map((f) => <FreelancerCard key={f.id} f={f} />)}
+          </div>
+        )}
+      </section>
+
+      <SiteFooter />
+    </div>
+  );
+}

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/skills")({
   head: () => ({
-    meta: [{ title: "Select skills — Ishbor" }],
+    meta: [{ title: "Ko'nikmalarni tanlang — Ishbor" }],
   }),
   component: OnboardingSkillsPage,
 });
@@ -31,11 +31,11 @@ function OnboardingSkillsPage() {
   return (
     <OnboardingLayout
       stepId="skills"
-      title="What are your skills?"
-      subtitle="Select up to 8 skills that best represent your expertise. Clients search by these."
+      title="Qanday ko'nikmalaringiz bor?"
+      subtitle="Mutaxassisligingizni eng yaxshi ifodalovchi 8 tagacha ko'nikmani tanlang. Mijozlar shu bo'yicha qidiradi."
     >
       <p className="mb-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-        {skills.length}/8 selected
+        {skills.length}/8 tanlandi
       </p>
       <div className="flex flex-wrap gap-2">
         {skillOptions.map((skill) => {
@@ -63,7 +63,7 @@ function OnboardingSkillsPage() {
         backTo="/onboarding"
         onContinue={handleContinue}
         disabled={skills.length < 2}
-        continueLabel={skills.length < 2 ? "Select at least 2 skills" : "Continue"}
+        continueLabel={skills.length < 2 ? "Kamida 2 ta ko'nikma tanlang" : "Davom etish"}
       />
     </OnboardingLayout>
   );

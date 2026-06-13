@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/industry")({
   head: () => ({
-    meta: [{ title: "Industry — Ishbor" }],
+    meta: [{ title: "Soha — Ishbor" }],
   }),
   component: OnboardingIndustryPage,
 });
@@ -24,8 +24,8 @@ function OnboardingIndustryPage() {
   return (
     <OnboardingLayout
       stepId="industry"
-      title="What industry are you in?"
-      subtitle="We'll surface freelancers with relevant experience in your sector."
+      title="Qaysi sohadasiz?"
+      subtitle="Sektoringizga mos tajribaga ega frilanserlarni ko'rsatamiz."
     >
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {industries.map((ind) => (

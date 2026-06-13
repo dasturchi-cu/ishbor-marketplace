@@ -7,7 +7,7 @@ import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/pa
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
-    meta: [{ title: "Reset password — Ishbor" }],
+    meta: [{ title: "Parolni tiklash — Ishbor" }],
   }),
   component: ResetPasswordPage,
 });
@@ -36,16 +36,16 @@ function ResetPasswordPage() {
 
   if (done) {
     return (
-      <AuthLayout title="Password updated" subtitle="Your password has been reset successfully.">
+      <AuthLayout title="Parol yangilandi" subtitle="Parolingiz muvaffaqiyatli o'zgartirildi.">
         <div className="rounded-2xl border border-success/20 bg-success/5 p-6 text-center">
           <CheckCircle2 className="mx-auto size-12 text-success" />
-          <p className="mt-4 text-sm text-muted-foreground">You can now sign in with your new password.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Endi yangi parol bilan kirishingiz mumkin.</p>
         </div>
         <Link
           to="/login"
           className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90"
         >
-          Sign in
+          Kirish
         </Link>
       </AuthLayout>
     );
@@ -53,8 +53,8 @@ function ResetPasswordPage() {
 
   return (
     <AuthLayout
-      title="Set new password"
-      subtitle="Choose a strong password you haven't used before on Ishbor."
+      title="Yangi parol o'rnatish"
+      subtitle="Ishborda ilgari ishlatmagan kuchli parol tanlang."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
@@ -62,14 +62,14 @@ function ResetPasswordPage() {
             htmlFor="new-password"
             className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
           >
-            New password
+            Yangi parol
           </label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               id="new-password"
               type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 characters"
+              placeholder="Kamida 8 belgi"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -81,6 +81,7 @@ function ResetPasswordPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
@@ -93,14 +94,14 @@ function ResetPasswordPage() {
             htmlFor="confirm-password"
             className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
           >
-            Confirm password
+            Parolni tasdiqlash
           </label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               id="confirm-password"
               type="password"
-              placeholder="Repeat password"
+              placeholder="Parolni qayta kiriting"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               required
@@ -108,11 +109,11 @@ function ResetPasswordPage() {
               className={`${authInputClass} pl-10`}
             />
           </div>
-          {mismatch && <p className="text-xs text-destructive">Passwords don&apos;t match</p>}
+          {mismatch && <p className="text-xs text-destructive">Parollar mos kelmayapti</p>}
         </div>
 
         <AuthButton type="submit" disabled={!canSubmit || loading}>
-          {loading ? "Updating…" : "Update password"}
+          {loading ? "Yangilanmoqda…" : "Parolni yangilash"}
         </AuthButton>
       </form>
     </AuthLayout>

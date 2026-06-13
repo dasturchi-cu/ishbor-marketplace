@@ -1,257 +1,948 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Clock, Plus, Shield, TrendingUp, Lock } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+
+import { useSyncExternalStore, useMemo, useEffect } from "react";
+
+import { Clock, Plus, Shield, TrendingUp, Lock, Heart, FolderOpen, Wallet, BarChart3, Users, Sparkles } from "lucide-react";
+
 import { WorkspaceShell } from "@/components/site/workspace-shell";
+import { QualitySuggestionsCard } from "@/components/quality/quality-suggestions-card";
+import { getClientQualityIssues } from "@/lib/quality-engine";
+import { OpportunityScoreCard } from "@/components/ai/opportunity-score-card";
+import { SmartMatchPanel } from "@/components/ai/smart-match-panel";
+import { matchFreelancersForClient } from "@/lib/ai-matching-store";
+import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
+
 import { GradientAvatar } from "@/components/site/avatar";
+
 import { EscrowShield, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
+
 import { PipelineEmpty } from "@/components/site/feedback";
-import { orders, escrowRecords, hiringPipeline, messages } from "@/lib/mock-data";
+
+import { orders, hiringPipeline, messages } from "@/lib/mock-data";
+
+import type { AuthUser } from "@/lib/auth";
+
+import type { EscrowWorkflow } from "@/lib/mock-data";
+
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
+
+import { getMyProjects, subscribeProjects } from "@/lib/projects-store";
+
+import { getSaved, subscribeSaved } from "@/lib/saved-store";
+
+import { getAllEscrowWorkflows, subscribeEscrow } from "@/lib/escrow-store";
+
+import { getWallet, subscribeWallet } from "@/lib/wallet-store";
+import { getProfileCompletionItems, computeProfileCompletionPercent } from "@/lib/profile-store";
+import { getClientJourney } from "@/lib/ftue-store";
+import { ProfileCompletionCard } from "@/components/trust/profile-completion-card";
+import { WelcomeBanner } from "@/components/ftue/welcome-banner";
+import { GettingStartedCard } from "@/components/ftue/getting-started-card";
+import { FeatureDiscoveryGrid } from "@/components/ftue/feature-discovery-grid";
+import { JourneyMap } from "@/components/ftue/journey-map";
+import { NextActionCard } from "@/components/ftue/next-action-card";
+import { TrustTip } from "@/components/ftue/trust-tip";
+
+
 
 export const Route = createFileRoute("/dashboard/")({
-  head: () => ({ meta: [{ title: "Client Dashboard — Ishbor" }] }),
+
+  head: () => ({ meta: [{ title: "Mijoz paneli — Ishbor" }] }),
+
   component: ClientDashboard,
+
 });
 
+
+
+const EMPTY_PROJECTS: ReturnType<typeof getMyProjects> = [];
+
+
+
+function filterClientEscrow(user: AuthUser | null, workflows: EscrowWorkflow[]) {
+
+  if (!user) return [];
+
+  return workflows.filter(
+
+    (e) => e.client === user.fullName || e.client === user.company || e.client === user.companySlug,
+
+  );
+
+}
+
+
+
+function escrowHeldAmount(escrow: EscrowWorkflow) {
+
+  return escrow.milestones
+
+    .filter((m) => m.status === "funded")
+
+    .reduce((sum, m) => sum + m.amount, 0);
+
+}
+
+
+
 function ClientDashboard() {
+
   const { user } = useAuth();
+  const { activeRole } = useActiveRole();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (activeRole === "freelancer") {
+      navigate({ to: "/dashboard/freelancer", replace: true });
+    }
+  }, [activeRole, navigate]);
+
+  useEffect(() => {
+    if (user) syncSmartNotifications(user.id);
+  }, [user?.id]);
+
+  const matchedFreelancers = user ? matchFreelancersForClient(user.id, 5) : [];
+  const userId = user?.id;
+
+
+
+  const myProjects = useSyncExternalStore(
+
+    subscribeProjects,
+
+    () => (userId ? getMyProjects(userId) : EMPTY_PROJECTS),
+
+    () => EMPTY_PROJECTS,
+
+  );
+
+  const saved = useSyncExternalStore(
+
+    subscribeSaved,
+
+    () => getSaved(userId),
+
+    () => ({ services: [], freelancers: [], projects: [], portfolios: [] }),
+
+  );
+
+  const allEscrows = useSyncExternalStore(
+    subscribeEscrow,
+    getAllEscrowWorkflows,
+    () => [] as EscrowWorkflow[],
+  );
+
+  const clientEscrows = useMemo(
+    () => filterClientEscrow(user, allEscrows),
+    [user, allEscrows],
+  );
+
+  const wallet = useSyncExternalStore(
+
+    subscribeWallet,
+
+    () => (userId ? getWallet(userId) : null),
+
+    () => null,
+
+  );
+
+
+
   const activeOrders = orders.filter((o) => o.status === "in_progress" || o.status === "review");
+
   const reviewingLeads = hiringPipeline.filter((h) => h.stage === "reviewing");
+
   const shortlistedLeads = hiringPipeline.filter((h) => h.stage === "shortlisted");
+
   const interviewLeads = hiringPipeline.filter((h) => h.stage === "interview");
+
   const offerLeads = hiringPipeline.filter((h) => h.stage === "offer");
-  const fundedEscrow = escrowRecords.filter((e) => e.status === "funded" || e.status === "released");
-  const totalEscrow = fundedEscrow.reduce((sum, e) => sum + e.amount, 0);
+
+  const activeEscrows = clientEscrows.filter((e) => e.status !== "completed" && e.status !== "released");
+
+  const totalEscrow = activeEscrows.reduce((sum, e) => sum + escrowHeldAmount(e), 0);
+
+  const fundedMilestones = activeEscrows.reduce(
+
+    (sum, e) => sum + e.milestones.filter((m) => m.status === "funded").length,
+
+    0,
+
+  );
+
+  const recentProjects = myProjects.slice(0, 4);
+
+  const activeProjectCount = myProjects.filter((p) => p.status === "published" || !p.status).length;
+
+  const savedFreelancers = saved.freelancers.length;
+
+  const lifetimeSpent = wallet?.lifetimeEarned ?? 0;
+
+  const availableBalance = wallet?.available ?? 0;
+
+
 
   return (
+
     <WorkspaceShell
-      eyebrow="Client workspace"
-      title={`Good evening, ${user?.fullName.split(" ")[0] ?? "there"}.`}
+
+      eyebrow="Mijoz ish maydoni"
+
+      title={`Xayrli kech, ${user?.fullName.split(" ")[0] ?? "do'stim"}.`}
+
       actions={
+
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+
           <Link to="/my-projects" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-5 text-sm font-semibold hover:border-primary/20 sm:w-auto">
-            My projects
+
+            Mening loyihalarim
+
           </Link>
+
           <Link to="/projects/create" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
+
             <Plus className="size-4" />
-            Post project
+
+            Loyiha joylash
+
           </Link>
+
+          <Link to="/ai" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 px-5 text-sm font-semibold text-primary hover:border-primary/40 sm:w-auto">
+
+            <Sparkles className="size-4" />
+
+            AI markaz
+
+          </Link>
+
         </div>
+
       }
+
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total spent" value="$184,200" trend="+22% YoY" />
-        <StatCard label="In escrow" value="$10,800" trend="Across 3 milestones" accent />
-        <StatCard label="Active projects" value="4" trend="2 ending soon" />
-        <StatCard label="Avg. hire time" value="1.4h" trend="Faster than 92%" />
+
+      {user && <QualitySuggestionsCard issues={getClientQualityIssues(user)} />}
+
+      {user && (
+        <div className="mt-4 space-y-4">
+          <WelcomeBanner
+            user={user}
+            roleLabel="Mijoz"
+            primaryHref="/projects/create"
+            primaryLabel="Birinchi loyihani joylash"
+            secondaryHref="/ai/onboarding"
+            secondaryLabel="Yo'riqnomani ko'rish"
+          />
+          <GettingStartedCard user={user} />
+          <NextActionCard user={user} />
+          <JourneyMap
+            stages={getClientJourney(user, myProjects.length > 0, !!user.verified)}
+            compact
+          />
+          {myProjects.length === 0 && <TrustTip topic="escrow" />}
+          {!user.verified && <TrustTip topic="verification" />}
+        </div>
+      )}
+
+      {user && (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <ProfileCompletionCard
+            percent={computeProfileCompletionPercent(user.id, "client")}
+            items={getProfileCompletionItems(user.id, "client")}
+          />
+          <FeatureDiscoveryGrid role="client" compact />
+        </div>
+      )}
+
+      {user && (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-stretch">
+          <OpportunityScoreCard user={user} />
+          <SmartMatchPanel
+            variant="freelancers"
+            title="Tavsiya etilgan frilanserlar"
+            viewAllHref="/freelancers"
+            items={matchedFreelancers}
+            emptyMessage="Hozircha tavsiya yo'q. Loyiha e'lon qiling yoki qidiruvdan foydalaning."
+            links={[
+              { label: "Loyiha generatori", to: "/ai/project-generator" },
+              { label: "AI onboarding", to: "/ai/onboarding" },
+            ]}
+          />
+        </div>
+      )}
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+        <Link to="/analytics/client" className="block">
+          <StatCard label="Analitika" value="Ko'rish" trend="Xarajat va yollash tahlili →" accent />
+        </Link>
+
+        <Link to="/clients/manage" className="block">
+          <StatCard label="Frilanserlar CRM" value="Boshqarish" trend="Yollash va aloqa tarixlari →" />
+        </Link>
+
+        <StatCard label="Jami sarflangan" value={`$${lifetimeSpent.toLocaleString()}`} trend="Platformada umumiy" />
+
+        <StatCard label="Eskrouda" value={`$${totalEscrow.toLocaleString()}`} trend={`${fundedMilestones} faol bosqich`} accent />
+
       </div>
 
-      <div className="mt-4 flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
-        <EscrowShield size="md" className="shrink-0" />
-        <span className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">$10,800</span> is securely held in escrow across 3 active milestones. Funds are released only on your approval.
-        </span>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+
+        <StatCard label="Mavjud balans" value={`$${availableBalance.toLocaleString()}`} trend="Xarajat qilishga tayyor" />
+
+        <Link to="/saved" className="block">
+
+          <StatCard label="Saqlangan frilanserlar" value={savedFreelancers.toString()} trend="Saqlanganlarni ko'rish →" />
+
+        </Link>
+
       </div>
+
+
+
+      {totalEscrow > 0 && (
+
+        <div className="mt-4 flex flex-col gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 sm:px-5">
+
+          <EscrowShield size="md" className="shrink-0" />
+
+          <span className="text-sm text-muted-foreground">
+
+            <span className="font-semibold text-foreground">${totalEscrow.toLocaleString()}</span> {fundedMilestones} faol bosqich bo'yicha eskrouda xavfsiz saqlanmoqda. Mablag'lar faqat sizning tasdig'ingizdan keyin chiqariladi.
+
+          </span>
+
+        </div>
+
+      )}
+
+
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
+
         <div className="flex flex-col gap-8">
+
           <section className="rounded-2xl border border-border bg-card">
+
             <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
-              <h2 className="font-display text-base font-semibold">Active orders</h2>
-              <Link to="/orders" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
-                View all
+
+              <h2 className="font-display text-base font-semibold">So'nggi loyihalar</h2>
+
+              <Link to="/my-projects" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                Barchasini ko'rish
+
               </Link>
+
             </div>
-            <div className="divide-y divide-border">
-              {activeOrders.map((order) => (
-                <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block p-4 transition-default hover:bg-secondary/20 sm:p-6">
-                  <div className="mb-4 flex items-center gap-3">
-                    <GradientAvatar name={order.client} hue={order.clientHue} size={40} rounded="rounded-lg" />
+
+            {recentProjects.length > 0 ? (
+
+              <div className="divide-y divide-border">
+
+                {recentProjects.map((project) => (
+
+                  <Link
+
+                    key={project.id}
+
+                    to="/projects/$slug"
+
+                    params={{ slug: project.slug }}
+
+                    className="flex items-center gap-3 p-4 transition-default hover:bg-secondary/20 sm:p-6"
+
+                  >
+
+                    <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+
+                      <FolderOpen className="size-4" />
+
+                    </div>
+
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-display text-sm font-semibold">{order.title}</div>
+
+                      <div className="truncate font-display text-sm font-semibold">{project.title}</div>
+
                       <div className="font-mono mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {order.client}
+
+                        {project.category} · {project.proposals} ta taklif
+
                       </div>
+
                     </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <OrderStatusBadge status={order.status} />
-                      {order.escrowFunded && <EscrowFundedBadge />}
+
+                    <div className="text-right">
+
+                      <div className="font-display text-sm font-semibold">${project.budget.toLocaleString()}</div>
+
+                      <div className="font-mono text-[10px] text-muted-foreground">{project.status ?? "published"}</div>
+
                     </div>
-                  </div>
-                  <div className="mb-4 h-1.5 rounded-full bg-secondary">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${order.progress}%` }}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                    <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground sm:gap-3 sm:text-[11px]">
-                      <span className="flex items-center gap-1">
-                        <Clock className="size-3" /> Due {order.dueDate}
-                      </span>
-                      <span>·</span>
-                      <span>{order.milestones.length} milestones</span>
-                    </div>
-                    <div className="font-display text-sm font-semibold">${order.amount.toLocaleString()}</div>
-                  </div>
+
+                  </Link>
+
+                ))}
+
+              </div>
+
+            ) : (
+
+              <div className="p-6 text-center text-sm text-muted-foreground">
+
+                Hali loyihalar yo'q.{" "}
+
+                <Link to="/projects/create" className="font-medium text-primary hover:underline">
+
+                  Birinchi loyihangizni joylang
+
                 </Link>
-              ))}
-            </div>
+
+              </div>
+
+            )}
+
           </section>
 
+
+
           <section className="rounded-2xl border border-border bg-card">
-            <div className="border-b border-border px-4 py-4 sm:px-6">
-              <h2 className="font-display text-base font-semibold">Hiring pipeline</h2>
+
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+
+              <h2 className="font-display text-base font-semibold">Faol buyurtmalar</h2>
+
+              <Link to="/orders" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                Barchasini ko'rish
+
+              </Link>
+
             </div>
-            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
-              {[
-                { label: "Reviewing", leads: reviewingLeads },
-                { label: "Shortlisted", leads: shortlistedLeads },
-                { label: "Interview", leads: interviewLeads },
-                { label: "Offer", leads: offerLeads },
-              ].map(({ label, leads }) => (
-                <div key={label}>
-                  <div className="mb-4 flex items-center gap-2">
-                    <h3 className="font-display text-xs font-semibold uppercase tracking-widest">{label}</h3>
-                    <span className="inline-flex size-5 items-center justify-center rounded-full bg-secondary font-mono text-[10px] font-semibold">
-                      {leads.length}
-                    </span>
+
+            <div className="divide-y divide-border">
+
+              {activeOrders.map((order) => (
+
+                <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block p-4 transition-default hover:bg-secondary/20 sm:p-6">
+
+                  <div className="mb-4 flex items-center gap-3">
+
+                    <GradientAvatar name={order.client} hue={order.clientHue} size={40} rounded="rounded-lg" />
+
+                    <div className="min-w-0 flex-1">
+
+                      <div className="truncate font-display text-sm font-semibold">{order.title}</div>
+
+                      <div className="font-mono mt-0.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+
+                        {order.client}
+
+                      </div>
+
+                    </div>
+
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+
+                      <OrderStatusBadge status={order.status} />
+
+                      {order.escrowFunded && <EscrowFundedBadge />}
+
+                    </div>
+
                   </div>
-                  <div className="space-y-3">
-                    {leads.length > 0 ? leads.map((lead) => (
-                      <HiringCard key={lead.id} lead={lead} />
-                    )) : (
-                      <PipelineEmpty label={label.toLowerCase()} />
-                    )}
+
+                  <div className="mb-4 h-1.5 rounded-full bg-secondary">
+
+                    <div
+
+                      className="h-full rounded-full bg-primary transition-all"
+
+                      style={{ width: `${order.progress}%` }}
+
+                    />
+
                   </div>
-                </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground sm:gap-3 sm:text-[11px]">
+
+                      <span className="flex items-center gap-1">
+
+                        <Clock className="size-3" /> Muddat: {order.dueDate}
+
+                      </span>
+
+                      <span>·</span>
+
+                      <span>{order.milestones.length} bosqich</span>
+
+                    </div>
+
+                    <div className="font-display text-sm font-semibold">${order.amount.toLocaleString()}</div>
+
+                  </div>
+
+                </Link>
+
               ))}
+
             </div>
+
           </section>
+
+
+
+          <section className="rounded-2xl border border-border bg-card">
+
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+
+              <h2 className="font-display text-base font-semibold">Yollash voronkasi</h2>
+
+              <Link to="/clients/manage" className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                <Users className="size-3" /> CRM ga o'tish
+
+              </Link>
+
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
+
+              {[
+
+                { label: "Ko'rib chiqilmoqda", pipelineKey: "reviewing", leads: reviewingLeads },
+
+                { label: "Tanlovga qo'yilgan", pipelineKey: "shortlisted", leads: shortlistedLeads },
+
+                { label: "Suhbat", pipelineKey: "interview", leads: interviewLeads },
+
+                { label: "Taklif", pipelineKey: "offer", leads: offerLeads },
+
+              ].map(({ label, pipelineKey, leads }) => (
+
+                <div key={pipelineKey}>
+
+                  <div className="mb-4 flex items-center gap-2">
+
+                    <h3 className="font-display text-xs font-semibold uppercase tracking-widest">{label}</h3>
+
+                    <span className="inline-flex size-5 items-center justify-center rounded-full bg-secondary font-mono text-[10px] font-semibold">
+
+                      {leads.length}
+
+                    </span>
+
+                  </div>
+
+                  <div className="space-y-3">
+
+                    {leads.length > 0 ? leads.map((lead) => (
+
+                      <HiringCard key={lead.id} lead={lead} />
+
+                    )) : (
+
+                      <PipelineEmpty label={pipelineKey} />
+
+                    )}
+
+                  </div>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          </section>
+
         </div>
+
+
 
         <div className="flex flex-col gap-8">
-          <section className="rounded-2xl border border-border bg-card">
-            <div className="border-b border-border px-4 py-4 sm:px-6">
-              <h2 className="font-display text-base font-semibold">Escrow overview</h2>
-            </div>
-            <div className="p-4 sm:p-6">
-              <div className="mb-6">
-                <div className="eyebrow">In escrow</div>
-                <div className="font-display mt-2 text-3xl font-bold">${totalEscrow.toLocaleString()}</div>
-                <div className="font-mono mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {fundedEscrow.length} active milestones
-                </div>
-              </div>
-              <div className="space-y-3">
-                {fundedEscrow.map((escrow) => (
-                  <div key={escrow.id} className="flex items-center gap-3">
-                    <div
-                      className={`size-2 flex-shrink-0 rounded-full ${
-                        escrow.status === "funded" ? "bg-primary" : "bg-success"
-                      }`}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-xs font-medium">{escrow.project}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground">{escrow.milestone}</div>
-                    </div>
-                    <div className="font-display text-right text-sm font-semibold">${escrow.amount.toLocaleString()}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 flex items-start gap-2 rounded-lg border border-border bg-surface p-3">
-                <Shield className="mt-0.5 size-4 flex-shrink-0 text-primary" />
-                <div>
-                  <div className="text-xs font-medium">Escrow protected</div>
-                  <div className="font-mono text-[10px] text-muted-foreground">
-                    All funds held securely until milestone completion.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
 
           <section className="rounded-2xl border border-border bg-card">
+
             <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
-              <h2 className="font-display text-base font-semibold">Recent messages</h2>
-              <Link to="/messages" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
-                All
+
+              <h2 className="font-display text-base font-semibold">Xarajatlar</h2>
+
+              <Link to="/wallet" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                Hamyon
+
               </Link>
+
             </div>
-            <div className="divide-y divide-border">
-              {messages.slice(0, 3).map((msg) => (
-                <Link
-                  key={msg.id}
-                  to="/messages"
-                  className="flex items-center gap-3 p-4 transition-default hover:bg-secondary/20"
-                >
-                  <div className="relative">
-                    <GradientAvatar name={msg.name} hue={msg.hue} size={36} />
-                    {msg.online && (
-                      <div className="absolute bottom-0 right-0 size-2 rounded-full bg-success ring-2 ring-card" />
-                    )}
+
+            <div className="p-4 sm:p-6">
+
+              <div className="grid gap-4 sm:grid-cols-2">
+
+                <div className="rounded-xl border border-border bg-surface p-4">
+
+                  <div className="flex items-center gap-2 eyebrow">
+
+                    <Wallet className="size-3" /> Mavjud
+
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <div className="truncate text-sm font-medium">{msg.name}</div>
-                      {msg.unread > 0 && (
-                        <span className="inline-flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary font-mono text-[10px] font-semibold text-primary-foreground">
-                          {msg.unread}
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-mono truncate text-xs text-muted-foreground">{msg.snippet}</div>
-                  </div>
-                  <div className="font-mono whitespace-nowrap text-[10px] text-muted-foreground">{msg.time}</div>
-                </Link>
-              ))}
+
+                  <div className="font-display mt-2 text-2xl font-bold">${availableBalance.toLocaleString()}</div>
+
+                </div>
+
+                <div className="rounded-xl border border-border bg-surface p-4">
+
+                  <div className="eyebrow">Umumiy sarflangan</div>
+
+                  <div className="font-display mt-2 text-2xl font-bold">${lifetimeSpent.toLocaleString()}</div>
+
+                </div>
+
+              </div>
+
+              <div className="mt-4 font-mono text-[10px] text-muted-foreground">
+
+                {activeProjectCount} ochiq loyiha · {savedFreelancers} saqlangan frilanser
+
+              </div>
+
             </div>
-            <Link
-              to="/messages"
-              className="block border-t border-border px-6 py-3 text-center text-xs font-medium text-primary transition-default hover:text-primary/80"
-            >
-              View all messages
-            </Link>
+
           </section>
+
+
+
+          <section className="rounded-2xl border border-border bg-card">
+
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+
+              <h2 className="font-display text-base font-semibold">Eskrou ko'rinishi</h2>
+
+              <Link to="/escrow" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                Barchasini ko'rish
+
+              </Link>
+
+            </div>
+
+            <div className="p-4 sm:p-6">
+
+              <div className="mb-6">
+
+                <div className="eyebrow">Eskrouda</div>
+
+                <div className="font-display mt-2 text-3xl font-bold">${totalEscrow.toLocaleString()}</div>
+
+                <div className="font-mono mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+
+                  {fundedMilestones} faol bosqich
+
+                </div>
+
+              </div>
+
+              <div className="space-y-3">
+
+                {activeEscrows.length > 0 ? activeEscrows.map((escrow) => {
+
+                  const held = escrowHeldAmount(escrow);
+
+                  if (held === 0) return null;
+
+                  return (
+
+                    <Link
+
+                      key={escrow.id}
+
+                      to="/escrow/$id"
+
+                      params={{ id: escrow.id }}
+
+                      className="flex items-center gap-3 rounded-lg transition-default hover:bg-secondary/20"
+
+                    >
+
+                      <div className="size-2 flex-shrink-0 rounded-full bg-primary" />
+
+                      <div className="min-w-0 flex-1">
+
+                        <div className="truncate text-xs font-medium">{escrow.project}</div>
+
+                        <div className="font-mono text-[10px] text-muted-foreground">{escrow.freelancer}</div>
+
+                      </div>
+
+                      <div className="font-display text-right text-sm font-semibold">${held.toLocaleString()}</div>
+
+                    </Link>
+
+                  );
+
+                }) : (
+
+                  <p className="text-sm text-muted-foreground">Hisobingizda faol eskrou yo'q.</p>
+
+                )}
+
+              </div>
+
+              <div className="mt-6 flex items-start gap-2 rounded-lg border border-border bg-surface p-3">
+
+                <Shield className="mt-0.5 size-4 flex-shrink-0 text-primary" />
+
+                <div>
+
+                  <div className="text-xs font-medium">Eskrou himoyalangan</div>
+
+                  <div className="font-mono text-[10px] text-muted-foreground">
+
+                    Barcha mablag'lar bosqich yakunlanguncha xavfsiz saqlanadi.
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
+
+
+
+          <section className="rounded-2xl border border-border bg-card">
+
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+
+              <h2 className="font-display text-base font-semibold">Saqlangan frilanserlar</h2>
+
+              <Link to="/saved" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                Barchasini ko'rish
+
+              </Link>
+
+            </div>
+
+            <div className="p-4 sm:p-6">
+
+              <div className="flex items-center gap-3">
+
+                <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
+
+                  <Heart className="size-4" />
+
+                </div>
+
+                <div>
+
+                  <div className="font-display text-2xl font-bold">{savedFreelancers}</div>
+
+                  <div className="text-xs text-muted-foreground">keyinroq uchun saqlangan frilanserlar</div>
+
+                </div>
+
+              </div>
+
+              {savedFreelancers > 0 && (
+
+                <Link
+
+                  to="/saved"
+
+                  className="mt-4 block text-center text-xs font-medium text-primary transition-default hover:text-primary/80"
+
+                >
+
+                  Saqlanganlarni ko'rish →
+
+                </Link>
+
+              )}
+
+            </div>
+
+          </section>
+
+
+
+          <section className="rounded-2xl border border-border bg-card">
+
+            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+
+              <h2 className="font-display text-base font-semibold">So'nggi xabarlar</h2>
+
+              <Link to="/messages" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
+
+                Barchasi
+
+              </Link>
+
+            </div>
+
+            <div className="divide-y divide-border">
+
+              {messages.slice(0, 3).map((msg) => (
+
+                <Link
+
+                  key={msg.id}
+
+                  to="/messages"
+
+                  className="flex items-center gap-3 p-4 transition-default hover:bg-secondary/20"
+
+                >
+
+                  <div className="relative">
+
+                    <GradientAvatar name={msg.name} hue={msg.hue} size={36} />
+
+                    {msg.online && (
+
+                      <div className="absolute bottom-0 right-0 size-2 rounded-full bg-success ring-2 ring-card" />
+
+                    )}
+
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+
+                    <div className="flex items-center gap-2">
+
+                      <div className="truncate text-sm font-medium">{msg.name}</div>
+
+                      {msg.unread > 0 && (
+
+                        <span className="inline-flex size-5 flex-shrink-0 items-center justify-center rounded-full bg-primary font-mono text-[10px] font-semibold text-primary-foreground">
+
+                          {msg.unread}
+
+                        </span>
+
+                      )}
+
+                    </div>
+
+                    <div className="font-mono truncate text-xs text-muted-foreground">{msg.snippet}</div>
+
+                  </div>
+
+                  <div className="font-mono whitespace-nowrap text-[10px] text-muted-foreground">{msg.time}</div>
+
+                </Link>
+
+              ))}
+
+            </div>
+
+            <Link
+
+              to="/messages"
+
+              className="block border-t border-border px-6 py-3 text-center text-xs font-medium text-primary transition-default hover:text-primary/80"
+
+            >
+
+              Barcha xabarlarni ko'rish
+
+            </Link>
+
+          </section>
+
         </div>
+
       </div>
+
     </WorkspaceShell>
+
   );
+
 }
+
+
 
 function StatCard({ label, value, trend, accent }: { label: string; value: string; trend: string; accent?: boolean }) {
+
   return (
+
     <div className={`rounded-xl border bg-card p-4 transition-default hover:border-primary/20 hover:bg-surface ${accent ? "border-primary/20 bg-primary/5" : "border-border"}`}>
+
       <div className="flex items-center gap-2 eyebrow">
+
         {accent && <Lock className="size-3 text-primary" />}
+
         {label}
+
       </div>
+
       <div className="font-display mt-2 text-3xl font-bold tracking-tight">{value}</div>
+
       <div className="font-mono mt-1 inline-flex items-center gap-1 text-[11px] text-success">
+
         <TrendingUp className="size-3" /> {trend}
+
       </div>
+
     </div>
+
   );
+
 }
 
+
+
 function HiringCard({ lead }: { lead: (typeof hiringPipeline)[number] }) {
+
   return (
+
     <Link to="/freelancers/$username" params={{ username: lead.username }} className="block rounded-lg border border-border bg-surface p-3 transition-default hover:border-primary/20">
+
       <div className="mb-2 flex items-center gap-2">
+
         <GradientAvatar name={lead.name} hue={lead.hue} size={28} rounded="rounded-md" />
+
         <div className="min-w-0 flex-1">
+
           <div className="truncate text-xs font-semibold leading-snug">{lead.name}</div>
+
         </div>
+
       </div>
+
       <div className="mb-2">
+
         <div className="font-mono truncate text-[9px] uppercase tracking-widest text-muted-foreground">{lead.title}</div>
+
       </div>
+
       <div className="flex items-center justify-between">
-        <div className="font-display text-xs font-semibold">${lead.rate}/hr</div>
+
+        <div className="font-display text-xs font-semibold">${lead.rate}/soat</div>
+
         <div className="font-mono flex items-center gap-0.5 text-[9px] text-muted-foreground">
+
           <span>★</span>
+
           <span>{lead.rating.toFixed(2)}</span>
+
         </div>
+
       </div>
+
     </Link>
+
   );
+
 }
+

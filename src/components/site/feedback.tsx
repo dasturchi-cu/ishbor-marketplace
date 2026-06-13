@@ -7,7 +7,7 @@ export function LoadingSpinner({ className, size = "md" }: { className?: string;
   return (
     <span
       role="status"
-      aria-label="Loading"
+      aria-label="Yuklanmoqda"
       className={cn(
         "inline-block animate-spin rounded-full border-primary/30 border-t-primary",
         sizes[size],
@@ -52,15 +52,21 @@ export function CardSkeleton({ className }: { className?: string }) {
 
 export function ServiceCardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card" aria-hidden>
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card" aria-hidden>
       <Skeleton className="aspect-[5/3] w-full rounded-none" />
-      <div className="space-y-3 p-4">
-        <div className="flex items-center gap-2">
-          <Skeleton className="size-5 rounded-full" />
+      <div className="flex flex-1 flex-col space-y-3 p-4">
+        <div className="flex items-center gap-2.5">
+          <Skeleton className="size-7 rounded-lg" />
           <Skeleton className="h-3 w-24" />
         </div>
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-9 w-full rounded-xl" />
+      </div>
+      <div className="flex gap-2 border-t border-border p-3">
+        <Skeleton className="h-10 flex-1 rounded-lg" />
+        <Skeleton className="h-10 flex-1 rounded-lg" />
+        <Skeleton className="h-10 flex-1 rounded-lg" />
       </div>
     </div>
   );
@@ -69,7 +75,7 @@ export function ServiceCardSkeleton() {
 export function MarketplaceGridSkeleton({ count = 6, variant = "card" }: { count?: number; variant?: "card" | "service" }) {
   const Item = variant === "service" ? ServiceCardSkeleton : CardSkeleton;
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Loading content">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-label="Kontent yuklanmoqda">
       {Array.from({ length: count }).map((_, i) => (
         <Item key={i} />
       ))}
@@ -148,7 +154,7 @@ export function InlineBanner({
   children,
   className,
 }: {
-  variant?: "info" | "success" | "warning";
+  variant?: "info" | "success" | "warning" | "error";
   icon?: LucideIcon;
   children: ReactNode;
   className?: string;
@@ -157,11 +163,13 @@ export function InlineBanner({
     info: "border-primary/20 bg-primary/5 text-foreground",
     success: "border-success/20 bg-success/5 text-foreground",
     warning: "border-warning/20 bg-warning/8 text-foreground",
+    error: "border-destructive/20 bg-destructive/5 text-foreground",
   };
   const iconStyles = {
     info: "text-primary",
     success: "text-success",
     warning: "text-warning",
+    error: "text-destructive",
   };
   return (
     <div className={cn("flex items-start gap-3 rounded-xl border px-4 py-3 text-sm", styles[variant], className)}>
@@ -171,10 +179,16 @@ export function InlineBanner({
   );
 }
 
-export function PipelineEmpty({ label }: { label: string }) {
+export function confirmDestructive(message: string): boolean {
+  if (typeof window === "undefined") return false;
+  return window.confirm(message);
+}
+
+export function PipelineEmpty({ label, action }: { label: string; action?: ReactNode }) {
   return (
     <div className="rounded-lg border border-dashed border-border bg-surface/50 px-3 py-6 text-center">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">No {label} yet</p>
+      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Hali {label} yo'q</p>
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }

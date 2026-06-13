@@ -1,12 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
-import { Star, Clock, Check, ChevronRight, Users, ShieldCheck, MessageSquare, Heart, Share2, ShoppingCart } from "lucide-react";
+import { Star, Clock, Check, ChevronRight, Users, ShieldCheck, MessageSquare, Share2, ShoppingCart, Lock, Repeat2 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ServiceCard } from "@/components/site/cards";
-import { SellerTrustBar, EscrowShield, VerifiedIdentityBadge } from "@/components/site/trust";
+import { SellerTrustBar, TrustGuaranteeCard } from "@/components/site/trust";
+import { SaveButtonInline } from "@/components/site/save-button";
 import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { ServiceGallery } from "@/components/site/service-detail/gallery";
 import { PackageCard, PackageComparison } from "@/components/site/service-detail/package-card";
@@ -18,31 +19,55 @@ import {
   getServiceReviews,
   getSimilarServices,
 } from "@/lib/mock-data";
+import { getServiceBySlug } from "@/lib/services-store";
+import { applyLiveServiceMetrics } from "@/lib/growth-metrics";
+import { recordServiceView } from "@/lib/analytics-utils";
+import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
+import { useAuth } from "@/hooks/use-auth";
+import { isFeaturedActive } from "@/lib/featured-store";
+import { getSession } from "@/lib/auth";
+import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/services/$slug")({
   loader: ({ params }) => {
-    const raw = services.find((x) => x.slug === params.slug);
+    const stored = getServiceBySlug(params.slug);
+    const raw = stored ?? services.find((x) => x.slug === params.slug);
     if (!raw) throw notFound();
-    const service = enrichService(raw);
+    const session = typeof window !== "undefined" ? getSession() : null;
+    const status = stored?.status ?? "published";
+    const isOwner = !!(session && stored?.ownerUserId === session.user.id);
+    if (status !== "published" && !isOwner) throw notFound();
+    const service = applyLiveServiceMetrics(enrichService(raw));
     const serviceReviews = getServiceReviews(params.slug);
     const similarServices = getSimilarServices(params.slug);
     return { service, serviceReviews, similarServices };
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.service?.title ?? "Service"} — Ishbor` },
+      { title: `${loaderData?.service?.title ?? "Xizmat"} — Ishbor` },
       { name: "description", content: loaderData?.service?.description ?? "" },
     ],
   }),
-  notFoundComponent: () => <div className="p-8">Service not found</div>,
-  errorComponent: ({ error }) => <div className="p-8">{error.message}</div>,
+  notFoundComponent: () => (
+    <EntityNotFound
+      title="Xizmat topilmadi"
+      description="Bu xizmat mavjud emas, arxivlangan yoki hali e'lon qilinmagan."
+      backTo="/services"
+      backLabel="Xizmatlarni ko'rish"
+    />
+  ),
   component: ServiceDetail,
 });
 
 function ServiceDetail() {
   const { service, serviceReviews, similarServices } = Route.useLoaderData();
-  const [saved, setSaved] = useState(false);
+  const { user } = useAuth();
   const defaultPkg = service.packages.find((p) => p.popular)?.tier.toLowerCase() ?? "premium";
+  const isOwner = user?.username === service.sellerUsername;
+
+  useEffect(() => {
+    recordServiceView(service.slug, service.sellerUsername);
+  }, [service.slug, service.sellerUsername]);
 
   const handleShare = async () => {
     const url = `${window.location.origin}/services/${service.slug}`;
@@ -51,167 +76,183 @@ function ServiceDetail() {
       return;
     }
     await navigator.clipboard.writeText(url);
-    toast.success("Service link copied");
+    toast.success("Xizmat havolasi nusxalandi");
   };
 
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <nav className="font-mono mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Link to="/services">Services</Link>
-          <ChevronRight className="size-3" />
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+        <nav className="font-mono mb-5 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+          <Link to="/services" className="transition-default hover:text-primary">Xizmatlar</Link>
+          <ChevronRight className="size-3 opacity-50" />
           <span>{service.category}</span>
-          <ChevronRight className="size-3" />
+          <ChevronRight className="size-3 opacity-50" />
           <span className="line-clamp-1 text-foreground">{service.title}</span>
         </nav>
 
-        <ConversionFlowBanner
-          title="Client hiring path"
-          steps={CLIENT_HIRE_FLOW}
-          currentStep="service"
-          nextHint="Order this service to fund escrow-protected work. Payment is released only when you approve delivery."
-          className="mb-8"
-        />
-
-        <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
-          <div>
-            <h1 className="font-display max-w-2xl text-balance text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
-              {service.title}
-            </h1>
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
-              <Link
-                to="/freelancers/$username"
-                params={{ username: service.sellerUsername }}
-                className="flex items-center gap-2 transition-default hover:opacity-80"
-              >
-                <GradientAvatar name={service.seller} hue={service.sellerHue} size={28} />
-                <span className="font-medium">{service.seller}</span>
-              </Link>
-              <div className="inline-flex items-center gap-1 text-muted-foreground">
-                <Star className="size-3.5 fill-gold text-gold" />
-                <span className="font-mono text-foreground">{service.rating.toFixed(2)}</span>
-                <span>({service.reviews} reviews)</span>
-              </div>
-              <div className="inline-flex items-center gap-1 text-muted-foreground">
-                <Clock className="size-3.5" />
-                {service.delivery} delivery
-              </div>
-              {service.inProgress > 0 && (
-                <div className="inline-flex items-center gap-1 text-muted-foreground">
-                  <Users className="size-3.5" />
-                  {service.inProgress} in progress
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-10">
+          <div className="space-y-8">
+            {/* Service hero */}
+            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_20px_60px_-24px_oklch(0.546_0.185_257/0.14)]">
+              <div className="p-6 sm:p-8">
+                <div className="font-mono inline-flex rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+                  {service.category}
                 </div>
-              )}
+                <h1 className="font-display mt-4 max-w-3xl text-balance text-2xl font-extrabold tracking-tight sm:text-3xl lg:text-[2rem] lg:leading-tight">
+                  {service.title}
+                </h1>
+
+                <div className="mt-5 flex flex-wrap items-center gap-2.5 text-sm">
+                  <Link
+                    to="/freelancers/$username"
+                    params={{ username: service.sellerUsername }}
+                    className="inline-flex items-center gap-2.5 rounded-full border border-border bg-secondary/40 py-1.5 pl-1.5 pr-3.5 transition-default hover:border-primary/25 hover:bg-primary/[0.04]"
+                  >
+                    <GradientAvatar name={service.seller} hue={service.sellerHue} size={32} rounded="rounded-full" />
+                    <span className="font-medium">{service.seller}</span>
+                  </Link>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1.5 text-muted-foreground">
+                    <Star className="size-3.5 fill-gold text-gold" />
+                    <span className="font-mono font-semibold text-foreground">{service.rating.toFixed(2)}</span>
+                    <span>({service.reviews})</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1.5 text-muted-foreground">
+                    <Clock className="size-3.5" />
+                    {service.delivery}
+                  </span>
+                  {service.inProgress > 0 && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/60 px-3 py-1.5 text-muted-foreground">
+                      <Users className="size-3.5" />
+                      {service.inProgress} jarayonda
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                  <Link
+                    to="/checkout"
+                    search={{
+                      type: "service" as const,
+                      service: service.slug,
+                      package: defaultPkg as "essential" | "premium" | "enterprise",
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
+                  >
+                    <ShoppingCart className="size-4" /> Hozir buyurtma berish
+                  </Link>
+                  <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-1 sm:max-w-md">
+                    <Link
+                      to="/messages"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm font-medium transition-default hover:border-primary/25 focus-ring"
+                    >
+                      <MessageSquare className="size-4" /> Bog'lanish
+                    </Link>
+                    <SaveButtonInline type="service" id={service.slug} />
+                    <button
+                      type="button"
+                      onClick={handleShare}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-sm font-medium transition-default hover:border-primary/25 focus-ring"
+                    >
+                      <Share2 className="size-4" />
+                      <span className="hidden sm:inline">Ulashish</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-border px-6 py-5 sm:px-8">
+                <SellerTrustBar
+                  level={service.sellerLevel}
+                  identityVerified={service.sellerIdentityVerified}
+                  successScore={service.sellerSuccessScore}
+                  completionRate={service.sellerCompletionRate}
+                  onTime={service.sellerOnTime}
+                  responseTime={service.sellerResponseTime}
+                  repeatClients={service.sellerRepeatClients}
+                  totalEarned={service.sellerTotalEarned}
+                />
+              </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Link
-                to="/checkout"
-                search={{
-                  type: "service" as const,
-                  service: service.slug,
-                  package: defaultPkg as "essential" | "premium" | "enterprise",
-                }}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] transition-default hover:opacity-90 focus-ring"
-              >
-                <ShoppingCart className="size-4" /> Order now
-              </Link>
-              <Link
-                to="/messages"
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
-              >
-                <MessageSquare className="size-4" /> Contact freelancer
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setSaved((v) => !v);
-                  toast.success(saved ? "Removed from saved" : "Service saved");
-                }}
-                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-default focus-ring ${
-                  saved ? "border-primary/30 bg-primary/5 text-primary" : "border-border hover:border-primary/20"
-                }`}
-              >
-                <Heart className={`size-4 ${saved ? "fill-primary" : ""}`} /> Save service
-              </button>
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
-              >
-                <Share2 className="size-4" /> Share service
-              </button>
-            </div>
-
-            <div className="mt-5">
-              <SellerTrustBar
-                level={service.sellerLevel}
-                identityVerified={service.sellerIdentityVerified}
-                successScore={service.sellerSuccessScore}
-                completionRate={service.sellerCompletionRate}
-                onTime={service.sellerOnTime}
-                responseTime={service.sellerResponseTime}
-                repeatClients={service.sellerRepeatClients}
-                totalEarned={service.sellerTotalEarned}
-              />
-            </div>
-
-            <div className="mt-6">
+            <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
               <ServiceGallery images={service.gallery} hue={service.hue} />
             </div>
 
-            {/* Trust indicators */}
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="flex items-center gap-2 rounded-xl border border-success/15 bg-success/5 px-3 py-2.5 text-sm">
-                <EscrowShield size="sm" />
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <TrustGuaranteeCard
+                icon={Lock}
+                label="Eskrou himoyalangan"
+                detail="Tasdiqdan keyin mablag' chiqariladi"
+                tone="primary"
+                layout="inline"
+              />
               {service.sellerIdentityVerified && (
-                <div className="flex items-center gap-2 rounded-xl border border-success/15 bg-success/5 px-3 py-2.5 text-sm">
-                  <VerifiedIdentityBadge />
-                </div>
+                <TrustGuaranteeCard
+                  icon={ShieldCheck}
+                  label="Shaxs tasdiqlangan"
+                  detail="Davlat ID tasdiqlangan"
+                  tone="success"
+                  layout="inline"
+                />
               )}
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-primary/8 px-3 py-2.5 text-sm text-primary">
-                <Clock className="size-4" /> Responds {service.sellerResponseTime}
-              </div>
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-primary/8 px-3 py-2.5 text-sm text-primary">
-                <ShieldCheck className="size-4" /> {service.sellerRepeatClients}% repeat clients
-              </div>
+              <TrustGuaranteeCard
+                icon={Clock}
+                label={`Javob beradi ${service.sellerResponseTime}`}
+                detail="O'rtacha javob vaqti"
+                tone="neutral"
+                layout="inline"
+              />
+              <TrustGuaranteeCard
+                icon={Repeat2}
+                label={`${service.sellerRepeatClients}% takroriy`}
+                detail="Mijozlar qayta yollaydi"
+                tone="neutral"
+                layout="inline"
+              />
             </div>
 
-            <section className="mt-12">
-              <h2 className="font-display mb-4 text-2xl font-bold tracking-tight">About this service</h2>
-              <p className="leading-relaxed text-foreground/85">{service.description}</p>
-              <p className="mt-4 leading-relaxed text-foreground/85">{service.descriptionExtended}</p>
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="font-display text-xl font-bold tracking-tight">Bu xizmat haqida</h2>
+              <p className="mt-4 max-w-prose leading-relaxed text-foreground/85">{service.description}</p>
+              <p className="mt-4 max-w-prose leading-relaxed text-foreground/85">{service.descriptionExtended}</p>
 
-              <h3 className="font-display mt-10 text-lg font-bold">What&apos;s included</h3>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              <h3 className="font-display mt-8 text-lg font-bold">What&apos;s included</h3>
+              <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
                 {service.included.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm">
-                    <Check className="size-4 text-primary" /> {item}
+                  <li key={item} className="flex items-center gap-2.5 rounded-lg border border-border/60 bg-secondary/20 px-3 py-2.5 text-sm">
+                    <Check className="size-4 shrink-0 text-primary" strokeWidth={2.5} /> {item}
                   </li>
                 ))}
               </ul>
             </section>
 
-            <section className="mt-12">
-              <h2 className="font-display mb-4 text-2xl font-bold tracking-tight">Compare packages</h2>
-              <PackageComparison packages={service.packages} />
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="font-display text-xl font-bold tracking-tight">Paketlarni solishtirish</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Vaqt va byudjetingizga mos doirani tanlang</p>
+              <div className="mt-5">
+                <PackageComparison packages={service.packages} serviceSlug={service.slug} />
+              </div>
             </section>
 
-            <section className="mt-12">
-              <h2 className="font-display mb-4 text-2xl font-bold tracking-tight">Frequently asked questions</h2>
-              <FaqSection faqs={service.faqs} />
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="font-display text-xl font-bold tracking-tight">Ko'p so'raladigan savollar</h2>
+              <div className="mt-5">
+                <FaqSection faqs={service.faqs} />
+              </div>
             </section>
 
-            <section className="mt-12 border-t border-border pt-8">
-              <h2 className="font-display mb-6 text-2xl font-bold tracking-tight">Reviews</h2>
-              <ServiceReviews
-                reviews={serviceReviews}
-                rating={service.rating}
-                totalReviews={service.reviews}
-              />
+            <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
+              <h2 className="font-display text-xl font-bold tracking-tight">Sharhlar</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{service.reviews} tasdiqlangan mijoz sharhi</p>
+              <div className="mt-5">
+                <ServiceReviews
+                  reviews={serviceReviews}
+                  rating={service.rating}
+                  totalReviews={service.reviews}
+                />
+              </div>
             </section>
           </div>
 
@@ -222,33 +263,57 @@ function ServiceDetail() {
               queuePosition={service.queuePosition}
             />
 
-            <div className="rounded-xl border border-primary/20 bg-primary/8 p-5">
-              <h4 className="text-sm font-semibold">Your money is safe</h4>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Payment is held in escrow and only released when you approve the delivered work. Full refund if
-                the seller fails to deliver on time.
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg border border-border bg-background p-2">
-                  <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Queue</div>
-                  <div className="font-mono text-sm font-semibold">{service.queuePosition} ahead</div>
+            <ConversionFlowBanner
+              title="Mijoz yollash yo'li"
+              steps={CLIENT_HIRE_FLOW}
+              currentStep="service"
+              nextHint="Eskrou himoyalangan ish uchun bu xizmatni buyurtma qiling."
+              variant="sidebar"
+            />
+
+            {isOwner && (
+              <FeaturedPurchaseCard
+                target={{ type: "service", slug: service.slug, title: service.title }}
+                featured={isFeaturedActive(service.featured, service.featuredUntil)}
+                featuredUntil={service.featuredUntil}
+              />
+            )}
+
+            <div className="overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] via-card to-card">
+              <div className="border-b border-primary/10 px-5 py-4">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="size-4 text-primary" />
+                  <h4 className="text-sm font-semibold">Pulingiz xavfsiz</h4>
                 </div>
-                <div className="rounded-lg border border-border bg-background p-2">
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  To'lov eskrouda saqlanadi va faqat yetkazilgan ishni tasdiqlaganingizda chiqariladi. To'liq qaytarish, agar
+                  sotuvchi vaqtida yetkaza olmasa.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 divide-x divide-border/80">
+                <div className="px-5 py-4">
+                  <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Navbat</div>
+                  <div className="font-display mt-1 text-lg font-bold">{service.queuePosition} oldinda</div>
+                </div>
+                <div className="px-5 py-4">
                   <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                    Resolution
+                    Hal qilish
                   </div>
-                  <div className="font-mono text-sm font-semibold">&lt; 24h</div>
+                  <div className="font-display mt-1 text-lg font-bold">&lt; 24h</div>
                 </div>
               </div>
             </div>
           </aside>
         </div>
 
-        <section className="mt-20 border-t border-border pt-12">
-          <h2 className="font-display mb-6 text-2xl font-bold tracking-tight">Similar services</h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+        <section className="mt-16 overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="border-b border-border bg-gradient-to-r from-primary/[0.06] via-secondary/30 to-transparent px-6 py-6 sm:px-8">
+            <h2 className="font-display text-xl font-bold tracking-tight">O'xshash xizmatlar</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Bo'limidagi boshqa variantlar {service.category}</p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-2 sm:p-8 lg:grid-cols-4 stagger-children">
             {similarServices.map((s) => (
-              <ServiceCard key={s.id} s={s} />
+              <ServiceCard key={s.id} s={s} compact />
             ))}
           </div>
         </section>
@@ -256,7 +321,7 @@ function ServiceDetail() {
 
       <SiteFooter />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-card/95 p-3 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-card/95 p-3 backdrop-blur-md lg:hidden">
         <Link
           to="/checkout"
           search={{
@@ -264,13 +329,13 @@ function ServiceDetail() {
             service: service.slug,
             package: defaultPkg as "essential" | "premium" | "enterprise",
           }}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground focus-ring"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.4)] focus-ring"
         >
-          <ShoppingCart className="size-4" /> Order now
+          <ShoppingCart className="size-4" /> Hozir buyurtma berish
         </Link>
         <Link
           to="/messages"
-          className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2.5 text-sm font-medium focus-ring"
+          className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-3 text-sm font-medium focus-ring"
         >
           <MessageSquare className="size-4" />
         </Link>

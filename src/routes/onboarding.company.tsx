@@ -7,7 +7,7 @@ import { loadOnboardingState, saveOnboardingState } from "@/lib/auth-constants";
 
 export const Route = createFileRoute("/onboarding/company")({
   head: () => ({
-    meta: [{ title: "Company — Ishbor" }],
+    meta: [{ title: "Kompaniya — Ishbor" }],
   }),
   component: OnboardingCompanyPage,
 });
@@ -25,16 +25,16 @@ function OnboardingCompanyPage() {
   return (
     <OnboardingLayout
       stepId="company"
-      title="What's your company name?"
-      subtitle="This appears on your job posts and helps freelancers understand who they're working with."
+      title="Kompaniyangiz nomi nima?"
+      subtitle="Bu nom ish e'lonlaringizda ko'rinadi va frilanserlar kim bilan ishlayotganini tushunishiga yordam beradi."
     >
       <AuthField
-        label="Company name"
+        label="Kompaniya nomi"
         value={company}
         onChange={(e) => setCompany(e.target.value)}
         icon={<Building2 className="size-4" />}
         placeholder="Asaka Capital"
-        hint="Use your legal or trading name as clients will see it."
+        hint="Mijozlar ko'radigan rasmiy yoki savdo nomini kiriting."
       />
 
       <OnboardingNav

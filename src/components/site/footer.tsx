@@ -3,27 +3,31 @@ import { Logo } from "./logo";
 
 const cols = [
   {
-    title: "Marketplace",
+    title: "Bozor",
     links: [
-      { to: "/services", label: "Browse services" },
-      { to: "/freelancers", label: "Browse talent" },
-      { to: "/projects", label: "Browse projects" },
+      { to: "/services", label: "Xizmatlarni ko'rish" },
+      { to: "/freelancers", label: "Mutaxassislarni ko'rish" },
+      { to: "/projects", label: "Loyihalarni ko'rish" },
+      { to: "/agencies", label: "Agentliklarni ko'rish" },
     ],
   },
   {
-    title: "Work",
+    title: "Ish",
     links: [
-      { to: "/dashboard", label: "Client dashboard" },
-      { to: "/dashboard/freelancer", label: "Freelancer dashboard" },
-      { to: "/wallet", label: "Wallet & escrow" },
+      { to: "/dashboard", label: "Mijoz boshqaruv paneli" },
+      { to: "/dashboard/freelancer", label: "Frilanser boshqaruv paneli" },
+      { to: "/wallet", label: "Hamyon va eskrou" },
+      { to: "/pricing", label: "Tariflar" },
+      { to: "/subscription", label: "Obuna boshqaruvi" },
+      { to: "/promotions", label: "Rivojlantirish va kreditlar" },
     ],
   },
   {
-    title: "Company",
+    title: "Kompaniya",
     links: [
-      { to: "/", label: "About" },
-      { to: "/", label: "Press" },
-      { to: "/", label: "Careers" },
+      { to: "/terms", label: "Biz haqimizda" },
+      { to: "/privacy", label: "Maxfiylik" },
+      { to: "/register", label: "Ishborda qo'shilish" },
     ],
   },
 ];
@@ -36,14 +40,13 @@ export function SiteFooter() {
           <div className="max-w-sm space-y-3">
             <Logo />
             <p className="text-sm leading-relaxed text-muted-foreground">
-              The premium marketplace for Central Asia's independent
-              creators, engineers, and strategists. Secured by escrow, paid in
-              UZS or USD.
+              Markaziy Osiyoning mustaqil ijodkorlari, muhandislari va strateglari
+              uchun premium bozor. Eskrou himoyasi, UZS yoki USD da to'lov.
             </p>
             <div className="flex items-center gap-2">
               <span className="font-mono inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
                 <span className="size-1.5 rounded-full bg-success animate-pulse-subtle" />
-                All systems normal
+                Barcha tizimlar normal
               </span>
             </div>
           </div>
@@ -70,13 +73,13 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row sm:items-center">
-          <div>(c) 2026 Ishbor Marketplace · Tashkent, Uzbekistan</div>
+          <div>(c) 2026 Ishbor Marketplace · Toshkent, O'zbekiston</div>
           <div className="flex items-center gap-5">
             <Link to="/terms" className="transition-default hover:text-foreground">
-              Terms of trade
+              Savdo shartlari
             </Link>
             <Link to="/privacy" className="transition-default hover:text-foreground">
-              Privacy
+              Maxfiylik
             </Link>
             <span className="font-mono">UZ · EN · RU</span>
           </div>

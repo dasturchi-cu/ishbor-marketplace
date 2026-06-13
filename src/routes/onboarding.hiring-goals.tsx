@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/hiring-goals")({
   head: () => ({
-    meta: [{ title: "Hiring goals — Ishbor" }],
+    meta: [{ title: "Yollash maqsadlari — Ishbor" }],
   }),
   component: OnboardingHiringGoalsPage,
 });
@@ -31,12 +31,12 @@ function OnboardingHiringGoalsPage() {
   return (
     <OnboardingLayout
       stepId="hiring-goals"
-      title="What are your hiring goals?"
-      subtitle="Select up to 4 goals. We'll personalize your feed, recommendations, and project templates."
+      title="Yollash maqsadlaringiz qanday?"
+      subtitle="4 tagacha maqsad tanlang. Lentangiz, tavsiyalar va loyiha shablonlarini shunga moslashtiramiz."
     >
       <div className="mb-4 flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         <Target className="size-3.5 text-primary" />
-        {goals.length}/4 selected
+        {goals.length}/4 tanlandi
       </div>
       <div className="space-y-2">
         {hiringGoalOptions.map((goal) => {
@@ -73,7 +73,7 @@ function OnboardingHiringGoalsPage() {
       <OnboardingNav
         backTo="/onboarding/team-size"
         onContinue={handleContinue}
-        continueLabel="Finish setup"
+        continueLabel="Sozlashni yakunlash"
         disabled={goals.length < 1}
       />
     </OnboardingLayout>

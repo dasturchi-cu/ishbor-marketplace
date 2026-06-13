@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/team-size")({
   head: () => ({
-    meta: [{ title: "Team size — Ishbor" }],
+    meta: [{ title: "Jamoa hajmi — Ishbor" }],
   }),
   component: OnboardingTeamSizePage,
 });
@@ -25,12 +25,12 @@ function OnboardingTeamSizePage() {
   return (
     <OnboardingLayout
       stepId="team-size"
-      title="How large is your team?"
-      subtitle="Helps us recommend the right engagement models and talent pools."
+      title="Jamoangiz qanchalik katta?"
+      subtitle="To'g'ri hamkorlik modellari va mutaxassislar bazasini tavsiya qilishimizga yordam beradi."
     >
       <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
         <Users className="size-4 text-primary" />
-        Select your organization size
+        Tashkilotingiz hajmini tanlang
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {teamSizes.map((size) => (

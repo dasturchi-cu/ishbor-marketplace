@@ -43,7 +43,7 @@ export function AdminActionDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirm",
+  confirmLabel = "Tasdiqlash",
   variant = "default",
   action,
   target,
@@ -91,7 +91,7 @@ export function AdminActionDialog({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
+            Bekor qilish
           </Button>
           <Button variant={variant === "destructive" ? "destructive" : "default"} onClick={handleConfirm} disabled={loading}>
             {confirmLabel}

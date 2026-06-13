@@ -23,7 +23,7 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleButton({ label = "Continue with Google", onClick }: { label?: string; onClick?: () => void }) {
+export function GoogleButton({ label = "Google orqali davom etish", onClick }: { label?: string; onClick?: () => void }) {
   return (
     <AuthButton type="button" variant="secondary" onClick={onClick}>
       <GoogleIcon />

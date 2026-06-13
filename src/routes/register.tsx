@@ -8,28 +8,30 @@ import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/password-strength";
 import { saveOnboardingState, type UserType } from "@/lib/auth-constants";
 import { loginWithCredentials } from "@/lib/auth";
+import { applyReferralCode } from "@/lib/referral-store";
 import { cn } from "@/lib/utils";
 
 type RegisterSearch = {
   type?: UserType;
+  ref?: string;
 };
 
 export const Route = createFileRoute("/register")({
   validateSearch: (search: Record<string, unknown>): RegisterSearch => {
-    if (search.type === "client" || search.type === "freelancer") {
-      return { type: search.type };
-    }
-    return {};
+    const result: RegisterSearch = {};
+    if (search.type === "client" || search.type === "freelancer") result.type = search.type;
+    if (typeof search.ref === "string") result.ref = search.ref;
+    return result;
   },
   head: () => ({
-    meta: [{ title: "Create account — Ishbor" }, { name: "description", content: "Join Ishbor as a client or freelancer" }],
+    meta: [{ title: "Hisob yaratish — Ishbor" }, { name: "description", content: "Ishbor'ga mijoz yoki frilanser sifatida qo'shiling" }],
   }),
   component: RegisterPage,
 });
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const { type: initialType } = useSearch({ from: "/register" });
+  const { type: initialType, ref } = useSearch({ from: "/register" });
   const [userType, setUserType] = useState<UserType>(initialType ?? "freelancer");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,7 +47,7 @@ function RegisterPage() {
     saveOnboardingState({ userType, email: email || "nargiza@ishbor.uz", fullName: name || "Nargiza Akhmedova" });
     const result = loginWithCredentials("nargiza@ishbor.uz", "demo1234", true);
     if (result.ok) {
-      toast.success("Account created with Google");
+      toast.success("Google orqali hisob yaratildi");
       navigate({ to: "/onboarding" });
     }
   };
@@ -55,6 +57,9 @@ function RegisterPage() {
     if (!canSubmit) return;
     setLoading(true);
     saveOnboardingState({ userType, email, fullName: name });
+    if (ref) {
+      sessionStorage.setItem("ishbor-pending-ref", ref);
+    }
     setTimeout(() => {
       setLoading(false);
       navigate({ to: "/verify-email", search: { email } });
@@ -63,13 +68,13 @@ function RegisterPage() {
 
   return (
     <AuthLayout
-      title="Create your account"
-      subtitle="Join Ishbor — escrow-protected work across Central Asia."
+      title="Hisobingizni yarating"
+      subtitle="Ishbor'ga qo'shiling — Markaziy Osiyoda eskrou himoyalangan ish."
       footer={
         <>
-          Already have an account?{" "}
+          Allaqachon hisobingiz bormi?{" "}
           <Link to="/login" className="font-medium text-primary hover:underline">
-            Sign in
+            Kirish
           </Link>
         </>
       }
@@ -77,8 +82,8 @@ function RegisterPage() {
       {/* User type tabs */}
       <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-border bg-elevated/40 p-1">
         {([
-          { type: "client" as const, label: "Client", icon: Briefcase },
-          { type: "freelancer" as const, label: "Freelancer", icon: User },
+          { type: "client" as const, label: "Mijoz", icon: Briefcase },
+          { type: "freelancer" as const, label: "Frilanser", icon: User },
         ]).map(({ type, label, icon: Icon }) => (
           <button
             key={type}
@@ -97,12 +102,12 @@ function RegisterPage() {
         ))}
       </div>
 
-      <GoogleButton label="Sign up with Google" onClick={handleGoogle} />
+      <GoogleButton label="Google orqali ro'yxatdan o'tish" onClick={handleGoogle} />
       <AuthDivider />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthField
-          label="Full name"
+          label="To'liq ism"
           type="text"
           placeholder={userType === "client" ? "Sardor Karimov" : "Nargiza Akhmedova"}
           value={name}
@@ -113,9 +118,9 @@ function RegisterPage() {
         />
 
         <AuthField
-          label="Email"
+          label="Elektron pochta"
           type="email"
-          placeholder="you@company.com"
+          placeholder="siz@kompaniya.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           icon={<Mail className="size-4" />}
@@ -128,14 +133,14 @@ function RegisterPage() {
             htmlFor="reg-password"
             className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"
           >
-            Password
+            Parol
           </label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <input
               id="reg-password"
               type={showPassword ? "text" : "password"}
-              placeholder="Min. 8 characters"
+              placeholder="Kamida 8 belgi"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -147,7 +152,7 @@ function RegisterPage() {
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
@@ -164,23 +169,24 @@ function RegisterPage() {
             required
           />
           <span className="text-sm leading-relaxed text-muted-foreground">
-            I agree to the{" "}
+            Men{" "}
             <Link to="/terms" className="font-medium text-primary hover:underline">
-              Terms of Service
+              Foydalanish shartlari
             </Link>{" "}
-            and{" "}
+            va{" "}
             <Link to="/privacy" className="font-medium text-primary hover:underline">
-              Privacy Policy
+              Maxfiylik siyosati
             </Link>
+            ga roziman
           </span>
         </label>
 
         <AuthButton type="submit" disabled={!canSubmit || loading} loading={loading}>
           {loading
-            ? "Creating account…"
+            ? "Hisob yaratilmoqda…"
             : userType === "client"
-              ? "Create client account"
-              : "Create freelancer account"}
+              ? "Mijoz hisobini yaratish"
+              : "Frilanser hisobini yaratish"}
         </AuthButton>
       </form>
     </AuthLayout>

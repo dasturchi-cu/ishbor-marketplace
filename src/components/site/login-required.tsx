@@ -2,8 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 
 export function LoginRequired({
-  title = "Sign in required",
-  description = "Create an account or sign in to access this page.",
+  title = "Kirish talab qilinadi",
+  description = "Bu sahifaga kirish uchun hisob yarating yoki tizimga kiring.",
   redirect,
 }: {
   title?: string;
@@ -23,14 +23,14 @@ export function LoginRequired({
           search={redirect ? { redirect } : undefined}
           className="touch-target rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90"
         >
-          Sign in
+          Kirish
         </Link>
         <Link
           to="/register"
           search={{}}
           className="touch-target rounded-lg border border-border px-5 text-sm font-medium hover:border-primary/20"
         >
-          Create account
+          Hisob yaratish
         </Link>
       </div>
     </div>

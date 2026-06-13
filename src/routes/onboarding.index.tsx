@@ -10,7 +10,7 @@ import { saveOnboardingState, loadOnboardingState, getFirstOnboardingPath, type 
 
 export const Route = createFileRoute("/onboarding/")({
   head: () => ({
-    meta: [{ title: "Choose account type — Ishbor" }],
+    meta: [{ title: "Hisob turini tanlang — Ishbor" }],
   }),
   component: OnboardingTypePage,
 });
@@ -29,29 +29,29 @@ function OnboardingTypePage() {
     <OnboardingLayout
       stepId="type"
       showProgress={false}
-      title="How will you use Ishbor?"
-      subtitle="Choose your account type. You can always add the other role later."
+      title="Ishbor'dan qanday foydalanasiz?"
+      subtitle="Hisob turini tanlang. Keyinroq boshqa rolni ham qo'shishingiz mumkin."
     >
       <div className="space-y-3">
         <UserTypeCard
           type="client"
-          title="I'm hiring"
-          description="Post projects, browse talent, and manage contracts with escrow protection."
+          title="Men yollayman"
+          description="Loyihalar joylang, mutaxassislarni ko'ring va eskrou himoyasi bilan shartnomalarni boshqaring."
           icon={<Briefcase className="size-5" />}
           selected={userType === "client"}
           onSelect={() => setUserType("client")}
         />
         <UserTypeCard
           type="freelancer"
-          title="I'm freelancing"
-          description="Offer services, apply to projects, and get paid securely through Ishbor."
+          title="Men frilans qilaman"
+          description="Xizmatlar taklif qiling, loyihalarga ariza bering va Ishbor orqali xavfsiz to'lov oling."
           icon={<User className="size-5" />}
           selected={userType === "freelancer"}
           onSelect={() => setUserType("freelancer")}
         />
       </div>
 
-      <OnboardingNav onContinue={handleContinue} continueLabel="Continue" />
+      <OnboardingNav onContinue={handleContinue} continueLabel="Davom etish" />
     </OnboardingLayout>
   );
 }

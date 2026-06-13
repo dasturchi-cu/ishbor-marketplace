@@ -1,18 +1,32 @@
 import type { Freelancer, Project, Service } from "./mock-data";
+import type { StoredService } from "./services-store";
+import { isFeaturedActive } from "./featured-store";
+import { computeFreelancerReputation } from "./reputation-store";
+import { computeSuccessScore, computeResponseRate } from "./growth-metrics";
+import { getAverageRating } from "./reviews-store";
+import { rankFreelancers, rankServices, rankProjects } from "./ranking-store";
 
 export type SortOption =
   | "newest"
   | "rating"
   | "popular"
   | "price_asc"
-  | "price_desc";
+  | "price_desc"
+  | "trust_score"
+  | "success_score"
+  | "response_rate"
+  | "ranking_score";
 
 export const sortLabels: Record<SortOption, string> = {
-  newest: "Newest",
-  rating: "Highest rated",
-  popular: "Most popular",
-  price_asc: "Lowest price",
-  price_desc: "Highest price",
+  newest: "Eng yangi",
+  rating: "Eng yuqori baho",
+  popular: "Eng mashhur",
+  price_asc: "Eng arzon narx",
+  price_desc: "Eng qimmat narx",
+  trust_score: "Ishonch balli",
+  success_score: "Muvaffaqiyat balli",
+  response_rate: "Javob tezligi",
+  ranking_score: "Reyting balli",
 };
 
 export type MarketplaceSearch = {
@@ -26,7 +40,7 @@ export function normalizeSearch<T extends MarketplaceSearch>(search: Record<stri
   return {
     q: typeof search.q === "string" ? search.q : "",
     category: typeof search.category === "string" ? search.category : "",
-    sort: (typeof search.sort === "string" ? search.sort : "newest") as SortOption,
+    sort: (typeof search.sort === "string" ? search.sort : "ranking_score") as SortOption,
     filter: typeof search.filter === "string" ? search.filter : "",
   } as T;
 }
@@ -36,7 +50,7 @@ function matchesQuery(text: string, q: string) {
   return text.toLowerCase().includes(q.trim().toLowerCase());
 }
 
-export function filterServices(items: Service[], search: MarketplaceSearch): Service[] {
+export function filterServices(items: StoredService[], search: MarketplaceSearch): StoredService[] {
   let result = [...items];
   const q = search.q ?? "";
   const category = search.category ?? "";
@@ -64,22 +78,48 @@ export function filterServices(items: Service[], search: MarketplaceSearch): Ser
     result = result.filter((s) => s.rating >= 4.95);
   }
 
-  return sortServices(result, search.sort ?? "newest");
+  return sortServices(result, search.sort ?? "ranking_score");
 }
 
-export function sortServices(items: Service[], sort: SortOption): Service[] {
+export function sortServices(items: StoredService[], sort: SortOption): StoredService[] {
   const sorted = [...items];
+  const withFeatured = sorted.sort((a, b) => {
+    const af = isFeaturedActive(a.featured, a.featuredUntil) ? 1 : 0;
+    const bf = isFeaturedActive(b.featured, b.featuredUntil) ? 1 : 0;
+    return bf - af;
+  });
   switch (sort) {
+    case "ranking_score":
+      return rankServices(withFeatured).map(({ rankingScore: _, ...s }) => s);
     case "rating":
-      return sorted.sort((a, b) => b.rating - a.rating);
+    case "trust_score":
+      return withFeatured.sort((a, b) => b.rating - a.rating);
+    case "success_score":
+      return withFeatured.sort((a, b) => {
+        const sa = computeSuccessScore(a.sellerUsername).score;
+        const sb = computeSuccessScore(b.sellerUsername).score;
+        return sb - sa;
+      });
+    case "response_rate":
+      return withFeatured.sort((a, b) => {
+        const ra = computeResponseRate(a.sellerUsername).rate;
+        const rb = computeResponseRate(b.sellerUsername).rate;
+        return rb - ra;
+      });
     case "popular":
-      return sorted.sort((a, b) => b.reviews - a.reviews);
+      return withFeatured.sort((a, b) => b.reviews - a.reviews);
     case "price_asc":
-      return sorted.sort((a, b) => a.price - b.price);
+      return withFeatured.sort((a, b) => a.price - b.price);
     case "price_desc":
-      return sorted.sort((a, b) => b.price - a.price);
+      return withFeatured.sort((a, b) => b.price - a.price);
+    case "newest":
+      return withFeatured.sort((a, b) => {
+        const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bt - at;
+      });
     default:
-      return sorted;
+      return rankServices(withFeatured).map(({ rankingScore: _, ...s }) => s);
   }
 }
 
@@ -107,16 +147,35 @@ export function filterFreelancers(items: Freelancer[], search: MarketplaceSearch
     result = result.filter((f) => f.city === "Tashkent");
   } else if (filter === "verified") {
     result = result.filter((f) => f.identityVerified);
+  } else if (filter === "trust") {
+    result = result.filter((f) => computeFreelancerReputation(f.username).trustScore >= 70);
   }
 
-  return sortFreelancers(result, search.sort ?? "newest");
+  return sortFreelancers(result, search.sort ?? "ranking_score");
 }
 
 export function sortFreelancers(items: Freelancer[], sort: SortOption): Freelancer[] {
+  if (sort === "ranking_score") {
+    return rankFreelancers(items).map(({ rankingScore: _, ...f }) => f);
+  }
   const sorted = [...items];
   switch (sort) {
     case "rating":
-      return sorted.sort((a, b) => b.rating - a.rating);
+      return sorted.sort((a, b) => {
+        const ra = getAverageRating(a.username);
+        const rb = getAverageRating(b.username);
+        const avga = ra.count > 0 ? ra.avg : a.rating;
+        const avgb = rb.count > 0 ? rb.avg : b.rating;
+        return avgb - avga;
+      });
+    case "trust_score":
+      return sorted.sort((a, b) =>
+        computeFreelancerReputation(b.username).trustScore - computeFreelancerReputation(a.username).trustScore,
+      );
+    case "success_score":
+      return sorted.sort((a, b) => computeSuccessScore(b.username).score - computeSuccessScore(a.username).score);
+    case "response_rate":
+      return sorted.sort((a, b) => computeResponseRate(b.username).rate - computeResponseRate(a.username).rate);
     case "popular":
       return sorted.sort((a, b) => b.reviews - a.reviews);
     case "price_asc":
@@ -129,11 +188,11 @@ export function sortFreelancers(items: Freelancer[], sort: SortOption): Freelanc
 }
 
 const postedOrder: Record<string, number> = {
-  "4h ago": 1,
-  "8h ago": 2,
-  "1d ago": 3,
-  "2d ago": 4,
-  "3d ago": 5,
+  "4 soat oldin": 1,
+  "8 soat oldin": 2,
+  "1 kun oldin": 3,
+  "2 kun oldin": 4,
+  "3 kun oldin": 5,
 };
 
 export function filterProjects(items: Project[], search: MarketplaceSearch): Project[] {
@@ -158,23 +217,37 @@ export function filterProjects(items: Project[], search: MarketplaceSearch): Pro
     );
   }
 
-  return sortProjects(result, search.sort ?? "newest");
+  return sortProjects(result, search.sort ?? "ranking_score");
 }
 
 export function sortProjects(items: Project[], sort: SortOption): Project[] {
   const sorted = [...items];
+  const withFeatured = sorted.sort((a, b) => {
+    const af = isFeaturedActive(a.featured, a.featuredUntil) ? 1 : 0;
+    const bf = isFeaturedActive(b.featured, b.featuredUntil) ? 1 : 0;
+    return bf - af;
+  });
   switch (sort) {
+    case "ranking_score":
+      return rankProjects(withFeatured).map(({ rankingScore: _, ...p }) => p);
     case "rating":
-      return sorted.sort((a, b) => b.clientSpent - a.clientSpent);
+      return withFeatured.sort((a, b) => b.clientSpent - a.clientSpent);
     case "popular":
-      return sorted.sort((a, b) => b.proposals - a.proposals);
+      return withFeatured.sort((a, b) => b.proposals - a.proposals);
     case "price_asc":
-      return sorted.sort((a, b) => a.budget - b.budget);
+      return withFeatured.sort((a, b) => a.budget - b.budget);
     case "price_desc":
-      return sorted.sort((a, b) => b.budget - a.budget);
+      return withFeatured.sort((a, b) => b.budget - a.budget);
+    case "newest":
+      return withFeatured.sort((a, b) => {
+        const at = a.createdAt ? new Date(a.createdAt).getTime() : (postedOrder[a.postedAgo] ?? 99);
+        const bt = b.createdAt ? new Date(b.createdAt).getTime() : (postedOrder[b.postedAgo] ?? 99);
+        if (typeof at === "number" && typeof bt === "number" && !a.createdAt) {
+          return (at as number) - (bt as number);
+        }
+        return (bt as number) - (at as number);
+      });
     default:
-      return sorted.sort(
-        (a, b) => (postedOrder[a.postedAgo] ?? 99) - (postedOrder[b.postedAgo] ?? 99),
-      );
+      return rankProjects(withFeatured).map(({ rankingScore: _, ...p }) => p);
   }
 }

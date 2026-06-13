@@ -72,7 +72,7 @@ export function OnboardingLayout({ children, title, subtitle, stepId, showProgre
             ))}
           </div>
           <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-primary sm:hidden">
-            Step {currentIndex + 1} of {steps.length} — {steps[currentIndex]?.label}
+            {currentIndex + 1}-qadam / {steps.length} — {steps[currentIndex]?.label}
           </p>
         </div>
         )}
@@ -93,7 +93,7 @@ export function OnboardingLayout({ children, title, subtitle, stepId, showProgre
 export function OnboardingNav({
   backTo,
   onContinue,
-  continueLabel = "Continue",
+  continueLabel = "Davom etish",
   disabled,
 }: {
   backTo?: string;
@@ -108,7 +108,7 @@ export function OnboardingNav({
           to={backTo}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-default hover:text-foreground"
         >
-          <ArrowLeft className="size-4" /> Back
+          <ArrowLeft className="size-4" /> Orqaga
         </Link>
       ) : (
         <div />
@@ -164,7 +164,7 @@ export function UserTypeCard({
           <div className="flex items-center gap-2">
             <h3 className="font-display text-base font-bold">{title}</h3>
             <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-              {type}
+              {type === "client" ? "mijoz" : "frilanser"}
             </span>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>

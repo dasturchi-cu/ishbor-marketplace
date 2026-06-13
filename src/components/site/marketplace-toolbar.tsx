@@ -58,7 +58,7 @@ export function MarketplaceToolbar({
             <button
               onClick={() => onSearchChange({ q: "" })}
               className="touch-target text-muted-foreground hover:text-foreground"
-              aria-label="Clear search"
+              aria-label="Qidiruvni tozalash"
             >
               <X className="size-4" />
             </button>
@@ -71,7 +71,7 @@ export function MarketplaceToolbar({
               activeFilter ? "border-primary bg-primary/8 text-primary" : "border-border bg-surface hover:border-primary/20"
             }`}
           >
-            <SlidersHorizontal className="size-4" /> Filters
+            <SlidersHorizontal className="size-4" /> Filtrlar
           </button>
           <div className="relative flex-1">
             <button
@@ -104,7 +104,7 @@ export function MarketplaceToolbar({
 
       {showFilters && chips.length > 0 && (
         <div className="mt-3 rounded-lg border border-border bg-surface p-3">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Quick filters</div>
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Tez filtrlar</div>
           <div className="flex flex-wrap gap-2">
             {chips.map((c) => (
               <button
@@ -133,7 +133,7 @@ export function MarketplaceToolbar({
                 : "border-border bg-surface text-foreground/80 hover:border-primary/20"
             }`}
           >
-            All
+            Barchasi
           </button>
           {categories.map((c) => (
             <button
@@ -161,7 +161,7 @@ export function MarketplaceToolbar({
             onClick={clearAll}
             className="text-xs font-medium text-primary hover:underline"
           >
-            Clear filters
+            Filtrlarni tozalash
           </button>
         )}
       </div>

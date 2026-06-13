@@ -1,63 +1,191 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Building2, Banknote, Download, ListFilter as Filter, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Building2, Banknote, Download, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock, Crown, Sparkles, Receipt, Share2, Bell } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield } from "@/components/site/trust";
-import { InlineBanner } from "@/components/site/feedback";
+import { InlineBanner, EmptyState } from "@/components/site/feedback";
 import { DepositModal, WithdrawModal } from "@/components/site/modals";
-import { transactions, escrowItems, paymentMethods as mockPaymentMethods } from "@/lib/mock-data";
+import { escrowItems } from "@/lib/mock-data";
+import { AuthGate } from "@/components/auth/auth-gate";
+import { getPaymentMethods, subscribePaymentMethods, type StoredPaymentMethod } from "@/lib/payment-methods-store";
 import { requireAuth } from "@/lib/guards";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  subscribeWallet,
+  getWallet,
+  depositFunds,
+  withdrawFunds,
+  filterTransactions,
+  formatUsd,
+  formatTxDate,
+  type TxFilter,
+  type WalletTransaction,
+} from "@/lib/wallet-store";
+import { downloadTextFile, toCsvRow } from "@/lib/export-utils";
 
 export const Route = createFileRoute("/wallet")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: "Wallet — Ishbor" }] }),
+  head: () => ({ meta: [{ title: "Hamyon — Ishbor" }] }),
   component: WalletPage,
 });
 
-const txFilters = ["All", "Incoming", "Outgoing", "Fees"];
+const txFilterLabels: Record<TxFilter, string> = {
+  All: "Barchasi",
+  Incoming: "Kirim",
+  Outgoing: "Chiqim",
+  Fees: "To'lovlar",
+  Escrow: "Eskrou",
+};
+
+const txFilters: TxFilter[] = ["All", "Incoming", "Outgoing", "Fees", "Escrow"];
+
+const EMPTY_PAYMENT_METHODS: StoredPaymentMethod[] = [];
+
+const categoryFilters = ["All", "deposit", "withdrawal", "order", "escrow", "fee", "milestone"] as const;
+
+const categoryFilterLabels: Record<(typeof categoryFilters)[number], string> = {
+  All: "Barchasi",
+  deposit: "Depozit",
+  withdrawal: "Yechib olish",
+  order: "Buyurtma",
+  escrow: "Eskrou",
+  fee: "To'lov",
+  milestone: "Bosqich",
+};
+
+const statusLabels: Record<string, string> = {
+  Yakunlangan: "Yakunlangan",
+  Kutilmoqda: "Kutilmoqda",
+  Muvaffaqiyatsiz: "Muvaffaqiyatsiz",
+};
+
+function TxKindIcon({ tx }: { tx: WalletTransaction }) {
+  const iconClass = "size-3.5";
+  if (tx.kind === "in" || tx.kind === "escrow_release") {
+    return (
+      <div className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-success/10 text-success">
+        <ArrowDownLeft className={iconClass} />
+      </div>
+    );
+  }
+  if (tx.kind === "fee") {
+    return (
+      <div className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-muted-foreground">
+        <Banknote className={iconClass} />
+      </div>
+    );
+  }
+  return (
+    <div className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-warning/10 text-warning">
+      <ArrowUpRight className={iconClass} />
+    </div>
+  );
+}
+
+function TxStatusBadge({ status }: { status: WalletTransaction["status"] }) {
+  const completed = status === "Yakunlangan";
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium ${
+        completed ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
+      }`}
+    >
+      {completed ? <CheckCircle2 className="size-2.5" /> : <AlertCircle className="size-2.5" />}
+      {statusLabels[status] ?? status}
+    </span>
+  );
+}
 
 function WalletPage() {
   const navigate = useNavigate();
-  const [txFilter, setTxFilter] = useState("All");
+  const { user } = useAuth();
+  const [txFilter, setTxFilter] = useState<TxFilter>("All");
+  const [categoryFilter, setCategoryFilter] = useState<(typeof categoryFilters)[number]>("All");
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
 
-  const filteredTx = transactions.filter((t) => {
-    if (txFilter === "All") return true;
-    if (txFilter === "Incoming") return t.kind === "in";
-    if (txFilter === "Outgoing") return t.kind === "out";
-    if (txFilter === "Fees") return t.kind === "fee";
-    return true;
+  const wallet = useSyncExternalStore(
+    subscribeWallet,
+    () => (user ? getWallet(user.id) : null),
+    () => null,
+  );
+
+  const paymentMethods = useSyncExternalStore(
+    subscribePaymentMethods,
+    () => (user ? getPaymentMethods(user.id) : EMPTY_PAYMENT_METHODS),
+    () => EMPTY_PAYMENT_METHODS,
+  );
+
+  const filteredTx = (wallet?.transactions ?? []).filter((t) => {
+    const kindOk = filterTransactions([t], txFilter).length > 0;
+    const catOk = categoryFilter === "All" || t.category === categoryFilter;
+    return kindOk && catOk;
   });
 
-  const totalEscrow = escrowItems.reduce((s, e) => s + e.amount, 0);
+  const totalEscrow = wallet?.escrow ?? escrowItems.reduce((s, e) => s + e.amount, 0);
+  const available = wallet?.available ?? 0;
+  const pending = wallet?.pending ?? 0;
+  const lifetime = wallet?.lifetimeEarned ?? 0;
+  const [whole, cents = "00"] = available.toFixed(2).split(".");
+
+  const handleExportCsv = () => {
+    const rows = filteredTx.length > 0 ? filteredTx : (wallet?.transactions ?? []);
+    if (rows.length === 0) {
+      toast.error("Eksport qilish uchun tranzaksiyalar yo'q");
+      return;
+    }
+    const header = toCsvRow(["Sana", "Tavsif", "Tur", "Kategoriya", "Summa", "Holat"]);
+    const body = rows
+      .map((t) =>
+        toCsvRow([formatTxDate(t.date), t.label, t.kind, t.category ?? "", formatUsd(t.amount), t.status]),
+      )
+      .join("\n");
+    downloadTextFile(`ishbor-tranzaksiyalar-${new Date().toISOString().slice(0, 10)}.csv`, `${header}\n${body}`);
+    toast.success(`${rows.length} ta tranzaksiya eksport qilindi`);
+  };
+
+  const handleDownloadReport = () => {
+    const rows = wallet?.transactions ?? [];
+    const report = [
+      "ISHBOR HAMYON HISOBOTI",
+      `Sana: ${new Date().toLocaleDateString("uz-UZ")}`,
+      `Foydalanuvchi: ${user?.fullName ?? "—"}`,
+      "",
+      `Mavjud balans: ${formatUsd(available)}`,
+      `Eskrou: ${formatUsd(totalEscrow)}`,
+      `Kutilmoqda: ${formatUsd(pending)}`,
+      `Umumiy daromad: ${formatUsd(lifetime)}`,
+      "",
+      "SO'NGGI TRANZAKSIYALAR",
+      ...rows.slice(0, 20).map((t) => `- ${formatTxDate(t.date)} | ${t.label} | ${formatUsd(t.amount)} | ${t.status}`),
+    ].join("\n");
+    downloadTextFile(`ishbor-hisobot-${new Date().toISOString().slice(0, 10)}.txt`, report, "text/plain;charset=utf-8");
+    toast.success("Hisobot yuklab olindi");
+  };
 
   return (
+    <AuthGate>
     <WorkspaceShell
-      eyebrow="Treasury"
-      title="Wallet"
+      eyebrow="Xazina"
+      title="Hamyon"
       actions={
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <button onClick={() => toast.success("Statement downloaded")} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
-            <Download className="size-4" /> Statement
+          <button onClick={handleDownloadReport} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
+            <Download className="size-4" /> Hisobot
           </button>
           <button onClick={() => setWithdrawOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
-            Withdraw
+            Yechib olish
           </button>
           <button onClick={() => setDepositOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring sm:flex-none">
-            <Plus className="size-4" /> Top up
+            <Plus className="size-4" /> To'ldirish
           </button>
         </div>
       }
     >
-      {/* Balance cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        {/* Available Balance — hero card */}
         <div className="relative col-span-full overflow-hidden rounded-2xl bg-foreground p-5 text-background sm:col-span-2 sm:p-6">
-          {/* Decorative gradient blobs */}
           <div
             aria-hidden
             className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-30"
@@ -72,14 +200,14 @@ function WalletPage() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-background/50">
-                  Available balance
+                  Mavjud balans
                 </div>
                 <div className="font-display mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
-                  $14,284
-                  <span className="text-2xl text-background/50 sm:text-3xl">.40</span>
+                  ${Number(whole).toLocaleString()}
+                  <span className="text-2xl text-background/50 sm:text-3xl">.{cents}</span>
                 </div>
                 <div className="mt-1 text-sm text-background/50">
-                  = 178,242,500 UZS
+                  = {Math.round(available * 12500).toLocaleString()} UZS
                 </div>
               </div>
               <div className="inline-flex size-10 items-center justify-center rounded-xl bg-background/10">
@@ -88,36 +216,39 @@ function WalletPage() {
             </div>
             <div className="mt-6 grid grid-cols-1 gap-4 border-t border-white/10 pt-4 sm:mt-8 sm:grid-cols-3 sm:pt-5">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">In escrow</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Eskrouda</div>
                 <div className="font-display mt-1 text-xl font-bold" style={{ color: "oklch(0.7 0.175 257)" }}>
                   ${totalEscrow.toLocaleString()}
                 </div>
               </div>
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Lifetime earned</div>
-                <div className="font-display mt-1 text-xl font-bold">$184,200</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Umumiy topilgan</div>
+                <div className="font-display mt-1 text-xl font-bold">${lifetime.toLocaleString()}</div>
               </div>
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Pending</div>
-                <div className="font-display mt-1 text-xl font-bold">$3,000</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Kutilmoqda</div>
+                <div className="font-display mt-1 text-xl font-bold">${pending.toLocaleString()}</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Payment Methods */}
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold">Payout methods</h3>
-            <button onClick={() => navigate({ to: "/settings" })} className="text-xs font-medium text-primary transition-default hover:opacity-80">Manage</button>
+            <h3 className="text-sm font-semibold">To'lov usullari</h3>
+            <button onClick={() => navigate({ to: "/settings" })} className="text-xs font-medium text-primary transition-default hover:opacity-80">Boshqarish</button>
           </div>
           <ul className="space-y-2">
-            {mockPaymentMethods.map((pm) => {
+            {paymentMethods.map((pm) => {
               const Icon = pm.type === "visa" ? CreditCard : Banknote;
               return (
                 <li
                   key={pm.id}
-                  className={`flex items-center gap-3 rounded-xl border p-3 transition-default ${pm.default ? "border-primary/30 bg-primary/5" : "border-border bg-background"}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate({ to: "/settings" })}
+                  onKeyDown={(e) => e.key === "Enter" && navigate({ to: "/settings" })}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-default ${pm.default ? "border-primary/30 bg-primary/5" : "border-border bg-background"}`}
                 >
                   <div className={`inline-flex size-8 items-center justify-center rounded-lg ${pm.default ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
                     <Icon className="size-4" />
@@ -128,7 +259,7 @@ function WalletPage() {
                     </div>
                     <div className="font-mono flex items-center gap-1 text-[10px] text-muted-foreground">
                       <CheckCircle2 className="size-2.5 text-success" />
-                      {pm.default ? "Default" : "Verified"}
+                      {pm.default ? "Asosiy" : "Tasdiqlangan"}
                     </div>
                   </div>
                   <ChevronRight className="size-3.5 text-muted-foreground" />
@@ -137,25 +268,81 @@ function WalletPage() {
             })}
           </ul>
           <button
-            onClick={() => {
-              toast.success("Payout method added", { description: "Your new card will be verified within 24 hours." });
-              navigate({ to: "/settings" });
-            }}
+            onClick={() => navigate({ to: "/settings", search: { pay: "add" } })}
             className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring"
           >
-            <Plus className="size-4" /> Add payout method
+            <Plus className="size-4" /> To'lov usulini qo'shish
           </button>
         </div>
       </div>
 
-      {/* Escrow overview */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Link to="/pricing" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
+          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Receipt className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Tariflar</div>
+            <div className="text-xs text-muted-foreground">Rejalarni solishtirish</div>
+          </div>
+        </Link>
+        <Link to="/subscription" search={{ plan: undefined }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
+          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Crown className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Obuna</div>
+            <div className="text-xs text-muted-foreground">Reja va kreditlar</div>
+          </div>
+        </Link>
+        <Link to="/promotions" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
+          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Sparkles className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Rivojlantirish</div>
+            <div className="text-xs text-muted-foreground">Profil va xizmatni ko'tarish</div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <Link to="/settings" search={{ tab: "referral" }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
+          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Share2 className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Referral dasturi</div>
+            <div className="text-xs text-muted-foreground">Do'stlarni taklif qiling</div>
+          </div>
+        </Link>
+        <Link to="/settings" search={{ tab: "alerts" }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
+          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Bell className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Ish ogohlantirishlari</div>
+            <div className="text-xs text-muted-foreground">Yangi loyiha xabarlari</div>
+          </div>
+        </Link>
+        <Link to="/settings" search={{ tab: "verification" }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
+          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <ShieldCheck className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold">Shaxsni tasdiqlash</div>
+            <div className="text-xs text-muted-foreground">Ishonch darajasini oshiring</div>
+          </div>
+        </Link>
+      </div>
+
       <section className="mt-6 rounded-2xl border border-primary/20 bg-card overflow-hidden">
         <div className="flex items-center justify-between border-b border-primary/10 bg-primary/5 px-5 py-4">
           <div className="flex items-center gap-2">
             <EscrowShield size="md" />
-            <h2 className="font-display text-base font-bold">Escrow</h2>
+            <h2 className="font-display text-base font-bold">Eskrou</h2>
           </div>
-          <span className="font-mono text-xs text-primary">${totalEscrow.toLocaleString()} protected</span>
+          <span className="font-mono text-xs text-primary">${totalEscrow.toLocaleString()} himoyalangan</span>
         </div>
         <div className="grid gap-0 divide-y divide-border sm:divide-x sm:divide-y-0 sm:grid-cols-3">
           {escrowItems.map((e) => (
@@ -172,7 +359,7 @@ function WalletPage() {
               <div className="mt-3 flex items-end justify-between">
                 <div>
                   <div className="font-display text-xl font-bold">${e.amount.toLocaleString()}</div>
-                  <div className="font-mono mt-0.5 text-[10px] text-muted-foreground">Due {e.dueDate}</div>
+                  <div className="font-mono mt-0.5 text-[10px] text-muted-foreground">Muddat: {e.dueDate}</div>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium ${
                   e.status === "funded" ? "bg-success/10 text-success" :
@@ -181,7 +368,7 @@ function WalletPage() {
                 }`}>
                   {e.status === "funded" && <CheckCircle2 className="size-3" />}
                   {e.status === "pending_release" && <Clock className="size-3" />}
-                  {e.status === "funded" ? "Funded" : "Pending release"}
+                  {e.status === "funded" ? "Moliyalashtirilgan" : "Chiqarish kutilmoqda"}
                 </span>
               </div>
             </div>
@@ -189,121 +376,203 @@ function WalletPage() {
         </div>
       </section>
 
-      {/* Security notice */}
       <InlineBanner variant="info" icon={ShieldCheck} className="mt-4">
-        <span className="font-semibold">Bank-grade protection.</span>{" "}
+        <span className="font-semibold">Bank darajasidagi himoya.</span>{" "}
         <span className="text-muted-foreground">
-          All funds are escrow-protected and held in segregated accounts at Ipoteka-bank.
-          Withdrawals are verified via 2FA.
+          Barcha mablag'lar eskrou himoyasida va Ipoteka-bankdagi ajratilgan hisoblarda saqlanadi.
+          Yechib olishlar 2FA orqali tasdiqlanadi.
         </span>
       </InlineBanner>
 
-      {/* Transactions */}
       <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <h2 className="font-display text-base font-bold">Transactions</h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="mobile-scroll-x flex max-w-full rounded-lg border border-border bg-background p-0.5">
+        <div className="border-b border-border px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-display text-base font-bold">Tranzaksiyalar</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                <span className="font-mono text-foreground">{filteredTx.length}</span> ta yozuv
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleExportCsv}
+                className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
+              >
+                <Download className="size-3.5" /> Eksport
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <div className="mobile-scroll-x flex max-w-full gap-1 rounded-lg border border-border bg-background p-1">
               {txFilters.map((f) => (
                 <button
                   key={f}
                   onClick={() => setTxFilter(f)}
-                  className={`touch-target shrink-0 rounded-md px-3 text-xs font-medium transition-default ${
-                    txFilter === f ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  className={`touch-target shrink-0 rounded-md px-3 py-2 text-xs font-medium transition-default focus-ring ${
+                    txFilter === f
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
                   }`}
                 >
-                  {f}
+                  {txFilterLabels[f]}
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => setShowAdvancedFilter((v) => !v)}
-              className={`touch-target inline-flex items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-default focus-ring ${
-                showAdvancedFilter ? "border-primary/30 bg-primary/5 text-primary" : "border-border hover:border-primary/20"
-              }`}
-            >
-              <Filter className="size-3.5" /> Filter
-            </button>
-            <button
-              onClick={() => toast.success("Transactions exported", { description: "CSV download started." })}
-              className="touch-target text-xs font-medium text-primary transition-default hover:opacity-80"
-            >
-              Export
-            </button>
+
+            <div className="mobile-scroll-x flex max-w-full flex-nowrap gap-1.5 sm:flex-nowrap">
+              {categoryFilters.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategoryFilter(c)}
+                  className={`touch-target shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-default focus-ring ${
+                    categoryFilter === c
+                      ? "border-primary/25 bg-primary/8 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-primary/20 hover:text-foreground"
+                  }`}
+                >
+                  {categoryFilterLabels[c]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="-mx-px overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm">
-            <thead>
-              <tr className="border-b border-border bg-elevated/30 text-left">
-                <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Type
-                </th>
-                <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Reference
-                </th>
-                <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Date
-                </th>
-                <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Status
-                </th>
-                <th className="font-mono px-5 py-3 text-right text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Amount
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+
+        {filteredTx.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon={Banknote}
+              title="Tranzaksiyalar topilmadi"
+              description="Filtrlarni o'zgartiring yoki hamyonni to'ldiring."
+              compact
+              action={
+                <button
+                  onClick={() => {
+                    setTxFilter("All");
+                    setCategoryFilter("All");
+                  }}
+                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition-default hover:border-primary/20"
+                >
+                  Filtrlarni tozalash
+                </button>
+              }
+            />
+          </div>
+        ) : (
+          <>
+            <div className="space-y-3 p-4 md:hidden">
               {filteredTx.map((t) => (
-                <tr key={t.id} className="group transition-default hover:bg-secondary/20">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-2.5">
-                      <div className={`inline-flex size-7 items-center justify-center rounded-lg ${
-                        t.kind === "in" ? "bg-success/10 text-success" :
-                        t.kind === "fee" ? "bg-secondary text-muted-foreground" :
-                        "bg-secondary text-muted-foreground"
-                      }`}>
-                        {t.kind === "in" ? (
-                          <ArrowDownLeft className="size-3.5" />
-                        ) : t.kind === "fee" ? (
-                          <Banknote className="size-3.5" />
-                        ) : (
-                          <ArrowUpRight className="size-3.5" />
-                        )}
+                <article
+                  key={t.id}
+                  className="rounded-xl border border-border bg-background p-4 transition-default hover:border-primary/15"
+                >
+                  <div className="flex items-start gap-3">
+                    <TxKindIcon tx={t} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="truncate text-sm font-semibold">{t.label}</div>
+                          <div className="mt-0.5 truncate text-xs text-muted-foreground">{t.reference}</div>
+                        </div>
+                        <div
+                          className={`shrink-0 font-mono text-sm font-semibold ${
+                            t.amount > 0 ? "text-success" : "text-foreground"
+                          }`}
+                        >
+                          {formatUsd(t.amount, { signed: true })}
+                        </div>
                       </div>
-                      <span className="font-medium">{t.label}</span>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <TxStatusBadge status={t.status} />
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {categoryFilterLabels[t.category as keyof typeof categoryFilterLabels] ?? t.category}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-foreground">{formatTxDate(t.date)}</span>
+                      </div>
+                      <div className="mt-2 font-mono text-[10px] text-muted-foreground">
+                        Balans: {formatUsd(t.runningBalance)}
+                      </div>
                     </div>
-                  </td>
-                  <td className="px-5 py-3.5 text-muted-foreground">{t.project}</td>
-                  <td className="font-mono px-5 py-3.5 text-muted-foreground">{t.date}</td>
-                  <td className="px-5 py-3.5">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                      t.status === "Completed"
-                        ? "bg-success/10 text-success"
-                        : "bg-warning/10 text-warning"
-                    }`}>
-                      {t.status === "Completed" ? (
-                        <CheckCircle2 className="size-2.5" />
-                      ) : (
-                        <AlertCircle className="size-2.5" />
-                      )}
-                      {t.status}
-                    </span>
-                  </td>
-                  <td className={`font-mono px-5 py-3.5 text-right font-semibold ${
-                    t.amount > 0 ? "text-success" : "text-foreground"
-                  }`}>
-                    {t.amount > 0 ? "+" : ""}${Math.abs(t.amount).toLocaleString()}.00
-                  </td>
-                </tr>
+                  </div>
+                </article>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[720px] text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-elevated/30 text-left">
+                    <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Tur</th>
+                    <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Ma'lumot</th>
+                    <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Sana</th>
+                    <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Holat</th>
+                    <th className="font-mono px-5 py-3 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Toifa</th>
+                    <th className="font-mono px-5 py-3 text-right text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Summa</th>
+                    <th className="font-mono px-5 py-3 text-right text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Balans</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {filteredTx.map((t) => (
+                    <tr key={t.id} className="transition-default hover:bg-secondary/20">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <TxKindIcon tx={t} />
+                          <span className="font-medium">{t.label}</span>
+                        </div>
+                      </td>
+                      <td className="max-w-[200px] truncate px-5 py-3.5 text-muted-foreground">{t.reference}</td>
+                      <td className="font-mono whitespace-nowrap px-5 py-3.5 text-muted-foreground">{formatTxDate(t.date)}</td>
+                      <td className="px-5 py-3.5">
+                        <TxStatusBadge status={t.status} />
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {categoryFilterLabels[t.category as keyof typeof categoryFilterLabels] ?? t.category}
+                        </span>
+                      </td>
+                      <td
+                        className={`font-mono whitespace-nowrap px-5 py-3.5 text-right font-semibold ${
+                          t.amount > 0 ? "text-success" : "text-foreground"
+                        }`}
+                      >
+                        {formatUsd(t.amount, { signed: true })}
+                      </td>
+                      <td className="font-mono whitespace-nowrap px-5 py-3.5 text-right text-muted-foreground">
+                        {formatUsd(t.runningBalance)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </section>
 
-      <DepositModal open={depositOpen} onClose={() => setDepositOpen(false)} onConfirm={() => toast.success("Deposit initiated — funds available in 1–2 minutes")} />
-      <WithdrawModal open={withdrawOpen} onClose={() => setWithdrawOpen(false)} balance={14284} onConfirm={() => toast.success("Withdrawal submitted")} />
+      <DepositModal
+        open={depositOpen}
+        onClose={() => setDepositOpen(false)}
+        onConfirm={(amount, method) => {
+          if (!user) return;
+          depositFunds(user.id, amount, method);
+          toast.success(`$${amount.toLocaleString()} depozit yakunlandi`);
+        }}
+      />
+      <WithdrawModal
+        open={withdrawOpen}
+        onClose={() => setWithdrawOpen(false)}
+        balance={available}
+        onConfirm={(amount, method) => {
+          if (!user) return;
+          const result = withdrawFunds(user.id, amount, method);
+          if (!result) {
+            toast.error("Mavjud balans yetarli emas");
+            return;
+          }
+          toast.success(`$${amount.toLocaleString()} yechib olish ${method} ga yuborildi`);
+        }}
+      />
     </WorkspaceShell>
+    </AuthGate>
   );
 }

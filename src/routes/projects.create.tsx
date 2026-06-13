@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -10,17 +10,21 @@ import {
 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
-import { requireAuth } from "@/lib/guards";
+import { ProtectedGate } from "@/components/auth/protected-gate";
+import { requireRole } from "@/lib/guards";
 import { loginDemo, logout } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
 import {
   publishProject,
   saveProjectDraft,
   getProjectBySlug,
   type ProjectFormInput,
 } from "@/lib/projects-store";
+import { validateProjectInput } from "@/lib/project-validation";
+import { consumeAiProjectDraft, mapAiCategoryToForm } from "@/lib/ai-project-generator";
 
-type CreateSearch = { edit?: string; published?: string };
+type CreateSearch = { edit?: string; published?: string; ai?: string };
 
 const projectCategoryOptions = [
   "Product Design",
@@ -34,34 +38,40 @@ const projectCategoryOptions = [
 ];
 
 export const Route = createFileRoute("/projects/create")({
-  beforeLoad: requireAuth,
+  beforeLoad: requireRole(["client"]),
   validateSearch: (search: Record<string, unknown>): CreateSearch => ({
     edit: typeof search.edit === "string" ? search.edit : undefined,
     published: typeof search.published === "string" ? search.published : undefined,
+    ai: typeof search.ai === "string" ? search.ai : undefined,
   }),
   head: () => ({
     meta: [
-      { title: "Post a Project — Ishbor" },
-      { name: "description", content: "Create a new project and hire freelancers." },
+      { title: "Loyiha joylash — Ishbor" },
+      { name: "description", content: "Yangi loyiha yarating va frilanserlar yollang." },
     ],
   }),
-  component: CreateProjectPage,
+  component: () => (
+    <ProtectedGate roles={["client"]}>
+      <CreateProjectPage />
+    </ProtectedGate>
+  ),
 });
 
 function CreateProjectPage() {
   const { user } = useAuth();
+  const { activeRole } = useActiveRole();
   const navigate = useNavigate();
-  const { edit } = Route.useSearch();
+  const { edit, ai } = Route.useSearch();
 
-  if (user?.userType !== "client") {
+  if (activeRole !== "client") {
     return (
       <div className="min-h-screen bg-background">
         <SiteNav />
         <div className="mx-auto max-w-lg px-4 py-20 text-center">
-          <h1 className="font-display text-2xl font-bold">Client account required</h1>
+          <h1 className="font-display text-2xl font-bold">Mijoz hisobi talab qilinadi</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Only clients can post projects and hire freelancers. You are signed in as a{" "}
-            <span className="font-medium text-foreground">freelancer</span>.
+            Faqat mijozlar loyiha joylash va frilanser yollashi mumkin. Siz{" "}
+            <span className="font-medium text-foreground">frilanser</span> sifatida kirdingiz.
           </p>
           <div className="mt-8 flex flex-col gap-3">
             <button
@@ -72,7 +82,7 @@ function CreateProjectPage() {
               }}
               className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
-              Sign in as client
+              Mijoz sifatida kirish
             </button>
             <button
               type="button"
@@ -83,10 +93,10 @@ function CreateProjectPage() {
               }}
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:border-primary/20"
             >
-              Try demo client (Asaka Capital)
+              Demo mijozni sinash (Asaka Capital)
             </button>
             <Link to="/dashboard/freelancer" className="text-sm text-muted-foreground hover:text-foreground">
-              Back to freelancer dashboard
+              Frilanser paneliga qaytish
             </Link>
           </div>
         </div>
@@ -111,6 +121,19 @@ function CreateProjectPage() {
     existing?.attachments ?? [],
   );
 
+  useEffect(() => {
+    if (edit || ai !== "1") return;
+    const draft = consumeAiProjectDraft();
+    if (!draft) return;
+    setTitle(draft.title);
+    setCategory(mapAiCategoryToForm(draft.category));
+    setBudget(String(draft.budget.suggested));
+    setDuration(`${draft.timeline.weeks} hafta`);
+    setDescription(draft.description);
+    setSkillsText(draft.skills.join(", "));
+    toast.success("AI loyiha ma'lumotlari yuklandi");
+  }, [edit, ai]);
+
   const buildInput = (): ProjectFormInput => ({
     title,
     category,
@@ -134,25 +157,27 @@ function CreateProjectPage() {
     clientVerified: user!.verified,
   };
 
-  const isValid = title.trim() && category && Number(budget) > 0 && duration.trim() && description.trim();
+  const validation = validateProjectInput(buildInput());
+  const isValid = validation.ok;
 
   const handleSaveDraft = () => {
     if (!title.trim()) {
-      toast.error("Project title is required to save a draft.");
+      toast.error("Qoralama saqlash uchun loyiha nomi talab qilinadi.");
       return;
     }
     const project = saveProjectDraft(buildInput(), ctx, edit);
-    toast.success("Draft saved", { description: "You can continue editing anytime from My Projects." });
+    toast.success("Qoralama saqlandi", { description: "Mening loyihalarimdan istalgan vaqtda davom etishingiz mumkin." });
     navigate({ to: "/projects/create", search: { edit: project.slug } });
   };
 
   const handlePublish = () => {
-    if (!isValid) {
-      toast.error("Please fill in all required fields before publishing.");
+    const result = validateProjectInput(buildInput());
+    if (!result.ok) {
+      toast.error(result.errors[0] ?? "Joylashdan oldin barcha majburiy maydonlarni to'ldiring.");
       return;
     }
     const project = publishProject(buildInput(), ctx, edit);
-    toast.success("Project published", { description: "Freelancers can now submit proposals." });
+    toast.success("Loyiha joylandi", { description: "Frilanserlar endi taklif yuborishi mumkin." });
     navigate({ to: "/projects/$slug", params: { slug: project.slug }, search: { published: "true" } });
   };
 
@@ -164,11 +189,11 @@ function CreateProjectPage() {
     ];
     const next = mockFiles[attachments.length % mockFiles.length]!;
     if (attachments.some((a) => a.name === next.name)) {
-      toast.info("Attachment already added (mock).");
+      toast.info("Ilova allaqachon qo'shilgan (mock).");
       return;
     }
     setAttachments((prev) => [...prev, next]);
-    toast.success("Attachment added (mock)");
+    toast.success("Ilova qo'shildi (mock)");
   };
 
   return (
@@ -178,17 +203,17 @@ function CreateProjectPage() {
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <nav className="font-mono mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Link to="/my-projects" className="flex items-center gap-1 hover:text-foreground">
-            <ChevronLeft className="size-3" /> My projects
+            <ChevronLeft className="size-3" /> Mening loyihalarim
           </Link>
           <span>/</span>
-          <span>{edit ? "Edit project" : "Post a project"}</span>
+          <span>{edit ? "Loyihani tahrirlash" : "Loyiha joylash"}</span>
         </nav>
 
         <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-          {edit ? "Edit project" : "Post a project"}
+          {edit ? "Loyihani tahrirlash" : "Loyiha joylash"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Describe your project to attract qualified freelancers. Save as draft or publish immediately.
+          Malakali frilanserlar jalb qilish uchun loyihangizni tasvirlab bering. Qoralama sifatida saqlang yoki darhol joylang.
         </p>
 
         <form
@@ -198,17 +223,17 @@ function CreateProjectPage() {
             handlePublish();
           }}
         >
-          <Field label="Project title" required>
+          <Field label="Loyiha nomi" required>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Fintech App Redesign"
+              placeholder="masalan, Fintech ilova qayta dizayni"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/30"
             />
           </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Category" required>
+            <Field label="Kategoriya" required>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -219,21 +244,21 @@ function CreateProjectPage() {
                 ))}
               </select>
             </Field>
-            <Field label="Experience level" required>
+            <Field label="Tajriba darajasi" required>
               <select
                 value={experienceLevel}
                 onChange={(e) => setExperienceLevel(e.target.value as typeof experienceLevel)}
                 className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/30"
               >
-                <option value="Entry">Entry</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Expert">Expert</option>
+                <option value="Entry">Boshlang'ich</option>
+                <option value="Intermediate">O'rta</option>
+                <option value="Expert">Ekspert</option>
               </select>
             </Field>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Budget" required>
+            <Field label="Byudjet" required>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -247,48 +272,48 @@ function CreateProjectPage() {
                   onChange={(e) => setBudgetType(e.target.value as "fixed" | "hourly")}
                   className="rounded-lg border border-border bg-background px-3 py-3 text-sm outline-none focus:border-primary/30"
                 >
-                  <option value="fixed">Fixed</option>
-                  <option value="hourly">Hourly</option>
+                  <option value="fixed">Belgilangan</option>
+                  <option value="hourly">Soatlik</option>
                 </select>
               </div>
             </Field>
-            <Field label="Duration" required>
+            <Field label="Muddat" required>
               <input
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
-                placeholder="6 weeks"
+                placeholder="6 hafta"
                 className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/30"
               />
             </Field>
           </div>
 
-          <Field label="Description" required>
+          <Field label="Tavsif" required>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={6}
-              placeholder="Describe the project scope, goals, and deliverables. Use - prefix for scope items."
+              placeholder="Loyiha doirasi, maqsadlar va natijalarni tasvirlang. Doira bandlari uchun - prefiksidan foydalaning."
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/30"
             />
           </Field>
 
-          <Field label="Required skills" required>
+          <Field label="Talab qilinadigan ko'nikmalar" required>
             <input
               value={skillsText}
               onChange={(e) => setSkillsText(e.target.value)}
               placeholder="Figma, Design Systems, Fintech"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/30"
             />
-            <p className="mt-1 text-xs text-muted-foreground">Separate skills with commas.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Ko'nikmalarni vergul bilan ajrating.</p>
           </Field>
 
-          <Field label="Attachments (mock)">
+          <Field label="Ilovalar (mock)">
             <button
               type="button"
               onClick={handleMockAttach}
               className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:border-primary/20"
             >
-              <Paperclip className="size-4" /> Add attachment
+              <Paperclip className="size-4" /> Ilova qo'shish
             </button>
             {attachments.length > 0 && (
               <ul className="mt-3 space-y-2">
@@ -314,17 +339,17 @@ function CreateProjectPage() {
               onClick={handleSaveDraft}
               className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:border-primary/20"
             >
-              <Save className="size-4" /> Save draft
+              <Save className="size-4" /> Qoralamani saqlash
             </button>
             <button
               type="submit"
               disabled={!isValid}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
             >
-              <Send className="size-4" /> Publish project
+              <Send className="size-4" /> Loyihani joylash
             </button>
             <Link to="/my-projects" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-              Cancel
+              Bekor qilish
             </Link>
           </div>
         </form>

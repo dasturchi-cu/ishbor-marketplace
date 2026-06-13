@@ -14,7 +14,8 @@ import {
   Eye,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
-import { EmptyState } from "@/components/site/feedback";
+import { EmptyState, confirmDestructive } from "@/components/site/feedback";
+import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireRole } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -28,32 +29,39 @@ import type { Project, ProjectStatus } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/my-projects")({
   beforeLoad: requireRole(["client"]),
-  head: () => ({ meta: [{ title: "My Projects — Ishbor" }] }),
-  component: MyProjectsPage,
+  head: () => ({ meta: [{ title: "Mening loyihalarim — Ishbor" }] }),
+  component: () => (
+    <ProtectedGate roles={["client"]}>
+      <MyProjectsPage />
+    </ProtectedGate>
+  ),
 });
 
 const statusLabels: Record<ProjectStatus, string> = {
-  draft: "Draft",
-  published: "Open",
-  paused: "Paused",
-  closed: "Closed",
+  draft: "Qoralama",
+  published: "Ochiq",
+  paused: "To'xtatilgan",
+  closed: "Yopilgan",
 };
 
 const filterTabs = [
-  { key: "all", label: "All" },
-  { key: "draft", label: "Drafts" },
-  { key: "published", label: "Published" },
-  { key: "paused", label: "Paused" },
-  { key: "closed", label: "Closed" },
+  { key: "all", label: "Barchasi" },
+  { key: "draft", label: "Qoralamalar" },
+  { key: "published", label: "Joylangan" },
+  { key: "paused", label: "To'xtatilgan" },
+  { key: "closed", label: "Yopilgan" },
 ] as const;
+
+const EMPTY_PROJECTS: Project[] = [];
 
 function MyProjectsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof filterTabs)[number]["key"]>("all");
+  const ownerId = user?.id;
   const projects = useSyncExternalStore(
     subscribeProjects,
-    () => getMyProjects(user!.id),
-    () => getMyProjects(user!.id),
+    () => (ownerId ? getMyProjects(ownerId) : EMPTY_PROJECTS),
+    () => EMPTY_PROJECTS,
   );
 
   const filtered =
@@ -63,14 +71,14 @@ function MyProjectsPage() {
 
   return (
     <WorkspaceShell
-      eyebrow="Client workspace"
-      title="My projects"
+      eyebrow="Mijoz ish maydoni"
+      title="Mening loyihalarim"
       actions={
         <Link
           to="/projects/create"
           className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground sm:w-auto"
         >
-          <Plus className="size-4" /> Post project
+          <Plus className="size-4" /> Loyiha joylash
         </Link>
       }
     >
@@ -97,25 +105,25 @@ function MyProjectsPage() {
       {projects.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
-          title="Post your first project"
-          description="Create a project to start receiving proposals from verified freelancers."
+          title="Birinchi loyihangizni joylang"
+          description="Tekshirilgan frilanserlardan taklif olish uchun loyiha yarating."
           action={
             <Link
               to="/projects/create"
               className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
-              Post your first project
+              Birinchi loyihangizni joylang
             </Link>
           }
         />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
-          title={`No ${filterTabs.find((t) => t.key === tab)?.label.toLowerCase()} projects`}
-          description="Try another filter or post a new project."
+          title={`${filterTabs.find((t) => t.key === tab)?.label} loyihalar yo'q`}
+          description="Boshqa filtrni sinab ko'ring yoki yangi loyiha joylang."
           action={
             <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-              Post project
+              Loyiha joylash
             </Link>
           }
         />
@@ -138,17 +146,21 @@ function ProjectRow({ project: p }: { project: Project }) {
   const handlePause = () => {
     const next = status === "paused" ? "published" : "paused";
     updateProjectStatus(p.slug, next);
-    toast.success(next === "paused" ? "Project paused" : "Project resumed");
+    toast.success(next === "paused" ? "Loyiha to'xtatildi" : "Loyiha davom ettirildi");
   };
 
-  const handleClose = () => {
+  const handleYopish = () => {
+    if (!confirmDestructive(`"${p.title}" loyihasini yopishni tasdiqlaysizmi?`)) return;
     updateProjectStatus(p.slug, "closed");
-    toast.success("Project closed");
+    toast.success("Loyiha yopildi");
   };
 
   const handleDelete = () => {
+    if (!confirmDestructive(`"${p.title}" butunlay o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) return;
     if (deleteProject(p.slug)) {
-      toast.success("Project deleted");
+      toast.success("Loyiha o'chirildi");
+    } else {
+      toast.error("O'chirishda xato yuz berdi");
     }
   };
 
@@ -161,7 +173,7 @@ function ProjectRow({ project: p }: { project: Project }) {
             <StatusBadge status={status} />
             {pendingApps > 0 && status === "published" && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                <Users className="size-3" /> {pendingApps} proposals
+                <Users className="size-3" /> {pendingApps} ta taklif
               </span>
             )}
           </div>
@@ -174,9 +186,9 @@ function ProjectRow({ project: p }: { project: Project }) {
           </Link>
           <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
           <div className="mt-3 flex flex-wrap gap-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            <span>Budget: ${p.budget.toLocaleString()}{p.budgetType === "hourly" ? "/hr" : ""}</span>
-            <span>Duration: {p.duration}</span>
-            <span>Posted: {p.postedAgo}</span>
+            <span>Byudjet: ${p.budget.toLocaleString()}{p.budgetType === "hourly" ? "/hr" : ""}</span>
+            <span>Muddat: {p.duration}</span>
+            <span>Joylangan: {p.postedAgo}</span>
           </div>
         </div>
 
@@ -186,7 +198,7 @@ function ProjectRow({ project: p }: { project: Project }) {
             params={{ slug: p.slug }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/20"
           >
-            <Eye className="size-3.5" /> View
+            <Eye className="size-3.5" /> Ko'rish
           </Link>
           {status !== "closed" && (
             <Link
@@ -194,7 +206,7 @@ function ProjectRow({ project: p }: { project: Project }) {
               search={{ edit: p.slug }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/20"
             >
-              <Pencil className="size-3.5" /> Edit
+              <Pencil className="size-3.5" /> Tahrirlash
             </Link>
           )}
           {status === "published" || status === "paused" ? (
@@ -204,19 +216,19 @@ function ProjectRow({ project: p }: { project: Project }) {
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/20"
             >
               {status === "paused" ? (
-                <><Play className="size-3.5" /> Resume</>
+                <><Play className="size-3.5" /> Davom ettirish</>
               ) : (
-                <><Pause className="size-3.5" /> Pause</>
+                <><Pause className="size-3.5" /> To'xtatish</>
               )}
             </button>
           ) : null}
           {status !== "closed" && status !== "draft" && (
             <button
               type="button"
-              onClick={handleClose}
+              onClick={handleYopish}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/20"
             >
-              <XCircle className="size-3.5" /> Close
+              <XCircle className="size-3.5" /> Yopish
             </button>
           )}
           <button
@@ -224,7 +236,7 @@ function ProjectRow({ project: p }: { project: Project }) {
             onClick={handleDelete}
             className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-2 text-xs font-medium text-destructive hover:bg-destructive/5"
           >
-            <Trash2 className="size-3.5" /> Delete
+            <Trash2 className="size-3.5" /> O'chirish
           </button>
         </div>
       </div>

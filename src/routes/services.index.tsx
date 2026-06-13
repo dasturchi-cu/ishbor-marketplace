@@ -1,0 +1,99 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { SiteNav } from "@/components/site/nav";
+import { SiteFooter } from "@/components/site/footer";
+import { ServiceCard } from "@/components/site/cards";
+import { ServiceCardSkeleton, EmptyState } from "@/components/site/feedback";
+import { getPublishedServices, subscribeServices } from "@/lib/services-store";
+import { recommendServices } from "@/lib/recommendations";
+import { useSyncExternalStore } from "react";
+import { usePageReady } from "@/hooks/use-page-ready";
+import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { filterServices, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
+import { categories } from "@/lib/mock-data";
+import { Link } from "@tanstack/react-router";
+import { Package } from "lucide-react";
+
+export const Route = createFileRoute("/services/")({
+  validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
+  head: () => ({
+    meta: [
+      { title: "Xizmatlar — Ishbor" },
+      { name: "description", content: "Markaziy Osiyoning tekshirilgan ijodkorlaridan tayyor xizmatlar." },
+    ],
+  }),
+  component: ServicesPage,
+});
+
+function ServicesPage() {
+  const ready = usePageReady();
+  const search = Route.useSearch();
+  const setSearch = useMarketplaceSearch(search, "/services");
+  const allServices = useSyncExternalStore(subscribeServices, getPublishedServices, getPublishedServices);
+  const recommended = recommendServices(allServices);
+  const filtered = filterServices(
+    search.sort === "newest" && !search.q && !search.category ? recommended : allServices,
+    search,
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SiteNav />
+
+      <div className="border-b border-border">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+          <div className="eyebrow mb-3">Bozor · Xizmatlar</div>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
+            Tayyor ish, yetkazishga tayyor.
+          </h1>
+          <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
+            Aniq doira, aniq narx, aniq muddat. Mintaqaning eng yaxshilaridan tanlangan takliflar.
+          </p>
+          <Link
+            to="/services/create"
+            className="mt-4 inline-flex rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            Xizmat yaratish
+          </Link>
+
+          <MarketplaceToolbar
+            placeholder="Xizmatlarni qidirish…"
+            q={search.q ?? ""}
+            sort={search.sort ?? "newest"}
+            activeCategory={search.category}
+            activeFilter={search.filter}
+            categories={categories.map((c) => ({ key: c.slug, label: c.name, count: c.count }))}
+            chips={[{ key: "top-rated", label: "Eng yuqori reyting" }]}
+            resultCount={filtered.length}
+            resultLabel="xizmat"
+            onSearchChange={setSearch}
+          />
+        </div>
+      </div>
+
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+        {!ready ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => <ServiceCardSkeleton key={i} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={Package}
+            title="Xizmatlar topilmadi"
+            description="Qidiruv yoki filtrlarni o'zgartirib ko'ring."
+            action={
+              <button onClick={() => setSearch({ q: "", category: "", filter: "", sort: "newest" })} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                Filtrlarni tozalash
+              </button>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
+            {filtered.map((s) => <ServiceCard key={s.id} s={s} />)}
+          </div>
+        )}
+      </section>
+
+      <SiteFooter />
+    </div>
+  );
+}

@@ -2,20 +2,23 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { AdminProvider } from "@/components/admin/admin-context";
 import { AdminSearch } from "@/components/admin/search";
 import { AdminSearchProvider } from "@/components/admin/search-context";
-import { requireAuth } from "@/lib/guards";
+import { AdminOnlyGate } from "@/components/admin/admin-only-gate";
+import { requireAdmin } from "@/lib/guards";
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: requireAuth,
+  beforeLoad: requireAdmin,
   component: AdminLayout,
 });
 
 function AdminLayout() {
   return (
-    <AdminProvider>
-      <AdminSearchProvider>
-        <Outlet />
-        <AdminSearch />
-      </AdminSearchProvider>
-    </AdminProvider>
+    <AdminOnlyGate>
+      <AdminProvider>
+        <AdminSearchProvider>
+          <Outlet />
+          <AdminSearch />
+        </AdminSearchProvider>
+      </AdminProvider>
+    </AdminOnlyGate>
   );
 }

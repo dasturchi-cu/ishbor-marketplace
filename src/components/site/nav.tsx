@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 
-import { Search, Bell, Wallet, MessageSquare, Menu, X, LogOut, FolderOpen, FileText, Briefcase, Plus } from "lucide-react";
+import { Search, Bell, Wallet, MessageSquare, Menu, X, LogOut, FolderOpen, FileText, Briefcase, Plus, Sparkles, LayoutDashboard } from "lucide-react";
 
 import { useState } from "react";
 
@@ -11,15 +11,18 @@ import { ThemeToggle } from "./theme";
 import { GradientAvatar } from "./avatar";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
+import { getActiveDashboardPath } from "@/lib/active-role-store";
 
 import type { AuthUser } from "@/lib/auth";
 
 function NavProfileLink({ user }: { user: AuthUser }) {
+  const { activeRole } = useActiveRole();
   const avatar = (
     <GradientAvatar name={user.fullName} hue={user.avatarHue} size={32} />
   );
 
-  if (user.userType === "freelancer" && user.username) {
+  if (activeRole === "freelancer" && user.username) {
     return (
       <Link
         to="/freelancers/$username"
@@ -53,6 +56,7 @@ function NavProfileLink({ user }: { user: AuthUser }) {
 
 
 function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; isAuthenticated: boolean }) {
+  const { activeRole } = useActiveRole();
   const secondary =
     "touch-target hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-default hover:border-primary/20 focus-ring sm:inline-flex";
   const primary =
@@ -62,25 +66,25 @@ function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; 
     return (
       <>
         <Link to="/projects" className={secondary}>
-          <Briefcase className="size-3.5" /> Find work
+          <Briefcase className="size-3.5" /> Ish topish
         </Link>
         <Link to="/login" search={{ redirect: "/projects/create" }} className={primary}>
-          <Plus className="size-3.5" /> Post project
+          <Plus className="size-3.5" /> Loyiha joylash
         </Link>
       </>
     );
   }
 
-  if (user?.userType === "client") {
+  if (activeRole === "client") {
     return (
       <>
         <Link to="/my-projects" className={secondary}>
-          <FolderOpen className="size-3.5" /> My projects
+          <FolderOpen className="size-3.5" /> Mening loyihalarim
         </Link>
         <Link to="/projects/create" className={primary}>
           <Plus className="size-3.5" />
-          <span className="hidden sm:inline">Post project</span>
-          <span className="sm:hidden">Post</span>
+          <span className="hidden sm:inline">Loyiha joylash</span>
+          <span className="sm:hidden">Joylash</span>
         </Link>
       </>
     );
@@ -89,12 +93,12 @@ function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; 
   return (
     <>
       <Link to="/applications" className={secondary}>
-        <FileText className="size-3.5" /> My applications
+        <FileText className="size-3.5" /> Mening arizalarim
       </Link>
       <Link to="/projects" className={primary}>
         <Briefcase className="size-3.5" />
-        <span className="hidden sm:inline">Find work</span>
-        <span className="sm:hidden">Projects</span>
+        <span className="hidden sm:inline">Ish topish</span>
+        <span className="sm:hidden">Loyihalar</span>
       </Link>
     </>
   );
@@ -104,11 +108,15 @@ function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; 
 
 const links = [
 
-  { to: "/services", label: "Services" },
+  { to: "/services", label: "Xizmatlar" },
 
-  { to: "/freelancers", label: "Talent" },
+  { to: "/freelancers", label: "Mutaxassislar" },
 
-  { to: "/projects", label: "Projects" },
+  { to: "/projects", label: "Loyihalar" },
+
+  { to: "/agencies", label: "Agentliklar" },
+
+  { to: "/pricing", label: "Tariflar" },
 
 ];
 
@@ -125,12 +133,18 @@ export function SiteNav() {
   const navigate = useNavigate();
 
   const { isAuthenticated, user, logout } = useAuth();
+  const { activeRole } = useActiveRole();
+  const dashboardPath = getActiveDashboardPath(activeRole);
 
-  const onWorkspace = ["/dashboard", "/my-projects", "/messages", "/notifications", "/wallet", "/admin", "/orders", "/applications", "/escrow", "/profile", "/settings"].some(
-
+  const onWorkspace = ["/dashboard", "/my-projects", "/portfolio", "/messages", "/notifications", "/wallet", "/admin", "/orders", "/applications", "/escrow", "/profile", "/settings", "/subscription", "/promotions", "/revenue", "/analytics", "/saved", "/ai", "/agency", "/my-services"].some(
     (p) => pathname.startsWith(p),
 
   );
+
+  const onMarketplace =
+    ["/services", "/freelancers", "/projects", "/agencies", "/pricing"].some(
+      (p) => pathname === p || pathname.startsWith(`${p}/`),
+    );
 
   const goSearch = (q: string) => {
     navigate({ to: "/services", search: { q: q.trim() || undefined } });
@@ -200,7 +214,7 @@ export function SiteNav() {
 
             <Search className="size-3.5" />
 
-            <span>Search</span>
+            <span>Qidiruv</span>
 
             <kbd className="font-mono ml-2 rounded border border-border px-1.5 py-0.5 text-[10px]">
 
@@ -212,11 +226,37 @@ export function SiteNav() {
 
 
 
-          {onWorkspace && isAuthenticated ? (
+          {(onWorkspace || onMarketplace) && isAuthenticated ? (
 
             <>
 
+              <Link
+                to={dashboardPath}
+                className={`touch-target hidden items-center gap-1.5 rounded-lg border px-2.5 transition-default focus-ring sm:inline-flex ${
+                  pathname.startsWith("/dashboard")
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-border bg-surface text-foreground/70 hover:border-primary/20 hover:text-foreground"
+                }`}
+                aria-label="Boshqaruv paneli"
+              >
+                <LayoutDashboard className="size-3.5" />
+                <span className="hidden text-xs font-semibold xl:inline">Panel</span>
+              </Link>
+
               <NavBusinessActions user={user} isAuthenticated={isAuthenticated} />
+
+              <Link
+                to="/ai"
+                className={`touch-target hidden items-center gap-1.5 rounded-lg border px-2.5 transition-default focus-ring sm:inline-flex ${
+                  pathname.startsWith("/ai")
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-border bg-surface text-foreground/70 hover:border-primary/20 hover:text-foreground"
+                }`}
+                aria-label="AI Markaz"
+              >
+                <Sparkles className="size-3.5" />
+                <span className="hidden text-xs font-semibold lg:inline">AI Markaz</span>
+              </Link>
 
               <Link
 
@@ -224,7 +264,7 @@ export function SiteNav() {
 
                 className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 hover:text-foreground transition-default focus-ring"
 
-                aria-label="Messages"
+                aria-label="Xabarlar"
 
               >
 
@@ -240,7 +280,7 @@ export function SiteNav() {
 
                 className="touch-target inline-flex items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 hover:text-foreground transition-default focus-ring"
 
-                aria-label="Notifications"
+                aria-label="Bildirishnomalar"
 
               >
 
@@ -254,7 +294,7 @@ export function SiteNav() {
 
                 className="touch-target hidden items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 hover:text-foreground sm:inline-flex transition-default focus-ring"
 
-                aria-label="Wallet"
+                aria-label="Hamyon"
 
               >
 
@@ -274,13 +314,13 @@ export function SiteNav() {
 
               <Link
 
-                to={user!.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard"}
+                to={dashboardPath}
 
                 className="touch-target hidden items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-default hover:text-foreground sm:inline-flex"
 
               >
 
-                Dashboard
+                Boshqaruv paneli
 
               </Link>
 
@@ -302,7 +342,7 @@ export function SiteNav() {
 
               >
 
-                Sign in
+                Kirish
 
               </Link>
 
@@ -320,7 +360,7 @@ export function SiteNav() {
 
             onClick={() => setOpen((o) => !o)}
 
-            aria-label="Menu"
+            aria-label="Menyu"
 
           >
 
@@ -346,7 +386,7 @@ export function SiteNav() {
 
               <input
 
-                placeholder="Search Ishbor…"
+                placeholder="Ishborni qidirish…"
 
                 value={mobileQ}
 
@@ -382,43 +422,46 @@ export function SiteNav() {
 
             {isAuthenticated ? (
               <>
-                <Link to={user!.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard"} onClick={() => setOpen(false)} className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
-                  Dashboard
+                <Link to="/ai" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                  <Sparkles className="size-4 text-primary" /> AI Markaz
                 </Link>
-                {user!.userType === "client" ? (
+                <Link to={dashboardPath} onClick={() => setOpen(false)} className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                  Boshqaruv paneli
+                </Link>
+                {activeRole === "client" ? (
                   <>
                     <Link to="/my-projects" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
-                      <FolderOpen className="size-4" /> My projects
+                      <FolderOpen className="size-4" /> Mening loyihalarim
                     </Link>
                     <Link to="/projects/create" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
-                      <Plus className="size-4" /> Post project
+                      <Plus className="size-4" /> Loyiha joylash
                     </Link>
                   </>
                 ) : (
                   <>
                     <Link to="/applications" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
-                      <FileText className="size-4" /> My applications
+                      <FileText className="size-4" /> Mening arizalarim
                     </Link>
                     <Link to="/projects" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
-                      <Briefcase className="size-4" /> Find work
+                      <Briefcase className="size-4" /> Ish topish
                     </Link>
                   </>
                 )}
                 <button onClick={() => { logout(); setOpen(false); }} className="touch-target flex w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-secondary">
-                  <LogOut className="size-4" /> Sign out
+                  <LogOut className="size-4" /> Chiqish
                 </button>
               </>
             ) : (
               <>
                 <Link to="/projects" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
-                  <Briefcase className="size-4" /> Find work
+                  <Briefcase className="size-4" /> Ish topish
                 </Link>
                 <Link
                   to="/login"
                   onClick={() => setOpen(false)}
                   className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-secondary transition-default"
                 >
-                  Sign in
+                  Kirish
                 </Link>
               </>
             )}
@@ -434,7 +477,7 @@ export function SiteNav() {
                   onClick={() => setOpen(false)}
                   className="touch-target rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"
                 >
-                  Post project
+                  Loyiha joylash
                 </Link>
               )}
 

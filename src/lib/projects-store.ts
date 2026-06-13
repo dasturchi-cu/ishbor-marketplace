@@ -1,5 +1,10 @@
 import type { Project, ProjectStatus } from "./mock-data";
 import { projects as mockProjects } from "./mock-data";
+import { isMarketplaceReady } from "./project-validation";
+import { notifyNewListing } from "./alerts-store";
+import { completeReferral } from "./referral-store";
+import { getSession } from "./auth";
+import { recordAnalyticsEvent } from "./analytics-events-store";
 
 const STORAGE_KEY = "ishbor-user-projects";
 const listeners = new Set<() => void>();
@@ -7,14 +12,21 @@ let cachedProjects: Project[] | null = null;
 let cachedPublished: Project[] | null = null;
 let cachedPublishedSource: Project[] | null = null;
 let cachedMyProjects: Map<string, Project[]> | null = null;
-let cachedMyProjectsSource: Project[] | null = null;
+let cachedStored: Project[] | null = null;
 
 function invalidateCache() {
   cachedProjects = null;
   cachedPublished = null;
   cachedPublishedSource = null;
   cachedMyProjects = null;
-  cachedMyProjectsSource = null;
+  cachedStored = null;
+}
+
+function getStoredSnapshot(): Project[] {
+  if (cachedStored === null) {
+    cachedStored = readStored();
+  }
+  return cachedStored;
 }
 
 function notify() {
@@ -84,7 +96,7 @@ export function getPublishedProjects(): Project[] {
   if (cachedPublished && cachedPublishedSource === all) {
     return cachedPublished;
   }
-  cachedPublished = all.filter((p) => !p.status || p.status === "published");
+  cachedPublished = all.filter((p) => (!p.status || p.status === "published") && isMarketplaceReady(p));
   cachedPublishedSource = all;
   return cachedPublished;
 }
@@ -94,27 +106,27 @@ export function getProjectBySlug(slug: string): Project | undefined {
 }
 
 export function getMyProjects(ownerUserId: string): Project[] {
-  const stored = readStored();
-  if (cachedMyProjects && cachedMyProjectsSource === stored && cachedMyProjects.has(ownerUserId)) {
+  if (cachedMyProjects?.has(ownerUserId)) {
     return cachedMyProjects.get(ownerUserId)!;
   }
-  if (!cachedMyProjects || cachedMyProjectsSource !== stored) {
+  if (!cachedMyProjects) {
     cachedMyProjects = new Map();
-    cachedMyProjectsSource = stored;
   }
-  const filtered = stored.filter((p) => p.ownerUserId === ownerUserId);
+  const filtered = getStoredSnapshot().filter((p) => p.ownerUserId === ownerUserId);
   cachedMyProjects.set(ownerUserId, filtered);
   return filtered;
 }
 
 export function getMyPublishedProjects(ownerUserId: string): Project[] {
-  const mine = getMyProjects(ownerUserId);
   const key = `${ownerUserId}:published`;
-  if (cachedMyProjects && cachedMyProjectsSource === readStored() && cachedMyProjects.has(key)) {
+  if (cachedMyProjects?.has(key)) {
     return cachedMyProjects.get(key)!;
   }
-  const filtered = mine.filter((p) => p.status === "published");
-  cachedMyProjects!.set(key, filtered);
+  if (!cachedMyProjects) {
+    cachedMyProjects = new Map();
+  }
+  const filtered = getMyProjects(ownerUserId).filter((p) => p.status === "published");
+  cachedMyProjects.set(key, filtered);
   return filtered;
 }
 
@@ -147,7 +159,7 @@ function buildProject(
   const all = getAllProjects();
   const slug = existing?.slug ?? uniqueSlug(input.title, all);
   return {
-    id: existing?.id ?? `p-${Date.now()}`,
+    id: existing?.id ?? `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     slug,
     title: input.title.trim(),
     client: ctx.client,
@@ -160,7 +172,7 @@ function buildProject(
     budget: input.budget,
     budgetType: input.budgetType,
     category: input.category,
-    postedAgo: status === "published" ? "Just now" : existing?.postedAgo ?? "Draft",
+    postedAgo: status === "published" ? "Hozirgina" : existing?.postedAgo ?? "Qoralama",
     proposals: existing?.proposals ?? 0,
     description: input.description.trim(),
     skills: input.skills,
@@ -203,13 +215,39 @@ export function publishProject(
   const stored = readStored();
   const existing = existingSlug ? stored.find((p) => p.slug === existingSlug) : undefined;
   const project = buildProject(input, ctx, "published", existing);
-  project.postedAgo = "Just now";
+  project.postedAgo = "Hozirgina";
+  project.createdAt = existing?.createdAt ?? new Date().toISOString();
   const next = existing
     ? stored.map((p) => (p.slug === existingSlug ? project : p))
     : [project, ...stored];
   writeStored(next);
   notify();
+  notifyNewListing({
+    title: project.title,
+    slug: project.slug,
+    category: project.category,
+    skills: project.skills,
+    budget: project.budget,
+    href: `/projects/${project.slug}`,
+    type: "project",
+  });
+  const session = getSession();
+  if (session) completeReferral(session.user.id);
+  recordAnalyticsEvent({ type: "project_created", entityId: project.slug });
   return project;
+}
+
+export function updateProjectFeatured(slug: string, featured: boolean, days = 7): Project | undefined {
+  const stored = readStored();
+  const idx = stored.findIndex((p) => p.slug === slug);
+  if (idx === -1) return undefined;
+  const until = featured ? new Date(Date.now() + days * 86400000).toISOString() : undefined;
+  const updated = { ...stored[idx]!, featured, featuredUntil: until };
+  const next = [...stored];
+  next[idx] = updated;
+  writeStored(next);
+  notify();
+  return updated;
 }
 
 export function updateProjectStatus(slug: string, status: ProjectStatus): Project | undefined {

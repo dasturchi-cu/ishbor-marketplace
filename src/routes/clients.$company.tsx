@@ -6,6 +6,10 @@ import { GradientAvatar } from "@/components/site/avatar";
 import { ProjectCard } from "@/components/site/cards";
 import { VerifiedIdentityBadge } from "@/components/site/trust";
 import { getClient, getClientProjects, getClientReviews } from "@/lib/mock-data";
+import { getClientPublicMetrics } from "@/lib/analytics-utils";
+import { computeClientReputation } from "@/lib/reputation-store";
+import { ReputationBadge } from "@/components/reputation/reputation-badge";
+import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/clients/$company")({
   loader: ({ params }) => {
@@ -18,13 +22,23 @@ export const Route = createFileRoute("/clients/$company")({
     };
   },
   head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.client.name ?? "Client"} — Ishbor` }],
+    meta: [{ title: `${loaderData?.client.name ?? "Mijoz"} — Ishbor` }],
   }),
+  notFoundComponent: () => (
+    <EntityNotFound
+      title="Mijoz topilmadi"
+      description="Bu kompaniya profili mavjud emas yoki havola noto'g'ri."
+      backTo="/projects"
+      backLabel="Loyihalarni ko'rish"
+    />
+  ),
   component: ClientProfilePage,
 });
 
 function ClientProfilePage() {
   const { client, openProjects, clientReviews } = Route.useLoaderData();
+  const live = getClientPublicMetrics(client.slug, client.name, client.verified);
+  const reputation = computeClientReputation(client.slug, client.name);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,11 +49,12 @@ function ClientProfilePage() {
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
             <GradientAvatar name={client.name} hue={client.hue} size={80} rounded="rounded-2xl" />
             <div className="min-w-0 flex-1">
-              <div className="eyebrow mb-2">Client profile</div>
+              <div className="eyebrow mb-2">Mijoz profili</div>
               <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{client.name}</h1>
               <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{client.bio}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {client.verified && <VerifiedIdentityBadge />}
+                <ReputationBadge tier={reputation.tier} size="md" />
                 <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                   <Building2 className="size-3" /> {client.industry}
                 </span>
@@ -52,12 +67,20 @@ function ClientProfilePage() {
             </div>
             <div className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-1">
               <div className="rounded-xl border border-border bg-background px-4 py-3 text-center">
-                <div className="font-display text-xl font-bold">${(client.spent / 1000).toFixed(0)}k</div>
-                <div className="text-xs text-muted-foreground">Total spent</div>
+                <div className="font-display text-xl font-bold">${(live.totalSpend / 1000).toFixed(0)}k</div>
+                <div className="text-xs text-muted-foreground">Jami sarflangan</div>
               </div>
               <div className="rounded-xl border border-border bg-background px-4 py-3 text-center">
-                <div className="font-display text-xl font-bold">{client.hires}</div>
-                <div className="text-xs text-muted-foreground">Hires</div>
+                <div className="font-display text-xl font-bold">{live.hiresCompleted}</div>
+                <div className="text-xs text-muted-foreground">Yollashlar</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background px-4 py-3 text-center">
+                <div className="font-display text-xl font-bold">{live.projectsPosted}</div>
+                <div className="text-xs text-muted-foreground">Joylangan loyihalar</div>
+              </div>
+              <div className="rounded-xl border border-border bg-background px-4 py-3 text-center">
+                <div className="font-display text-xl font-bold">{live.trustLevel}</div>
+                <div className="text-xs text-muted-foreground">Ishonch darajasi</div>
               </div>
             </div>
           </div>

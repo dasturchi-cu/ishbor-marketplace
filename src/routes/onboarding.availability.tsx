@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding/availability")({
   head: () => ({
-    meta: [{ title: "Availability — Ishbor" }],
+    meta: [{ title: "Mavjudlik — Ishbor" }],
   }),
   component: OnboardingAvailabilityPage,
 });
@@ -38,15 +38,15 @@ function OnboardingAvailabilityPage() {
   return (
     <OnboardingLayout
       stepId="availability"
-      title="Set your availability"
-      subtitle="Clients see this on your profile. You can update it anytime from your dashboard."
+      title="Mavjudligingizni belgilang"
+      subtitle="Mijozlar buni profilingizda ko'radi. Boshqaruv panelidan istalgan vaqtda o'zgartirishingiz mumkin."
     >
       <div className="space-y-6">
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold">Available for new work</div>
-              <div className="text-xs text-muted-foreground">Show a green indicator on your profile</div>
+              <div className="text-sm font-semibold">Yangi ish uchun mavjudman</div>
+              <div className="text-xs text-muted-foreground">Profilingizda yashil belgi ko&apos;rsatiladi</div>
             </div>
             <button
               type="button"
@@ -70,7 +70,7 @@ function OnboardingAvailabilityPage() {
 
         <div className="space-y-2">
           <label className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            <Calendar className="size-3.5" /> Hours per week
+            <Calendar className="size-3.5" /> Haftasiga soat
           </label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {hoursPerWeekOptions.map((h) => (
@@ -93,7 +93,7 @@ function OnboardingAvailabilityPage() {
 
         <div className="space-y-2">
           <label className="flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            <Clock className="size-3.5" /> Typical response time
+            <Clock className="size-3.5" /> Odatdagi javob vaqti
           </label>
           <div className="grid grid-cols-2 gap-2">
             {responseTimeOptions.map((r) => (
@@ -116,7 +116,7 @@ function OnboardingAvailabilityPage() {
 
         <div className="space-y-1.5">
           <label className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Timezone
+            Vaqt mintaqasi
           </label>
           <select
             value={timezone}
@@ -133,7 +133,7 @@ function OnboardingAvailabilityPage() {
       <OnboardingNav
         backTo="/onboarding/languages"
         onContinue={handleContinue}
-        continueLabel="Finish setup"
+        continueLabel="Sozlashni yakunlash"
         disabled={!canContinue}
       />
     </OnboardingLayout>

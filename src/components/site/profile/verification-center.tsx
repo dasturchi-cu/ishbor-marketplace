@@ -10,11 +10,11 @@ export function VerificationCenter({ items }: { items: VerificationItem[] }) {
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-success" />
           <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-success">
-            Verification center
+            Tasdiqlash markazi
           </span>
         </div>
         <span className="font-mono text-xs font-semibold text-success">
-          {verifiedCount}/{items.length} verified
+          {verifiedCount}/{items.length} tasdiqlangan
         </span>
       </div>
       <ul className="space-y-3">

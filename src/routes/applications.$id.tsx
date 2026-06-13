@@ -1,39 +1,41 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge } from "@/components/site/trust";
 import { ConversionFlowBanner, FREELANCER_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { requireAuth } from "@/lib/guards";
-import { getApplicationById, subscribeApplications } from "@/lib/applications-store";
+import { getApplicationById } from "@/lib/applications-store";
+import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/applications/$id")({
   beforeLoad: requireAuth,
+  loader: ({ params }) => {
+    const app = getApplicationById(params.id);
+    if (!app) throw notFound();
+    return { app };
+  },
+  notFoundComponent: () => (
+    <EntityNotFound
+      title="Ariza topilmadi"
+      description="Bu ariza mavjud emas yoki o'chirilgan."
+      backTo="/applications"
+      backLabel="Arizalarga qaytish"
+      compact
+    />
+  ),
   component: ApplicationDetailPage,
 });
 
 const timelineSteps = [
-  { key: "project", label: "Project posted" },
-  { key: "proposal", label: "Proposal submitted" },
-  { key: "application", label: "Under client review" },
-  { key: "accepted", label: "Proposal accepted" },
-  { key: "order", label: "Order & escrow active" },
+  { key: "project", label: "Loyiha joylandi" },
+  { key: "proposal", label: "Taklif yuborildi" },
+  { key: "application", label: "Mijoz ko'rib chiqmoqda" },
+  { key: "accepted", label: "Taklif qabul qilindi" },
+  { key: "order", label: "Buyurtma va eskrou faol" },
 ];
 
 function ApplicationDetailPage() {
-  const { id } = Route.useParams();
-  const app = useSyncExternalStore(subscribeApplications, () => getApplicationById(id), () => getApplicationById(id));
-
-  if (!app) {
-    return (
-      <WorkspaceShell eyebrow="Application" title="Application not found">
-        <p className="text-sm text-muted-foreground">This application may have been removed or the link is invalid.</p>
-        <Link to="/applications" className="mt-4 inline-flex text-sm font-medium text-primary hover:underline">
-          Back to applications
-        </Link>
-      </WorkspaceShell>
-    );
-  }
+  const { app } = Route.useLoaderData();
 
   const stepIndex =
     app.status === "pending" ? 2 :
@@ -46,17 +48,17 @@ function ApplicationDetailPage() {
     app.status === "pending" || app.status === "shortlisted" ? "application" : "proposal";
 
   return (
-    <WorkspaceShell eyebrow="Application" title={app.projectTitle}>
+    <WorkspaceShell eyebrow="Ariza" title={app.projectTitle}>
       <ConversionFlowBanner
-        title="Freelancer hiring path"
+        title="Frilanserni yollash yo'li"
         steps={FREELANCER_HIRE_FLOW}
         currentStep={currentFlowStep}
         nextHint={
           app.status === "accepted"
-            ? "Your proposal was accepted. The client will fund escrow and create an active order."
+            ? "Taklifingiz qabul qilindi. Mijoz eskrouni moliyalashtiradi va faol buyurtma yaratiladi."
             : app.status === "rejected"
-              ? "This proposal was not selected. Browse more projects to submit again."
-              : "Wait for the client to review. You will be notified when your status changes."
+              ? "Bu taklif tanlanmadi. Qayta yuborish uchun boshqa loyihalarni ko'ring."
+              : "Mijoz ko'rib chiqishini kuting. Holat o'zgarganda xabar beramiz."
         }
         className="mb-6"
       />
@@ -68,19 +70,19 @@ function ApplicationDetailPage() {
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{app.coverNote}</p>
             {app.deliveryTime && (
               <p className="mt-3 text-sm">
-                <span className="font-medium">Delivery time:</span>{" "}
+                <span className="font-medium">Yetkazish muddati:</span>{" "}
                 <span className="text-muted-foreground">{app.deliveryTime}</span>
               </p>
             )}
             {app.projectSlug && (
               <Link to="/projects/$slug" params={{ slug: app.projectSlug }} className="mt-4 inline-block text-sm font-medium text-primary hover:underline">
-                View project posting
+                Loyiha e'lonini ko'rish
               </Link>
             )}
           </section>
 
           <section className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="font-display font-semibold">Status timeline</h2>
+            <h2 className="font-display font-semibold">Holat vaqt chizig'i</h2>
             <div className="mt-4 space-y-3">
               {timelineSteps.map((step, i) => (
                 <div key={step.key} className="flex items-center gap-3">
@@ -93,7 +95,7 @@ function ApplicationDetailPage() {
                       params={app.orderId ? { id: app.orderId } : undefined}
                       className="ml-auto text-xs font-medium text-primary hover:underline"
                     >
-                      View order
+                      Buyurtmani ko'rish
                     </Link>
                   )}
                 </div>
@@ -104,12 +106,12 @@ function ApplicationDetailPage() {
 
         <aside className="space-y-4">
           <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Proposal amount</div>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Taklif summasi</div>
             <div className="font-display mt-1 text-2xl font-bold">${(app.proposalAmount ?? app.budget).toLocaleString()}</div>
-            <div className="mt-1 text-xs text-muted-foreground">Budget: ${app.budget.toLocaleString()}</div>
+            <div className="mt-1 text-xs text-muted-foreground">Byudjet: ${app.budget.toLocaleString()}</div>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="font-mono mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">Client</div>
+            <div className="font-mono mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">Mijoz</div>
             <div className="flex items-center gap-3">
               <GradientAvatar name={app.client} hue={app.clientHue} size={40} />
               {app.clientSlug ? (
@@ -122,12 +124,12 @@ function ApplicationDetailPage() {
             </div>
           </div>
           <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">Next step:</span>{" "}
+            <span className="font-semibold text-foreground">Keyingi qadam:</span>{" "}
             {app.status === "accepted"
               ? app.orderId
-                ? "Fund escrow in Checkout to activate the order."
-                : "Monitor Orders for escrow funding and milestone delivery."
-              : "Stay available — clients often respond within 48 hours."}
+                ? "Buyurtmani faollashtirish uchun To'lov sahifasida eskrouni moliyalashtiring."
+                : "Eskrou moliyalashtirilishi va bosqichlar yetkazilishi uchun Buyurtmalarni kuzating."
+              : "Mavjud bo'ling — mijozlar ko'pincha 48 soat ichida javob beradi."}
           </div>
         </aside>
       </div>

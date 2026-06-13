@@ -7,21 +7,21 @@ import { systemHealth } from "@/lib/admin-mock-data";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/system")({
-  head: () => ({ meta: [{ title: "System Health — Ishbor Admin" }] }),
+  head: () => ({ meta: [{ title: "Tizim holati — Ishbor Admin" }] }),
   component: AdminSystemPage,
 });
 
 const STATUS_LABELS = {
-  healthy: { label: "Healthy", color: "text-success" },
-  degraded: { label: "Degraded", color: "text-warning" },
-  down: { label: "Down", color: "text-destructive" },
+  healthy: { label: "Sog'lom", color: "text-success" },
+  degraded: { label: "Pasaygan", color: "text-warning" },
+  down: { label: "Ishlamayapti", color: "text-destructive" },
 };
 
 function AdminSystemPage() {
   const { onSearchOpen } = useAdminSearchOpen();
 
   return (
-    <AdminShell eyebrow="System Health" title="System Status" onSearchOpen={onSearchOpen}>
+    <AdminShell eyebrow="Tizim holati" title="Tizim holati" onSearchOpen={onSearchOpen}>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {systemHealth.map((s) => (
           <Card key={s.name}>
@@ -43,13 +43,13 @@ function AdminSystemPage() {
       </div>
 
       <Card className="mt-8">
-        <CardHeader><CardTitle className="text-base">Overall Platform Status</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Umumiy platforma holati</CardTitle></CardHeader>
         <CardContent>
           <div className="flex items-center gap-3">
             <HealthIndicator status="healthy" />
             <div>
-              <div className="font-display text-xl font-bold text-success">All systems operational</div>
-              <p className="text-sm text-muted-foreground">Email delivery is experiencing minor delays. All critical paths are healthy.</p>
+              <div className="font-display text-xl font-bold text-success">Barcha tizimlar ishlamoqda</div>
+              <p className="text-sm text-muted-foreground">Email yetkazib berishda kichik kechikishlar. Barcha muhim yo'nalishlar sog'lom.</p>
             </div>
           </div>
         </CardContent>

@@ -1,4 +1,5 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useSyncExternalStore } from "react";
 import { CheckCircle2, CircleAlert, Lock, MessageSquare } from "lucide-react";
 import { AdminShell } from "@/components/admin/shell";
 import { useAdminActionDialog } from "@/components/admin/actions";
@@ -8,41 +9,63 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getEscrowWorkflow } from "@/lib/mock-data";
+import { adminFreezeEscrow, adminReleaseEscrow, adminRefundEscrow } from "@/lib/admin-data-store";
+import { getEscrowWorkflowById, subscribeEscrow } from "@/lib/escrow-store";
 import { getAuditLog } from "@/lib/admin-store";
+import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/admin/escrow/$id")({
-  head: () => ({ meta: [{ title: "Escrow Detail — Ishbor Admin" }] }),
+  head: () => ({ meta: [{ title: "Eskrou tafsilotlari — Ishbor Admin" }] }),
   loader: ({ params }) => {
-    const escrow = getEscrowWorkflow(params.id);
-    if (!escrow) throw notFound();
+    const escrow = getEscrowWorkflowById(params.id) ?? getEscrowWorkflow(params.id) ?? null;
     return { escrow };
   },
   component: AdminEscrowDetailPage,
 });
 
 const CHAT = [
-  { from: "Asaka Capital", hue: 215, msg: "Milestone looks good. Ready for review.", time: "Jun 12" },
-  { from: "Nargiza Akhmedova", hue: 250, msg: "Submitted prototype files. Awaiting approval.", time: "Jun 11" },
-  { from: "System", hue: 250, msg: "Escrow funded — $6,000", time: "May 30" },
+  { from: "Asaka Capital", hue: 215, msg: "Bosqich yaxshi ko'rinadi. Ko'rib chiqishga tayyor.", time: "12-iyun" },
+  { from: "Nargiza Akhmedova", hue: 250, msg: "Prototip fayllari yuborildi. Tasdiqlash kutilmoqda.", time: "11-iyun" },
+  { from: "Tizim", hue: 250, msg: "Eskrou to'ldirildi — $6,000", time: "30-may" },
 ];
 
 function AdminEscrowDetailPage() {
-  const { escrow } = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const { escrow: loaderEscrow } = Route.useLoaderData();
+  const escrow = useSyncExternalStore(
+    subscribeEscrow,
+    () => getEscrowWorkflowById(id) ?? loaderEscrow,
+    () => loaderEscrow,
+  );
   const { dialog, confirm } = useAdminActionDialog();
+
+  if (!escrow) {
+    return (
+      <EntityNotFound
+        title="Eskrou topilmadi"
+        description="Bu eskrou admin bazasida mavjud emas."
+        backTo="/admin/escrow"
+        backLabel="Eskrou ro'yxatiga qaytish"
+        compact
+      />
+    );
+  }
+
   const audit = getAuditLog().filter((a) => a.target === escrow.id || a.category === "escrow").slice(0, 8);
+  const fundedMilestone = escrow.milestones.find((m) => m.status === "funded");
 
   return (
     <AdminShell
-      eyebrow="Escrow Command Center"
+      eyebrow="Eskrou boshqaruv markazi"
       title={escrow.project}
       onSearchOpen={() => {}}
       actions={
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => confirm({ title: "Release funds", description: `Release $${escrow.amount.toLocaleString()}?`, action: `Released escrow ${escrow.id}`, target: escrow.id, category: "escrow" })}>Release Funds</Button>
-          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Freeze escrow", description: "Freeze all escrow funds?", action: `Froze escrow ${escrow.id}`, target: escrow.id, category: "escrow" })}>Freeze</Button>
-          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Refund client", description: "Refund full amount to client?", action: `Refunded client for ${escrow.id}`, target: escrow.id, category: "escrow" })}>Refund Client</Button>
-          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Pay freelancer", description: "Release funds to freelancer?", action: `Paid freelancer for ${escrow.id}`, target: escrow.id, category: "escrow" })}>Pay Freelancer</Button>
-          <Button size="sm" variant="destructive" onClick={() => confirm({ title: "Open investigation", description: "Open formal investigation?", action: `Opened investigation ${escrow.id}`, target: escrow.id, category: "escrow" })}>Investigate</Button>
+          <Button size="sm" onClick={() => confirm({ title: "Mablag' chiqarish", description: `$${escrow.amount.toLocaleString()} chiqarilsinmi?`, action: `Eskrou mablag'i chiqarildi ${escrow.id}`, target: escrow.id, category: "escrow", onConfirm: () => { if (fundedMilestone) adminReleaseEscrow(escrow.id, fundedMilestone.label); } })}>Mablag' chiqarish</Button>
+          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Eskrouni muzlatish", description: "Barcha eskrou mablag'lari muzlatilsinmi?", action: `Eskrou muzlatildi ${escrow.id}`, target: escrow.id, category: "escrow", onConfirm: () => adminFreezeEscrow(escrow.id) })}>Muzlatish</Button>
+          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Mijozga qaytarish", description: "To'liq summa mijozga qaytarilsinmi?", action: `Mijozga qaytarildi ${escrow.id}`, target: escrow.id, category: "escrow", onConfirm: () => adminRefundEscrow(escrow.id) })}>Mijozga qaytarish</Button>
+          <Button size="sm" variant="outline" onClick={() => confirm({ title: "Frilanserga to'lash", description: "Mablag' frilanserga chiqarilsinmi?", action: `Frilanserga to'landi ${escrow.id}`, target: escrow.id, category: "escrow", onConfirm: () => { if (fundedMilestone) adminReleaseEscrow(escrow.id, fundedMilestone.label); } })}>Frilanserga to'lash</Button>
+          <Button size="sm" variant="destructive" onClick={() => confirm({ title: "Tekshiruv ochish", description: "Rasmiy tekshiruv ochilsinmi?", action: `Tekshiruv ochildi ${escrow.id}`, target: escrow.id, category: "escrow", onConfirm: () => adminFreezeEscrow(escrow.id) })}>Tekshirish</Button>
         </div>
       }
     >
@@ -57,10 +80,10 @@ function AdminEscrowDetailPage() {
 
       <Tabs defaultValue="timeline">
         <TabsList>
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="milestones">Milestones</TabsTrigger>
-          <TabsTrigger value="chat">Chat History</TabsTrigger>
-          <TabsTrigger value="audit">Audit Trail</TabsTrigger>
+          <TabsTrigger value="timeline">Vaqt chizig'i</TabsTrigger>
+          <TabsTrigger value="milestones">Bosqichlar</TabsTrigger>
+          <TabsTrigger value="chat">Chat tarixi</TabsTrigger>
+          <TabsTrigger value="audit">Audit izi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline">
@@ -106,7 +129,7 @@ function AdminEscrowDetailPage() {
                 </div>
               </div>
             ))}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground"><MessageSquare className="size-3.5" /> Platform messaging only</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><MessageSquare className="size-3.5" /> Faqat platforma xabarlari</div>
           </CardContent></Card>
         </TabsContent>
 

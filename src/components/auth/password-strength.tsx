@@ -13,7 +13,7 @@ export function getPasswordStrength(password: string): PasswordStrength {
   return Math.min(4, score) as PasswordStrength;
 }
 
-const labels = ["", "Weak", "Fair", "Good", "Strong"];
+const labels = ["", "Zaif", "O'rtacha", "Yaxshi", "Kuchli"];
 
 const colors = [
   "bg-secondary",
@@ -41,7 +41,7 @@ export function PasswordStrengthMeter({ password }: { password: string }) {
         ))}
       </div>
       <p className="font-mono text-[10px] text-muted-foreground">
-        Password strength: <span className="text-foreground">{labels[strength]}</span>
+        Parol mustahkamligi: <span className="text-foreground">{labels[strength]}</span>
       </p>
     </div>
   );
