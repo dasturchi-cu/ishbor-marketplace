@@ -17,7 +17,6 @@ function OnboardingCategoriesPage() {
   const navigate = useNavigate();
   const saved = loadOnboardingState();
   const [selected, setSelected] = useState<string[]>(saved.categories);
-  const isClient = saved.userType === "client";
 
   const toggle = (slug: string) => {
     setSelected((prev) =>
@@ -27,22 +26,14 @@ function OnboardingCategoriesPage() {
 
   const handleContinue = () => {
     saveOnboardingState({ categories: selected });
-    navigate({
-      to: isClient ? "/onboarding/company" : "/onboarding/portfolio",
-    });
+    navigate({ to: "/onboarding/portfolio" });
   };
-
-  const backTo = isClient ? "/onboarding/profile" : "/onboarding/skills";
 
   return (
     <OnboardingLayout
       stepId="categories"
-      title={isClient ? "What do you hire for?" : "Which categories do you work in?"}
-      subtitle={
-        isClient
-          ? "Select the service categories you most often need. We'll personalize your feed."
-          : "Choose up to 5 categories where you offer services or apply to projects."
-      }
+      title="Which categories do you work in?"
+      subtitle="Choose up to 5 categories where you offer services or apply to projects."
     >
       <p className="mb-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {selected.length}/5 selected
@@ -76,7 +67,7 @@ function OnboardingCategoriesPage() {
       </div>
 
       <OnboardingNav
-        backTo={backTo}
+        backTo="/onboarding/skills"
         onContinue={handleContinue}
         disabled={selected.length < 1}
       />

@@ -30,11 +30,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
+import { Route as OnboardingTeamSizeRouteImport } from './routes/onboarding.team-size'
 import { Route as OnboardingSkillsRouteImport } from './routes/onboarding.skills'
-import { Route as OnboardingProfileRouteImport } from './routes/onboarding.profile'
 import { Route as OnboardingPortfolioRouteImport } from './routes/onboarding.portfolio'
+import { Route as OnboardingLanguagesRouteImport } from './routes/onboarding.languages'
+import { Route as OnboardingIndustryRouteImport } from './routes/onboarding.industry'
+import { Route as OnboardingHiringGoalsRouteImport } from './routes/onboarding.hiring-goals'
 import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
 import { Route as OnboardingCategoriesRouteImport } from './routes/onboarding.categories'
+import { Route as OnboardingAvailabilityRouteImport } from './routes/onboarding.availability'
 import { Route as FreelancersUsernameRouteImport } from './routes/freelancers.$username'
 import { Route as DashboardFreelancerRouteImport } from './routes/dashboard.freelancer'
 
@@ -143,19 +147,34 @@ const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ProjectsRoute,
 } as any)
+const OnboardingTeamSizeRoute = OnboardingTeamSizeRouteImport.update({
+  id: '/team-size',
+  path: '/team-size',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const OnboardingSkillsRoute = OnboardingSkillsRouteImport.update({
   id: '/skills',
   path: '/skills',
   getParentRoute: () => OnboardingRoute,
 } as any)
-const OnboardingProfileRoute = OnboardingProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => OnboardingRoute,
-} as any)
 const OnboardingPortfolioRoute = OnboardingPortfolioRouteImport.update({
   id: '/portfolio',
   path: '/portfolio',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingLanguagesRoute = OnboardingLanguagesRouteImport.update({
+  id: '/languages',
+  path: '/languages',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingIndustryRoute = OnboardingIndustryRouteImport.update({
+  id: '/industry',
+  path: '/industry',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingHiringGoalsRoute = OnboardingHiringGoalsRouteImport.update({
+  id: '/hiring-goals',
+  path: '/hiring-goals',
   getParentRoute: () => OnboardingRoute,
 } as any)
 const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
@@ -166,6 +185,11 @@ const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
 const OnboardingCategoriesRoute = OnboardingCategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingAvailabilityRoute = OnboardingAvailabilityRouteImport.update({
+  id: '/availability',
+  path: '/availability',
   getParentRoute: () => OnboardingRoute,
 } as any)
 const FreelancersUsernameRoute = FreelancersUsernameRouteImport.update({
@@ -200,11 +224,15 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/onboarding/hiring-goals': typeof OnboardingHiringGoalsRoute
+  '/onboarding/industry': typeof OnboardingIndustryRoute
+  '/onboarding/languages': typeof OnboardingLanguagesRoute
   '/onboarding/portfolio': typeof OnboardingPortfolioRoute
-  '/onboarding/profile': typeof OnboardingProfileRoute
   '/onboarding/skills': typeof OnboardingSkillsRoute
+  '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/onboarding/': typeof OnboardingIndexRoute
@@ -229,11 +257,15 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/onboarding/hiring-goals': typeof OnboardingHiringGoalsRoute
+  '/onboarding/industry': typeof OnboardingIndustryRoute
+  '/onboarding/languages': typeof OnboardingLanguagesRoute
   '/onboarding/portfolio': typeof OnboardingPortfolioRoute
-  '/onboarding/profile': typeof OnboardingProfileRoute
   '/onboarding/skills': typeof OnboardingSkillsRoute
+  '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/onboarding': typeof OnboardingIndexRoute
@@ -260,11 +292,15 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/onboarding/availability': typeof OnboardingAvailabilityRoute
   '/onboarding/categories': typeof OnboardingCategoriesRoute
   '/onboarding/company': typeof OnboardingCompanyRoute
+  '/onboarding/hiring-goals': typeof OnboardingHiringGoalsRoute
+  '/onboarding/industry': typeof OnboardingIndustryRoute
+  '/onboarding/languages': typeof OnboardingLanguagesRoute
   '/onboarding/portfolio': typeof OnboardingPortfolioRoute
-  '/onboarding/profile': typeof OnboardingProfileRoute
   '/onboarding/skills': typeof OnboardingSkillsRoute
+  '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/onboarding/': typeof OnboardingIndexRoute
@@ -292,11 +328,15 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard/freelancer'
     | '/freelancers/$username'
+    | '/onboarding/availability'
     | '/onboarding/categories'
     | '/onboarding/company'
+    | '/onboarding/hiring-goals'
+    | '/onboarding/industry'
+    | '/onboarding/languages'
     | '/onboarding/portfolio'
-    | '/onboarding/profile'
     | '/onboarding/skills'
+    | '/onboarding/team-size'
     | '/projects/$slug'
     | '/services/$slug'
     | '/onboarding/'
@@ -321,11 +361,15 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard/freelancer'
     | '/freelancers/$username'
+    | '/onboarding/availability'
     | '/onboarding/categories'
     | '/onboarding/company'
+    | '/onboarding/hiring-goals'
+    | '/onboarding/industry'
+    | '/onboarding/languages'
     | '/onboarding/portfolio'
-    | '/onboarding/profile'
     | '/onboarding/skills'
+    | '/onboarding/team-size'
     | '/projects/$slug'
     | '/services/$slug'
     | '/onboarding'
@@ -351,11 +395,15 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard/freelancer'
     | '/freelancers/$username'
+    | '/onboarding/availability'
     | '/onboarding/categories'
     | '/onboarding/company'
+    | '/onboarding/hiring-goals'
+    | '/onboarding/industry'
+    | '/onboarding/languages'
     | '/onboarding/portfolio'
-    | '/onboarding/profile'
     | '/onboarding/skills'
+    | '/onboarding/team-size'
     | '/projects/$slug'
     | '/services/$slug'
     | '/onboarding/'
@@ -531,6 +579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsSlugRouteImport
       parentRoute: typeof ProjectsRoute
     }
+    '/onboarding/team-size': {
+      id: '/onboarding/team-size'
+      path: '/team-size'
+      fullPath: '/onboarding/team-size'
+      preLoaderRoute: typeof OnboardingTeamSizeRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/onboarding/skills': {
       id: '/onboarding/skills'
       path: '/skills'
@@ -538,18 +593,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingSkillsRouteImport
       parentRoute: typeof OnboardingRoute
     }
-    '/onboarding/profile': {
-      id: '/onboarding/profile'
-      path: '/profile'
-      fullPath: '/onboarding/profile'
-      preLoaderRoute: typeof OnboardingProfileRouteImport
-      parentRoute: typeof OnboardingRoute
-    }
     '/onboarding/portfolio': {
       id: '/onboarding/portfolio'
       path: '/portfolio'
       fullPath: '/onboarding/portfolio'
       preLoaderRoute: typeof OnboardingPortfolioRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/languages': {
+      id: '/onboarding/languages'
+      path: '/languages'
+      fullPath: '/onboarding/languages'
+      preLoaderRoute: typeof OnboardingLanguagesRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/industry': {
+      id: '/onboarding/industry'
+      path: '/industry'
+      fullPath: '/onboarding/industry'
+      preLoaderRoute: typeof OnboardingIndustryRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/hiring-goals': {
+      id: '/onboarding/hiring-goals'
+      path: '/hiring-goals'
+      fullPath: '/onboarding/hiring-goals'
+      preLoaderRoute: typeof OnboardingHiringGoalsRouteImport
       parentRoute: typeof OnboardingRoute
     }
     '/onboarding/company': {
@@ -564,6 +633,13 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/onboarding/categories'
       preLoaderRoute: typeof OnboardingCategoriesRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/availability': {
+      id: '/onboarding/availability'
+      path: '/availability'
+      fullPath: '/onboarding/availability'
+      preLoaderRoute: typeof OnboardingAvailabilityRouteImport
       parentRoute: typeof OnboardingRoute
     }
     '/freelancers/$username': {
@@ -608,20 +684,28 @@ const FreelancersRouteWithChildren = FreelancersRoute._addFileChildren(
 )
 
 interface OnboardingRouteChildren {
+  OnboardingAvailabilityRoute: typeof OnboardingAvailabilityRoute
   OnboardingCategoriesRoute: typeof OnboardingCategoriesRoute
   OnboardingCompanyRoute: typeof OnboardingCompanyRoute
+  OnboardingHiringGoalsRoute: typeof OnboardingHiringGoalsRoute
+  OnboardingIndustryRoute: typeof OnboardingIndustryRoute
+  OnboardingLanguagesRoute: typeof OnboardingLanguagesRoute
   OnboardingPortfolioRoute: typeof OnboardingPortfolioRoute
-  OnboardingProfileRoute: typeof OnboardingProfileRoute
   OnboardingSkillsRoute: typeof OnboardingSkillsRoute
+  OnboardingTeamSizeRoute: typeof OnboardingTeamSizeRoute
   OnboardingIndexRoute: typeof OnboardingIndexRoute
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingAvailabilityRoute: OnboardingAvailabilityRoute,
   OnboardingCategoriesRoute: OnboardingCategoriesRoute,
   OnboardingCompanyRoute: OnboardingCompanyRoute,
+  OnboardingHiringGoalsRoute: OnboardingHiringGoalsRoute,
+  OnboardingIndustryRoute: OnboardingIndustryRoute,
+  OnboardingLanguagesRoute: OnboardingLanguagesRoute,
   OnboardingPortfolioRoute: OnboardingPortfolioRoute,
-  OnboardingProfileRoute: OnboardingProfileRoute,
   OnboardingSkillsRoute: OnboardingSkillsRoute,
+  OnboardingTeamSizeRoute: OnboardingTeamSizeRoute,
   OnboardingIndexRoute: OnboardingIndexRoute,
 }
 

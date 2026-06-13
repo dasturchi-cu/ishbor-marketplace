@@ -33,7 +33,7 @@ function OnboardingPortfolioPage() {
 
   const handleContinue = () => {
     saveOnboardingState({ portfolio: validItems });
-    navigate({ to: "/dashboard/freelancer" });
+    navigate({ to: "/onboarding/languages" });
   };
 
   return (
@@ -97,7 +97,7 @@ function OnboardingPortfolioPage() {
       <OnboardingNav
         backTo="/onboarding/categories"
         onContinue={handleContinue}
-        continueLabel="Finish setup"
+        continueLabel="Continue"
         disabled={validItems.length < 1}
       />
     </OnboardingLayout>

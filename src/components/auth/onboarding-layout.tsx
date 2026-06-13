@@ -11,9 +11,10 @@ type OnboardingLayoutProps = {
   title: string;
   subtitle?: string;
   stepId: string;
+  showProgress?: boolean;
 };
 
-export function OnboardingLayout({ children, title, subtitle, stepId }: OnboardingLayoutProps) {
+export function OnboardingLayout({ children, title, subtitle, stepId, showProgress = true }: OnboardingLayoutProps) {
   const state = loadOnboardingState();
   const steps = getOnboardingSteps(state.userType);
   const currentIndex = steps.findIndex((s) => s.id === stepId);
@@ -31,14 +32,14 @@ export function OnboardingLayout({ children, title, subtitle, stepId }: Onboardi
       </header>
 
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-        {/* Progress */}
+        {showProgress && (
         <div className="mb-10">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {steps.map((step, i) => (
-              <div key={step.id} className="flex flex-1 items-center gap-2">
+              <div key={step.id} className="flex flex-1 items-center gap-1 sm:gap-2">
                 <div
                   className={cn(
-                    "flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-semibold transition-default",
+                    "flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[9px] font-semibold transition-default sm:size-7 sm:text-[10px]",
                     i < currentIndex && "bg-primary text-primary-foreground",
                     i === currentIndex && "bg-primary text-primary-foreground ring-4 ring-primary/20",
                     i > currentIndex && "border border-border bg-surface text-muted-foreground",
@@ -57,12 +58,12 @@ export function OnboardingLayout({ children, title, subtitle, stepId }: Onboardi
               </div>
             ))}
           </div>
-          <div className="mt-3 hidden gap-4 sm:flex">
-            {steps.map((step, i) => (
+          <div className="mt-3 hidden gap-2 sm:flex">
+            {steps.map((step) => (
               <span
                 key={step.id}
                 className={cn(
-                  "flex-1 font-mono text-[9px] uppercase tracking-widest",
+                  "flex-1 truncate font-mono text-[9px] uppercase tracking-widest",
                   pathname === step.path ? "text-primary" : "text-muted-foreground",
                 )}
               >
@@ -70,7 +71,11 @@ export function OnboardingLayout({ children, title, subtitle, stepId }: Onboardi
               </span>
             ))}
           </div>
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-primary sm:hidden">
+            Step {currentIndex + 1} of {steps.length} — {steps[currentIndex]?.label}
+          </p>
         </div>
+        )}
 
         <div className="mb-8">
           <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>

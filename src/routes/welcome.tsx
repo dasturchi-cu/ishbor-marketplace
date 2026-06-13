@@ -50,9 +50,9 @@ function WelcomePage() {
 
         <div className="mt-12 grid grid-cols-3 gap-4 rounded-2xl border border-border bg-card p-5">
           {[
-            { step: "1", label: "Choose type" },
-            { step: "2", label: "Build profile" },
-            { step: "3", label: "Start working" },
+            { step: "1", label: state.userType === "client" ? "Company" : "Skills" },
+            { step: "2", label: state.userType === "client" ? "Industry" : "Portfolio" },
+            { step: "3", label: state.userType === "client" ? "Hiring goals" : "Availability" },
           ].map((s) => (
             <div key={s.step}>
               <div className="font-display text-lg font-bold text-primary">{s.step}</div>

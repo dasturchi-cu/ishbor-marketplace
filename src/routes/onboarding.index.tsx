@@ -6,7 +6,7 @@ import {
   OnboardingNav,
   UserTypeCard,
 } from "@/components/auth/onboarding-layout";
-import { saveOnboardingState, loadOnboardingState, type UserType } from "@/lib/auth-constants";
+import { saveOnboardingState, loadOnboardingState, getFirstOnboardingPath, type UserType } from "@/lib/auth-constants";
 
 export const Route = createFileRoute("/onboarding/")({
   head: () => ({
@@ -22,12 +22,13 @@ function OnboardingTypePage() {
 
   const handleContinue = () => {
     saveOnboardingState({ userType });
-    navigate({ to: "/onboarding/profile" });
+    navigate({ to: getFirstOnboardingPath(userType) });
   };
 
   return (
     <OnboardingLayout
       stepId="type"
+      showProgress={false}
       title="How will you use Ishbor?"
       subtitle="Choose your account type. You can always add the other role later."
     >

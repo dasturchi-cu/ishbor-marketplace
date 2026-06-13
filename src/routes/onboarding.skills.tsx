@@ -60,7 +60,7 @@ function OnboardingSkillsPage() {
       </div>
 
       <OnboardingNav
-        backTo="/onboarding/profile"
+        backTo="/onboarding"
         onContinue={handleContinue}
         disabled={skills.length < 2}
         continueLabel={skills.length < 2 ? "Select at least 2 skills" : "Continue"}
