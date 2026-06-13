@@ -27,6 +27,7 @@ const iconConfig = {
   review: { icon: Star, bg: "bg-[oklch(0.78_0.15_75)]/10", text: "text-[oklch(0.65_0.15_75)]" },
   system: { icon: ShieldCheck, bg: "bg-secondary", text: "text-muted-foreground" },
   message: { icon: MessageSquare, bg: "bg-primary/10", text: "text-primary" },
+  escrow: { icon: Lock, bg: "bg-primary/10", text: "text-primary" },
 };
 
 const actionMap: Record<string, { primary?: string; secondary?: string }> = {
@@ -35,6 +36,7 @@ const actionMap: Record<string, { primary?: string; secondary?: string }> = {
   review: { primary: "View review" },
   system: { primary: "Learn more" },
   message: { primary: "Reply", secondary: "Dismiss" },
+  escrow: { primary: "View escrow", secondary: "Dismiss" },
 };
 
 const filters = ["All", "Payments", "Proposals", "Reviews", "System"] as const;

@@ -1,23 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  Plus,
-  ShieldCheck,
-  Lock,
-  CreditCard,
-  Building2,
-  Banknote,
-  Download,
-  Filter,
-  ChevronRight,
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-} from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Building2, Banknote, Download, ListFilter as Filter, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
+import { EscrowShield } from "@/components/site/trust";
 import { transactions, escrowItems } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/wallet")({
@@ -154,13 +140,13 @@ function WalletPage() {
       </div>
 
       {/* Escrow overview */}
-      <section className="mt-6 rounded-2xl border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
+      <section className="mt-6 rounded-2xl border border-primary/20 bg-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-primary/10 bg-primary/5 px-5 py-4">
           <div className="flex items-center gap-2">
-            <Lock className="size-4 text-primary" />
+            <EscrowShield size="md" />
             <h2 className="font-display text-base font-bold">Escrow</h2>
           </div>
-          <span className="font-mono text-xs text-muted-foreground">${totalEscrow.toLocaleString()} protected</span>
+          <span className="font-mono text-xs text-primary">${totalEscrow.toLocaleString()} protected</span>
         </div>
         <div className="grid gap-0 divide-y divide-border sm:divide-x sm:divide-y-0 sm:grid-cols-3">
           {escrowItems.map((e) => (

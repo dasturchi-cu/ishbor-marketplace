@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Star, Clock, Users, ShieldCheck, BadgeCheck } from "lucide-react";
+import { Star, Clock, Users, ShieldCheck, BadgeCheck, Lock, CircleCheck as CheckCircle2 } from "lucide-react";
 import { GradientAvatar } from "./avatar";
+import { LevelBadge, VerifiedIdentityBadge, EscrowShield } from "./trust";
 import type { Freelancer, Service, Project } from "@/lib/mock-data";
 
 export function FreelancerCard({ f }: { f: Freelancer }) {
@@ -18,8 +19,8 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
               <h3 className="truncate font-display text-sm font-semibold leading-tight">
                 {f.name}
               </h3>
-              {f.level === "Top Rated" && (
-                <BadgeCheck className="size-3.5 shrink-0 text-primary" />
+              {f.identityVerified && (
+                <CheckCircle2 className="size-3.5 shrink-0 text-success" />
               )}
             </div>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">{f.title}</p>
@@ -54,18 +55,16 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
         )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-3">
-        <span
-          className={`font-mono text-[10px] font-semibold uppercase tracking-[0.16em] ${
-            f.level === "Top Rated"
-              ? "text-primary"
-              : f.level === "Expert"
-                ? "text-foreground"
-                : "text-muted-foreground"
-          }`}
-        >
-          {f.level}
-        </span>
+      <div className="mt-3 flex flex-wrap gap-1">
+        <LevelBadge level={f.level} className="!px-2 !py-0.5" />
+        {f.identityVerified && <VerifiedIdentityBadge className="!px-2 !py-0.5" />}
+      </div>
+
+      <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3">
+        <div className="flex items-center gap-3 font-mono text-[10px] text-muted-foreground">
+          <span>{f.successScore} score</span>
+          <span>{f.completionRate}% done</span>
+        </div>
         <div className="flex items-center gap-1.5">
           {f.available && (
             <span className="inline-flex items-center gap-1 text-[10px] text-success">
@@ -104,10 +103,16 @@ export function ServiceCard({ s }: { s: Service }) {
             backgroundSize: "20px 20px",
           }}
         />
-        <div className="absolute left-3 top-3">
+        <div className="absolute left-3 top-3 flex items-center gap-1.5">
           <span className="font-mono rounded-full bg-black/25 px-2.5 py-1 text-[10px] uppercase tracking-widest text-white/90 backdrop-blur-sm">
             {s.category}
           </span>
+          {s.sellerIdentityVerified && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 backdrop-blur-sm">
+              <CheckCircle2 className="size-2.5 text-white/90" />
+              <span className="font-mono text-[9px] uppercase tracking-widest text-white/80">Verified</span>
+            </span>
+          )}
         </div>
         <div className="absolute bottom-3 right-3 rounded-full bg-white/90 px-3 py-1.5 text-xs shadow-sm">
           <span className="text-muted-foreground">From </span>
@@ -118,6 +123,7 @@ export function ServiceCard({ s }: { s: Service }) {
         <div className="mb-2 flex items-center gap-2">
           <GradientAvatar name={s.seller} hue={s.sellerHue} size={20} />
           <span className="text-xs text-muted-foreground">{s.seller}</span>
+          <LevelBadge level={s.sellerLevel} className="!px-1.5 !py-0 !text-[8px]" />
         </div>
         <h3 className="line-clamp-2 text-sm font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
           {s.title}
@@ -147,10 +153,8 @@ export function ProjectCard({ p }: { p: Project }) {
             <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
               {p.category}
             </span>
-            {p.verified && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-primary">
-                <ShieldCheck className="size-2.5" /> Escrow funded
-              </span>
+            {p.escrowProtected && (
+              <EscrowShield size="sm" className="!bg-primary/8 !px-2 !py-0.5" />
             )}
           </div>
           <h3 className="font-display text-base font-semibold leading-tight tracking-tight">
@@ -159,16 +163,25 @@ export function ProjectCard({ p }: { p: Project }) {
           <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
             <GradientAvatar name={p.client} hue={p.clientHue} size={16} />
             <span>{p.client}</span>
+            {p.clientVerified && (
+              <>
+                <CheckCircle2 className="size-3 text-success" />
+                <span className="text-success">Verified</span>
+              </>
+            )}
             <span className="text-border">·</span>
             <span>{p.postedAgo}</span>
           </div>
         </div>
         <div className="shrink-0 text-right">
           <div className="font-display text-lg font-semibold">
-            ${p.budget.toLocaleString()}
+            {p.budgetType === "hourly" ? "$" : ""}{p.budget.toLocaleString()}{p.budgetType === "hourly" ? "/h" : ""}
           </div>
           <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             {p.budgetType} · {p.duration}
+          </div>
+          <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            {p.experienceLevel}
           </div>
         </div>
       </div>
@@ -177,7 +190,7 @@ export function ProjectCard({ p }: { p: Project }) {
         {p.description}
       </p>
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      <div className="mb-3 flex flex-wrap gap-1.5">
         {p.skills.map((s) => (
           <span
             key={s}
@@ -188,14 +201,26 @@ export function ProjectCard({ p }: { p: Project }) {
         ))}
       </div>
 
+      {p.clientSpent > 0 && (
+        <div className="mb-3 flex items-center gap-3 font-mono text-[10px] text-muted-foreground">
+          <span>${(p.clientSpent / 1000).toFixed(0)}k spent</span>
+          <span>{p.clientHires} hires</span>
+          <span>Since {p.clientMemberSince}</span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between border-t border-border/60 pt-3">
         <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
           <Users className="size-3.5" />
           <span className="font-mono text-foreground">{p.proposals}</span> proposals
         </span>
-        <button className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring">
+        <Link
+          to="/projects/$slug"
+          params={{ slug: p.slug }}
+          className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
+        >
           Send proposal
-        </button>
+        </Link>
       </div>
     </div>
   );

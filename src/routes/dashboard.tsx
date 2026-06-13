@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, Clock, MessageCircle, Plus, Shield, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowUpRight, Clock, MessageCircle, Plus, Shield, TrendingUp, CircleAlert as AlertCircle, ShieldCheck, Lock } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
+import { EscrowShield } from "@/components/site/trust";
 import { orders, escrowRecords, hiringPipeline, messages } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard")({
@@ -31,9 +32,16 @@ function ClientDashboard() {
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total spent" value="$184,200" trend="+22% YoY" />
-        <StatCard label="In escrow" value="$10,800" trend="Across 3 milestones" />
+        <StatCard label="In escrow" value="$10,800" trend="Across 3 milestones" accent />
         <StatCard label="Active projects" value="4" trend="2 ending soon" />
         <StatCard label="Avg. hire time" value="1.4h" trend="Faster than 92%" />
+      </div>
+
+      <div className="mt-4 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-5 py-3">
+        <EscrowShield size="md" />
+        <span className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">$10,800</span> is securely held in escrow across 3 active milestones. Funds are released only on your approval.
+        </span>
       </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
@@ -205,10 +213,13 @@ function ClientDashboard() {
   );
 }
 
-function StatCard({ label, value, trend }: { label: string; value: string; trend: string }) {
+function StatCard({ label, value, trend, accent }: { label: string; value: string; trend: string; accent?: boolean }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20 hover:bg-surface">
-      <div className="eyebrow">{label}</div>
+    <div className={`rounded-xl border bg-card p-4 transition-default hover:border-primary/20 hover:bg-surface ${accent ? "border-primary/20 bg-primary/5" : "border-border"}`}>
+      <div className="flex items-center gap-2 eyebrow">
+        {accent && <Lock className="size-3 text-primary" />}
+        {label}
+      </div>
       <div className="font-display mt-2 text-3xl font-bold tracking-tight">{value}</div>
       <div className="font-mono mt-1 inline-flex items-center gap-1 text-[11px] text-success">
         <TrendingUp className="size-3" /> {trend}

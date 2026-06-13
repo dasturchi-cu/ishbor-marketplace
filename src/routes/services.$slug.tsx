@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Star, Clock, Heart, Share2, ShieldCheck, Check, ArrowRight } from "lucide-react";
+import { Star, Clock, Heart, Share2, Check, ArrowRight, Users, MessageSquare } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ServiceCard } from "@/components/site/cards";
+import { SellerTrustBar, EscrowShield, VerifiedIdentityBadge } from "@/components/site/trust";
 import { services } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/services/$slug")({
@@ -48,10 +49,10 @@ function ServiceDetail() {
               {service.title}
             </h1>
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
+              <Link to="/freelancers/$username" params={{ username: service.sellerUsername }} className="flex items-center gap-2 transition-default hover:opacity-80">
                 <GradientAvatar name={service.seller} hue={service.sellerHue} size={28} />
                 <span className="font-medium">{service.seller}</span>
-              </div>
+              </Link>
               <div className="inline-flex items-center gap-1 text-muted-foreground">
                 <Star className="size-3.5 fill-gold text-gold" />
                 <span className="font-mono text-foreground">{service.rating.toFixed(2)}</span>
@@ -61,6 +62,26 @@ function ServiceDetail() {
                 <Clock className="size-3.5" />
                 {service.delivery} delivery
               </div>
+              {service.inProgress > 0 && (
+                <div className="inline-flex items-center gap-1 text-muted-foreground">
+                  <Users className="size-3.5" />
+                  {service.inProgress} in progress
+                </div>
+              )}
+            </div>
+
+            {/* Seller trust bar */}
+            <div className="mt-5">
+              <SellerTrustBar
+                level={service.sellerLevel}
+                identityVerified={service.sellerIdentityVerified}
+                successScore={service.sellerSuccessScore}
+                completionRate={service.sellerCompletionRate}
+                onTime={service.sellerOnTime}
+                responseTime={service.sellerResponseTime}
+                repeatClients={service.sellerRepeatClients}
+                totalEarned={service.sellerTotalEarned}
+              />
             </div>
 
             <div
@@ -78,20 +99,22 @@ function ServiceDetail() {
               />
             </div>
 
-            <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {[
-                "Verified portfolio",
-                "Escrow protected",
-                "24h response time",
-              ].map((b) => (
-                <div
-                  key={b}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-primary/8 p-3 text-sm text-primary"
-                >
-                  <ShieldCheck className="size-4" />
-                  {b}
+            {/* Trust guarantees */}
+            <div className="mt-6 grid gap-3 sm:grid-cols-4">
+              <div className="flex items-center gap-2 rounded-xl border border-success/15 bg-success/5 px-3 py-2.5 text-sm">
+                <EscrowShield size="sm" />
+              </div>
+              {service.sellerIdentityVerified && (
+                <div className="flex items-center gap-2 rounded-xl border border-success/15 bg-success/5 px-3 py-2.5 text-sm">
+                  <VerifiedIdentityBadge />
                 </div>
-              ))}
+              )}
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-primary/8 px-3 py-2.5 text-sm text-primary">
+                <Clock className="size-4" /> Responds {service.sellerResponseTime}
+              </div>
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-primary/8 px-3 py-2.5 text-sm text-primary">
+                <Users className="size-4" /> {service.sellerRepeatClients}% repeat
+              </div>
             </div>
 
             <section className="mt-12">
@@ -159,7 +182,8 @@ function ServiceDetail() {
             </section>
           </div>
 
-          <aside className="lg:sticky lg:top-24 lg:h-fit">
+          <aside className="lg:sticky lg:top-24 lg:h-fit space-y-4">
+            {/* Package selector */}
             <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <div className="grid grid-cols-3 border-b border-border bg-elevated/40 text-xs">
                 {packages.map((p, i) => (
@@ -204,19 +228,44 @@ function ServiceDetail() {
                     <div className="mt-0.5 text-sm font-semibold">{packages[1]!.revisions}</div>
                   </div>
                 </div>
-                <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)]">
-                  Continue ($980) <ArrowRight className="size-4" />
-                </button>
-                <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface py-3 text-sm font-semibold transition-default hover:border-primary/20">
-                  Contact seller
+                <Link
+                  to="/checkout"
+                  search={{ type: "service" as const, service: service.slug, package: "premium" }}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring"
+                >
+                  Continue (${packages[1]!.price.toLocaleString()}) <ArrowRight className="size-4" />
+                </Link>
+                <button className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface py-3 text-sm font-semibold transition-default hover:border-primary/20 focus-ring">
+                  <MessageSquare className="size-4" /> Contact seller
                 </button>
                 <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-                  <button className="inline-flex items-center gap-1 hover:text-foreground">
+                  <button className="inline-flex items-center gap-1 transition-default hover:text-foreground">
                     <Heart className="size-3.5" /> Save
                   </button>
-                  <button className="inline-flex items-center gap-1 hover:text-foreground">
+                  <button className="inline-flex items-center gap-1 transition-default hover:text-foreground">
                     <Share2 className="size-3.5" /> Share
                   </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Escrow promise */}
+            <div className="rounded-xl border border-primary/20 bg-primary/8 p-5">
+              <div className="mb-2 flex items-center gap-2">
+                <EscrowShield size="md" />
+              </div>
+              <h4 className="text-sm font-semibold">Your money is safe</h4>
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                Payment is held in escrow and only released when you approve the delivered work. Full refund if the seller fails to deliver on time.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg border border-border bg-background p-2">
+                  <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Queue</div>
+                  <div className="font-mono text-sm font-semibold">{service.queuePosition} ahead</div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-2">
+                  <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Resolution</div>
+                  <div className="font-mono text-sm font-semibold">&lt; 24h</div>
                 </div>
               </div>
             </div>
