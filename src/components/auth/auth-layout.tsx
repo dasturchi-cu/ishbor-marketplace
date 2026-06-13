@@ -13,8 +13,8 @@ type AuthLayoutProps = {
 export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto flex min-h-screen max-w-6xl flex-col lg:flex-row">
-        {/* Brand panel */}
+      <div className="flex min-h-screen w-full flex-col lg:flex-row">
+        {/* Brand panel — unchanged */}
         <div className="relative hidden overflow-hidden border-r border-border lg:flex lg:w-[44%] lg:flex-col lg:justify-between">
           <div
             className="absolute inset-0"
@@ -65,8 +65,8 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
         </div>
 
         {/* Form panel */}
-        <div className="flex flex-1 flex-col">
-          <header className="flex items-center justify-between px-4 py-4 sm:px-8">
+        <div className="relative z-10 flex min-h-screen w-full min-w-0 flex-1 flex-col bg-background">
+          <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4 sm:px-6 lg:px-10">
             <Link to="/" className="lg:hidden">
               <Logo />
             </Link>
@@ -75,16 +75,22 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
             </div>
           </header>
 
-          <main className="flex flex-1 flex-col justify-center px-4 py-8 sm:px-8 lg:px-16">
-            <div className="mx-auto w-full max-w-md">
-              <div className="mb-8">
-                <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
+          <main className="flex flex-1 items-center justify-center overflow-y-auto px-4 py-6 sm:px-6 lg:px-10">
+            <div className="w-full max-w-[420px] py-4 text-foreground">
+              <div className="mb-6">
+                <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                  {title}
+                </h1>
                 {subtitle && (
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{subtitle}</p>
                 )}
               </div>
-              {children}
-              {footer && <div className="mt-8 text-center text-sm text-muted-foreground">{footer}</div>}
+
+              <div className="space-y-4">{children}</div>
+
+              {footer && (
+                <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>
+              )}
             </div>
           </main>
         </div>

@@ -64,8 +64,8 @@ function VerifyOtpPage() {
                   className={cn(
                     "relative flex size-12 items-center justify-center rounded-xl border text-lg font-semibold transition-default sm:size-14",
                     slot.isActive
-                      ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                      : "border-border bg-surface",
+                      ? "border-primary bg-primary/5 text-foreground ring-2 ring-primary/20"
+                      : "border-input bg-card text-foreground shadow-sm",
                   )}
                 >
                   {slot.char}

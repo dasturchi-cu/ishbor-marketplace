@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Lock, Eye, EyeOff, CheckCircle2 } from "lucide-react";
 import { AuthLayout } from "@/components/auth/auth-layout";
-import { AuthButton } from "@/components/auth/auth-field";
+import { AuthButton, authInputClass } from "@/components/auth/auth-field";
 import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/password-strength";
 
 export const Route = createFileRoute("/reset-password")({
@@ -75,7 +75,7 @@ function ResetPasswordPage() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-10 text-sm transition-default focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className={`${authInputClass} pl-10 pr-10`}
             />
             <button
               type="button"
@@ -105,7 +105,7 @@ function ResetPasswordPage() {
               onChange={(e) => setConfirm(e.target.value)}
               required
               autoComplete="new-password"
-              className="w-full rounded-xl border border-border bg-surface py-3 pl-10 text-sm transition-default focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className={`${authInputClass} pl-10`}
             />
           </div>
           {mismatch && <p className="text-xs text-destructive">Passwords don&apos;t match</p>}

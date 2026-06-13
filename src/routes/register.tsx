@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, User, Briefcase } from "lucide-react";
 import { AuthLayout } from "@/components/auth/auth-layout";
-import { AuthField, AuthButton, AuthDivider } from "@/components/auth/auth-field";
+import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components/auth/auth-field";
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/password-strength";
 import { saveOnboardingState, type UserType } from "@/lib/auth-constants";
@@ -123,7 +123,7 @@ function RegisterPage() {
               required
               minLength={8}
               autoComplete="new-password"
-              className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-10 text-sm transition-default placeholder:text-muted-foreground/60 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className={`${authInputClass} pl-10 pr-10`}
             />
             <button
               type="button"

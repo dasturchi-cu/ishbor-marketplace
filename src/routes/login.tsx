@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthLayout } from "@/components/auth/auth-layout";
-import { AuthField, AuthButton, AuthDivider } from "@/components/auth/auth-field";
+import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components/auth/auth-field";
 import { GoogleButton } from "@/components/auth/google-button";
 
 export const Route = createFileRoute("/login")({
@@ -83,7 +83,7 @@ function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-xl border border-border bg-surface py-3 pl-10 pr-10 text-sm transition-default placeholder:text-muted-foreground/60 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className={`${authInputClass} pl-10 pr-10`}
             />
             <button
               type="button"
