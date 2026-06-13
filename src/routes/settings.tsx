@@ -1,7 +1,7 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Search } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { LoadingSpinner, confirmDestructive } from "@/components/site/feedback";
 import { SettingsSaveBar } from "@/components/settings/settings-save-bar";
@@ -15,6 +15,7 @@ import { LanguageTab } from "@/components/settings/tabs/language-tab";
 import { PaymentMethodsTab } from "@/components/settings/tabs/payment-tab";
 import { VerificationTab } from "@/components/settings/tabs/verification-tab";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import { updateSessionUser } from "@/lib/auth";
@@ -32,17 +33,22 @@ import {
 import { computeSecurityScore } from "@/lib/security-store";
 import { computeVerificationScore } from "@/lib/verification-settings-store";
 
-const sections = [
+const coreSections = [
   "Hisob",
   "Xavfsizlik",
   "Bildirishnomalar",
+  "To'lov usullari",
+  "Shaxsni tasdiqlash",
+] as const;
+
+const moreSections = [
   "Ogohlantirishlar",
   "Taklif dasturi",
   "Ko'rinish",
   "Til",
-  "To'lov usullari",
-  "Shaxsni tasdiqlash",
 ] as const;
+
+const sections = [...coreSections, ...moreSections] as const;
 
 type Section = (typeof sections)[number];
 
@@ -86,9 +92,11 @@ export const Route = createFileRoute("/settings")({
 
 function SettingsPage() {
   const { user } = useAuth();
+  const { activeRole } = useActiveRole();
   const search = useSearch({ from: "/settings" });
   const [active, setActive] = useState<Section>("Hisob");
   const [query, setQuery] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
   const [tabLoading, setTabLoading] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [accountDirty, setAccountDirty] = useState(false);
@@ -118,7 +126,7 @@ function SettingsPage() {
 
   const sectionCompletion = useMemo(() => {
     if (!user) return {} as Record<Section, string | null>;
-    const userType = user.userType === "client" ? "client" : "freelancer";
+    const userType = activeRole;
     const profilePct = computeProfileCompletionPercent(user.id, userType);
     const security = computeSecurityScore(user.id, !!user.verified);
     const verification = computeVerificationScore(user.id, !!user.verified);
@@ -133,7 +141,7 @@ function SettingsPage() {
       "To'lov usullari": null,
       "Shaxsni tasdiqlash": verification < 100 ? `${verification}%` : "✓",
     } satisfies Record<Section, string | null>;
-  }, [user]);
+  }, [user, activeRole]);
 
   const settings = user ? getUserSettings(user.id) : null;
 
@@ -164,9 +172,12 @@ function SettingsPage() {
   const handleAccountDirty = useCallback((dirty: boolean, form: AccountFormData) => {
     setAccountDirty(dirty);
     setAccountForm(form);
-    if (dirty) setSaveState("dirty");
-    else if (saveState === "dirty") setSaveState("idle");
-  }, [saveState]);
+    setSaveState((s) => {
+      if (dirty) return "dirty";
+      if (s === "dirty") return "idle";
+      return s;
+    });
+  }, []);
 
   const performSave = useCallback(async () => {
     if (!user || !accountForm) return;
@@ -223,23 +234,33 @@ function SettingsPage() {
               aria-label="Sozlamalarni qidirish"
             />
           </div>
-          <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-            {filteredSections.map((s) => (
-              <button
-                key={s}
-                onClick={() => switchTab(s)}
-                className={`touch-target flex shrink-0 items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-default lg:w-full ${
-                  active === s ? "bg-primary/8 font-medium text-primary" : "text-muted-foreground hover:bg-secondary/50"
-                }`}
-              >
-                <span>{s}</span>
-                {sectionCompletion[s] && (
-                  <span className={`font-mono text-[10px] ${sectionCompletion[s] === "✓" ? "text-success" : "text-muted-foreground"}`}>
-                    {sectionCompletion[s]}
-                  </span>
-                )}
-              </button>
+          <nav className="flex flex-col gap-2 lg:overflow-visible">
+            {(query.trim() ? filteredSections : coreSections).map((s) => (
+              <SectionButton key={s} section={s} active={active} completion={sectionCompletion[s]} onSelect={() => switchTab(s)} />
             ))}
+            {!query.trim() && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen((o) => !o)}
+                  className={`touch-target flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-default ${
+                    moreSections.includes(active as (typeof moreSections)[number])
+                      ? "bg-primary/8 font-medium text-primary"
+                      : "text-muted-foreground hover:bg-secondary/50"
+                  }`}
+                >
+                  <span>Yana</span>
+                  <ChevronDown className={`size-4 transition-transform ${moreOpen || moreSections.includes(active as (typeof moreSections)[number]) ? "rotate-180" : ""}`} />
+                </button>
+                {(moreOpen || moreSections.includes(active as (typeof moreSections)[number])) && (
+                  <div className="mt-1 space-y-1">
+                    {moreSections.map((s) => (
+                      <SectionButton key={s} section={s} active={active} completion={sectionCompletion[s]} onSelect={() => switchTab(s)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         </div>
 
@@ -283,5 +304,34 @@ function SettingsPage() {
         />
       )}
     </WorkspaceShell>
+  );
+}
+
+function SectionButton({
+  section,
+  active,
+  completion,
+  onSelect,
+}: {
+  section: Section;
+  active: Section;
+  completion: string | null | undefined;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`touch-target flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-default ${
+        active === section ? "bg-primary/8 font-medium text-primary" : "text-muted-foreground hover:bg-secondary/50"
+      }`}
+    >
+      <span>{section}</span>
+      {completion && (
+        <span className={`font-mono text-[10px] ${completion === "✓" ? "text-success" : "text-muted-foreground"}`}>
+          {completion}
+        </span>
+      )}
+    </button>
   );
 }

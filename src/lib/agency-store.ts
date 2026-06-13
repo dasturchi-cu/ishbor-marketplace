@@ -12,8 +12,16 @@ import { agencyRoleLabels } from "./agency-types";
 
 const STORAGE_KEY = "ishbor-agencies";
 const listeners = new Set<() => void>();
+let cachedAll: Agency[] | null = null;
+let cachedPublished: Agency[] | null = null;
+
+function invalidateCache() {
+  cachedAll = null;
+  cachedPublished = null;
+}
 
 function notify() {
+  invalidateCache();
   listeners.forEach((l) => l());
 }
 
@@ -91,12 +99,28 @@ export function getAgencyById(id: string): Agency | undefined {
   return readAll().find((a) => a.id === id);
 }
 
-export function getPublishedAgencies(): Agency[] {
-  return readAll().filter((a) => a.status === "published");
+export function rehydrateFromStorage() {
+  notify();
 }
 
 export function getAllAgencies(): Agency[] {
-  return readAll();
+  if (typeof window === "undefined") {
+    return readAll();
+  }
+  if (!cachedAll) {
+    cachedAll = readAll();
+  }
+  return cachedAll;
+}
+
+export function getPublishedAgencies(): Agency[] {
+  if (typeof window === "undefined") {
+    return readAll().filter((a) => a.status === "published");
+  }
+  if (!cachedPublished) {
+    cachedPublished = getAllAgencies().filter((a) => a.status === "published");
+  }
+  return cachedPublished;
 }
 
 export function getAgenciesForUser(userId: string): Agency[] {

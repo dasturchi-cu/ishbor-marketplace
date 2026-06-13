@@ -1,0 +1,900 @@
+# LAUNCH_CHECKLIST.md
+
+**Ishbor pre-launch verification checklist**
+
+Check each item before release. Role = minimum persona required.
+
+## Global platform
+
+- [ ] **GLOBAL** — Build passes (npm run build)
+- [ ] **GLOBAL** — No console errors on home
+- [ ] **GLOBAL** — AuthGate redirects guest from /dashboard
+- [ ] **GLOBAL** — RoleGate blocks client from /my-services
+- [ ] **GLOBAL** — RoleGate blocks freelancer from /checkout
+- [ ] **GLOBAL** — AdminOnlyGate blocks non-admin from /admin
+- [ ] **GLOBAL** — Stress seed runs (100 notifications)
+- [ ] **GLOBAL** — Notifications pagination works
+- [ ] **GLOBAL** — Messages list pagination works
+- [ ] **GLOBAL** — Wallet CSV export downloads
+- [ ] **GLOBAL** — Package save persists to /saved
+- [ ] **GLOBAL** — Cross-tab logout syncs
+- [ ] **GLOBAL** — No infinite render on /notifications
+- [ ] **GLOBAL** — No infinite render on /analytics/client
+- [ ] **GLOBAL** — Entity 404 for fake order id
+- [ ] **GLOBAL** — Entity 404 for fake agency slug
+- [ ] **GLOBAL** — Login redirect preserves deep link
+- [ ] **GLOBAL** — Logout clears session
+- [ ] **GLOBAL** — Role switcher persists in localStorage
+- [ ] **GLOBAL** — O'zbek copy on all toasts
+
+## Guest routes
+
+- [ ] **GUEST** `/` — loads without crash
+- [ ] **GUEST** `/` — correct access for role
+- [ ] **GUEST** `/` — primary CTA works
+- [ ] **GUEST** `/` — secondary CTA works
+- [ ] **GUEST** `/` — empty state has CTA
+- [ ] **GUEST** `/` — mobile layout OK (375px)
+- [ ] **GUEST** `/` — no dead buttons
+- [ ] **GUEST** `/` — forms validate
+- [ ] **GUEST** `/` — error state shown
+- [ ] **GUEST** `/` — success feedback shown
+- [ ] **GUEST** `/login` — loads without crash
+- [ ] **GUEST** `/login` — correct access for role
+- [ ] **GUEST** `/login` — primary CTA works
+- [ ] **GUEST** `/login` — secondary CTA works
+- [ ] **GUEST** `/login` — empty state has CTA
+- [ ] **GUEST** `/login` — mobile layout OK (375px)
+- [ ] **GUEST** `/login` — no dead buttons
+- [ ] **GUEST** `/login` — forms validate
+- [ ] **GUEST** `/login` — error state shown
+- [ ] **GUEST** `/login` — success feedback shown
+- [ ] **GUEST** `/register` — loads without crash
+- [ ] **GUEST** `/register` — correct access for role
+- [ ] **GUEST** `/register` — primary CTA works
+- [ ] **GUEST** `/register` — secondary CTA works
+- [ ] **GUEST** `/register` — empty state has CTA
+- [ ] **GUEST** `/register` — mobile layout OK (375px)
+- [ ] **GUEST** `/register` — no dead buttons
+- [ ] **GUEST** `/register` — forms validate
+- [ ] **GUEST** `/register` — error state shown
+- [ ] **GUEST** `/register` — success feedback shown
+- [ ] **GUEST** `/forgot-password` — loads without crash
+- [ ] **GUEST** `/forgot-password` — correct access for role
+- [ ] **GUEST** `/forgot-password` — primary CTA works
+- [ ] **GUEST** `/forgot-password` — secondary CTA works
+- [ ] **GUEST** `/forgot-password` — empty state has CTA
+- [ ] **GUEST** `/forgot-password` — mobile layout OK (375px)
+- [ ] **GUEST** `/forgot-password` — no dead buttons
+- [ ] **GUEST** `/forgot-password` — forms validate
+- [ ] **GUEST** `/forgot-password` — error state shown
+- [ ] **GUEST** `/forgot-password` — success feedback shown
+- [ ] **GUEST** `/reset-password` — loads without crash
+- [ ] **GUEST** `/reset-password` — correct access for role
+- [ ] **GUEST** `/reset-password` — primary CTA works
+- [ ] **GUEST** `/reset-password` — secondary CTA works
+- [ ] **GUEST** `/reset-password` — empty state has CTA
+- [ ] **GUEST** `/reset-password` — mobile layout OK (375px)
+- [ ] **GUEST** `/reset-password` — no dead buttons
+- [ ] **GUEST** `/reset-password` — forms validate
+- [ ] **GUEST** `/reset-password` — error state shown
+- [ ] **GUEST** `/reset-password` — success feedback shown
+- [ ] **GUEST** `/verify-email` — loads without crash
+- [ ] **GUEST** `/verify-email` — correct access for role
+- [ ] **GUEST** `/verify-email` — primary CTA works
+- [ ] **GUEST** `/verify-email` — secondary CTA works
+- [ ] **GUEST** `/verify-email` — empty state has CTA
+- [ ] **GUEST** `/verify-email` — mobile layout OK (375px)
+- [ ] **GUEST** `/verify-email` — no dead buttons
+- [ ] **GUEST** `/verify-email` — forms validate
+- [ ] **GUEST** `/verify-email` — error state shown
+- [ ] **GUEST** `/verify-email` — success feedback shown
+- [ ] **GUEST** `/verify-otp` — loads without crash
+- [ ] **GUEST** `/verify-otp` — correct access for role
+- [ ] **GUEST** `/verify-otp` — primary CTA works
+- [ ] **GUEST** `/verify-otp` — secondary CTA works
+- [ ] **GUEST** `/verify-otp` — empty state has CTA
+- [ ] **GUEST** `/verify-otp` — mobile layout OK (375px)
+- [ ] **GUEST** `/verify-otp` — no dead buttons
+- [ ] **GUEST** `/verify-otp` — forms validate
+- [ ] **GUEST** `/verify-otp` — error state shown
+- [ ] **GUEST** `/verify-otp` — success feedback shown
+- [ ] **GUEST** `/terms` — loads without crash
+- [ ] **GUEST** `/terms` — correct access for role
+- [ ] **GUEST** `/terms` — primary CTA works
+- [ ] **GUEST** `/terms` — secondary CTA works
+- [ ] **GUEST** `/terms` — empty state has CTA
+- [ ] **GUEST** `/terms` — mobile layout OK (375px)
+- [ ] **GUEST** `/terms` — no dead buttons
+- [ ] **GUEST** `/terms` — forms validate
+- [ ] **GUEST** `/terms` — error state shown
+- [ ] **GUEST** `/terms` — success feedback shown
+- [ ] **GUEST** `/privacy` — loads without crash
+- [ ] **GUEST** `/privacy` — correct access for role
+- [ ] **GUEST** `/privacy` — primary CTA works
+- [ ] **GUEST** `/privacy` — secondary CTA works
+- [ ] **GUEST** `/privacy` — empty state has CTA
+- [ ] **GUEST** `/privacy` — mobile layout OK (375px)
+- [ ] **GUEST** `/privacy` — no dead buttons
+- [ ] **GUEST** `/privacy` — forms validate
+- [ ] **GUEST** `/privacy` — error state shown
+- [ ] **GUEST** `/privacy` — success feedback shown
+- [ ] **GUEST** `/pricing` — loads without crash
+- [ ] **GUEST** `/pricing` — correct access for role
+- [ ] **GUEST** `/pricing` — primary CTA works
+- [ ] **GUEST** `/pricing` — secondary CTA works
+- [ ] **GUEST** `/pricing` — empty state has CTA
+- [ ] **GUEST** `/pricing` — mobile layout OK (375px)
+- [ ] **GUEST** `/pricing` — no dead buttons
+- [ ] **GUEST** `/pricing` — forms validate
+- [ ] **GUEST** `/pricing` — error state shown
+- [ ] **GUEST** `/pricing` — success feedback shown
+- [ ] **GUEST** `/services` — loads without crash
+- [ ] **GUEST** `/services` — correct access for role
+- [ ] **GUEST** `/services` — primary CTA works
+- [ ] **GUEST** `/services` — secondary CTA works
+- [ ] **GUEST** `/services` — empty state has CTA
+- [ ] **GUEST** `/services` — mobile layout OK (375px)
+- [ ] **GUEST** `/services` — no dead buttons
+- [ ] **GUEST** `/services` — forms validate
+- [ ] **GUEST** `/services` — error state shown
+- [ ] **GUEST** `/services` — success feedback shown
+- [ ] **GUEST** `/services/$slug` — loads without crash
+- [ ] **GUEST** `/services/$slug` — correct access for role
+- [ ] **GUEST** `/services/$slug` — primary CTA works
+- [ ] **GUEST** `/services/$slug` — secondary CTA works
+- [ ] **GUEST** `/services/$slug` — empty state has CTA
+- [ ] **GUEST** `/services/$slug` — mobile layout OK (375px)
+- [ ] **GUEST** `/services/$slug` — no dead buttons
+- [ ] **GUEST** `/services/$slug` — forms validate
+- [ ] **GUEST** `/services/$slug` — error state shown
+- [ ] **GUEST** `/services/$slug` — success feedback shown
+- [ ] **GUEST** `/projects` — loads without crash
+- [ ] **GUEST** `/projects` — correct access for role
+- [ ] **GUEST** `/projects` — primary CTA works
+- [ ] **GUEST** `/projects` — secondary CTA works
+- [ ] **GUEST** `/projects` — empty state has CTA
+- [ ] **GUEST** `/projects` — mobile layout OK (375px)
+- [ ] **GUEST** `/projects` — no dead buttons
+- [ ] **GUEST** `/projects` — forms validate
+- [ ] **GUEST** `/projects` — error state shown
+- [ ] **GUEST** `/projects` — success feedback shown
+- [ ] **GUEST** `/projects/$slug` — loads without crash
+- [ ] **GUEST** `/projects/$slug` — correct access for role
+- [ ] **GUEST** `/projects/$slug` — primary CTA works
+- [ ] **GUEST** `/projects/$slug` — secondary CTA works
+- [ ] **GUEST** `/projects/$slug` — empty state has CTA
+- [ ] **GUEST** `/projects/$slug` — mobile layout OK (375px)
+- [ ] **GUEST** `/projects/$slug` — no dead buttons
+- [ ] **GUEST** `/projects/$slug` — forms validate
+- [ ] **GUEST** `/projects/$slug` — error state shown
+- [ ] **GUEST** `/projects/$slug` — success feedback shown
+- [ ] **GUEST** `/freelancers` — loads without crash
+- [ ] **GUEST** `/freelancers` — correct access for role
+- [ ] **GUEST** `/freelancers` — primary CTA works
+- [ ] **GUEST** `/freelancers` — secondary CTA works
+- [ ] **GUEST** `/freelancers` — empty state has CTA
+- [ ] **GUEST** `/freelancers` — mobile layout OK (375px)
+- [ ] **GUEST** `/freelancers` — no dead buttons
+- [ ] **GUEST** `/freelancers` — forms validate
+- [ ] **GUEST** `/freelancers` — error state shown
+- [ ] **GUEST** `/freelancers` — success feedback shown
+- [ ] **GUEST** `/freelancers/$username` — loads without crash
+- [ ] **GUEST** `/freelancers/$username` — correct access for role
+- [ ] **GUEST** `/freelancers/$username` — primary CTA works
+- [ ] **GUEST** `/freelancers/$username` — secondary CTA works
+- [ ] **GUEST** `/freelancers/$username` — empty state has CTA
+- [ ] **GUEST** `/freelancers/$username` — mobile layout OK (375px)
+- [ ] **GUEST** `/freelancers/$username` — no dead buttons
+- [ ] **GUEST** `/freelancers/$username` — forms validate
+- [ ] **GUEST** `/freelancers/$username` — error state shown
+- [ ] **GUEST** `/freelancers/$username` — success feedback shown
+- [ ] **GUEST** `/agencies` — loads without crash
+- [ ] **GUEST** `/agencies` — correct access for role
+- [ ] **GUEST** `/agencies` — primary CTA works
+- [ ] **GUEST** `/agencies` — secondary CTA works
+- [ ] **GUEST** `/agencies` — empty state has CTA
+- [ ] **GUEST** `/agencies` — mobile layout OK (375px)
+- [ ] **GUEST** `/agencies` — no dead buttons
+- [ ] **GUEST** `/agencies` — forms validate
+- [ ] **GUEST** `/agencies` — error state shown
+- [ ] **GUEST** `/agencies` — success feedback shown
+- [ ] **GUEST** `/agencies/$slug` — loads without crash
+- [ ] **GUEST** `/agencies/$slug` — correct access for role
+- [ ] **GUEST** `/agencies/$slug` — primary CTA works
+- [ ] **GUEST** `/agencies/$slug` — secondary CTA works
+- [ ] **GUEST** `/agencies/$slug` — empty state has CTA
+- [ ] **GUEST** `/agencies/$slug` — mobile layout OK (375px)
+- [ ] **GUEST** `/agencies/$slug` — no dead buttons
+- [ ] **GUEST** `/agencies/$slug` — forms validate
+- [ ] **GUEST** `/agencies/$slug` — error state shown
+- [ ] **GUEST** `/agencies/$slug` — success feedback shown
+- [ ] **GUEST** `/portfolio/$slug` — loads without crash
+- [ ] **GUEST** `/portfolio/$slug` — correct access for role
+- [ ] **GUEST** `/portfolio/$slug` — primary CTA works
+- [ ] **GUEST** `/portfolio/$slug` — secondary CTA works
+- [ ] **GUEST** `/portfolio/$slug` — empty state has CTA
+- [ ] **GUEST** `/portfolio/$slug` — mobile layout OK (375px)
+- [ ] **GUEST** `/portfolio/$slug` — no dead buttons
+- [ ] **GUEST** `/portfolio/$slug` — forms validate
+- [ ] **GUEST** `/portfolio/$slug` — error state shown
+- [ ] **GUEST** `/portfolio/$slug` — success feedback shown
+- [ ] **GUEST** `/clients/$company` — loads without crash
+- [ ] **GUEST** `/clients/$company` — correct access for role
+- [ ] **GUEST** `/clients/$company` — primary CTA works
+- [ ] **GUEST** `/clients/$company` — secondary CTA works
+- [ ] **GUEST** `/clients/$company` — empty state has CTA
+- [ ] **GUEST** `/clients/$company` — mobile layout OK (375px)
+- [ ] **GUEST** `/clients/$company` — no dead buttons
+- [ ] **GUEST** `/clients/$company` — forms validate
+- [ ] **GUEST** `/clients/$company` — error state shown
+- [ ] **GUEST** `/clients/$company` — success feedback shown
+- [ ] **GUEST** `/welcome` — loads without crash
+- [ ] **GUEST** `/welcome` — correct access for role
+- [ ] **GUEST** `/welcome` — primary CTA works
+- [ ] **GUEST** `/welcome` — secondary CTA works
+- [ ] **GUEST** `/welcome` — empty state has CTA
+- [ ] **GUEST** `/welcome` — mobile layout OK (375px)
+- [ ] **GUEST** `/welcome` — no dead buttons
+- [ ] **GUEST** `/welcome` — forms validate
+- [ ] **GUEST** `/welcome` — error state shown
+- [ ] **GUEST** `/welcome` — success feedback shown
+- [ ] **GUEST** `/onboarding` — loads without crash
+- [ ] **GUEST** `/onboarding` — correct access for role
+- [ ] **GUEST** `/onboarding` — primary CTA works
+- [ ] **GUEST** `/onboarding` — secondary CTA works
+- [ ] **GUEST** `/onboarding` — empty state has CTA
+- [ ] **GUEST** `/onboarding` — mobile layout OK (375px)
+- [ ] **GUEST** `/onboarding` — no dead buttons
+- [ ] **GUEST** `/onboarding` — forms validate
+- [ ] **GUEST** `/onboarding` — error state shown
+- [ ] **GUEST** `/onboarding` — success feedback shown
+
+## Client routes
+
+- [ ] **CLIENT** `/dashboard` — loads without crash
+- [ ] **CLIENT** `/dashboard` — correct access for role
+- [ ] **CLIENT** `/dashboard` — primary CTA works
+- [ ] **CLIENT** `/dashboard` — secondary CTA works
+- [ ] **CLIENT** `/dashboard` — empty state has CTA
+- [ ] **CLIENT** `/dashboard` — mobile layout OK (375px)
+- [ ] **CLIENT** `/dashboard` — no dead buttons
+- [ ] **CLIENT** `/dashboard` — forms validate
+- [ ] **CLIENT** `/dashboard` — error state shown
+- [ ] **CLIENT** `/dashboard` — success feedback shown
+- [ ] **CLIENT** `/my-projects` — loads without crash
+- [ ] **CLIENT** `/my-projects` — correct access for role
+- [ ] **CLIENT** `/my-projects` — primary CTA works
+- [ ] **CLIENT** `/my-projects` — secondary CTA works
+- [ ] **CLIENT** `/my-projects` — empty state has CTA
+- [ ] **CLIENT** `/my-projects` — mobile layout OK (375px)
+- [ ] **CLIENT** `/my-projects` — no dead buttons
+- [ ] **CLIENT** `/my-projects` — forms validate
+- [ ] **CLIENT** `/my-projects` — error state shown
+- [ ] **CLIENT** `/my-projects` — success feedback shown
+- [ ] **CLIENT** `/projects/create` — loads without crash
+- [ ] **CLIENT** `/projects/create` — correct access for role
+- [ ] **CLIENT** `/projects/create` — primary CTA works
+- [ ] **CLIENT** `/projects/create` — secondary CTA works
+- [ ] **CLIENT** `/projects/create` — empty state has CTA
+- [ ] **CLIENT** `/projects/create` — mobile layout OK (375px)
+- [ ] **CLIENT** `/projects/create` — no dead buttons
+- [ ] **CLIENT** `/projects/create` — forms validate
+- [ ] **CLIENT** `/projects/create` — error state shown
+- [ ] **CLIENT** `/projects/create` — success feedback shown
+- [ ] **CLIENT** `/checkout` — loads without crash
+- [ ] **CLIENT** `/checkout` — correct access for role
+- [ ] **CLIENT** `/checkout` — primary CTA works
+- [ ] **CLIENT** `/checkout` — secondary CTA works
+- [ ] **CLIENT** `/checkout` — empty state has CTA
+- [ ] **CLIENT** `/checkout` — mobile layout OK (375px)
+- [ ] **CLIENT** `/checkout` — no dead buttons
+- [ ] **CLIENT** `/checkout` — forms validate
+- [ ] **CLIENT** `/checkout` — error state shown
+- [ ] **CLIENT** `/checkout` — success feedback shown
+- [ ] **CLIENT** `/orders` — loads without crash
+- [ ] **CLIENT** `/orders` — correct access for role
+- [ ] **CLIENT** `/orders` — primary CTA works
+- [ ] **CLIENT** `/orders` — secondary CTA works
+- [ ] **CLIENT** `/orders` — empty state has CTA
+- [ ] **CLIENT** `/orders` — mobile layout OK (375px)
+- [ ] **CLIENT** `/orders` — no dead buttons
+- [ ] **CLIENT** `/orders` — forms validate
+- [ ] **CLIENT** `/orders` — error state shown
+- [ ] **CLIENT** `/orders` — success feedback shown
+- [ ] **CLIENT** `/orders/$id` — loads without crash
+- [ ] **CLIENT** `/orders/$id` — correct access for role
+- [ ] **CLIENT** `/orders/$id` — primary CTA works
+- [ ] **CLIENT** `/orders/$id` — secondary CTA works
+- [ ] **CLIENT** `/orders/$id` — empty state has CTA
+- [ ] **CLIENT** `/orders/$id` — mobile layout OK (375px)
+- [ ] **CLIENT** `/orders/$id` — no dead buttons
+- [ ] **CLIENT** `/orders/$id` — forms validate
+- [ ] **CLIENT** `/orders/$id` — error state shown
+- [ ] **CLIENT** `/orders/$id` — success feedback shown
+- [ ] **CLIENT** `/escrow` — loads without crash
+- [ ] **CLIENT** `/escrow` — correct access for role
+- [ ] **CLIENT** `/escrow` — primary CTA works
+- [ ] **CLIENT** `/escrow` — secondary CTA works
+- [ ] **CLIENT** `/escrow` — empty state has CTA
+- [ ] **CLIENT** `/escrow` — mobile layout OK (375px)
+- [ ] **CLIENT** `/escrow` — no dead buttons
+- [ ] **CLIENT** `/escrow` — forms validate
+- [ ] **CLIENT** `/escrow` — error state shown
+- [ ] **CLIENT** `/escrow` — success feedback shown
+- [ ] **CLIENT** `/escrow/$id` — loads without crash
+- [ ] **CLIENT** `/escrow/$id` — correct access for role
+- [ ] **CLIENT** `/escrow/$id` — primary CTA works
+- [ ] **CLIENT** `/escrow/$id` — secondary CTA works
+- [ ] **CLIENT** `/escrow/$id` — empty state has CTA
+- [ ] **CLIENT** `/escrow/$id` — mobile layout OK (375px)
+- [ ] **CLIENT** `/escrow/$id` — no dead buttons
+- [ ] **CLIENT** `/escrow/$id` — forms validate
+- [ ] **CLIENT** `/escrow/$id` — error state shown
+- [ ] **CLIENT** `/escrow/$id` — success feedback shown
+- [ ] **CLIENT** `/clients/manage` — loads without crash
+- [ ] **CLIENT** `/clients/manage` — correct access for role
+- [ ] **CLIENT** `/clients/manage` — primary CTA works
+- [ ] **CLIENT** `/clients/manage` — secondary CTA works
+- [ ] **CLIENT** `/clients/manage` — empty state has CTA
+- [ ] **CLIENT** `/clients/manage` — mobile layout OK (375px)
+- [ ] **CLIENT** `/clients/manage` — no dead buttons
+- [ ] **CLIENT** `/clients/manage` — forms validate
+- [ ] **CLIENT** `/clients/manage` — error state shown
+- [ ] **CLIENT** `/clients/manage` — success feedback shown
+- [ ] **CLIENT** `/analytics/client` — loads without crash
+- [ ] **CLIENT** `/analytics/client` — correct access for role
+- [ ] **CLIENT** `/analytics/client` — primary CTA works
+- [ ] **CLIENT** `/analytics/client` — secondary CTA works
+- [ ] **CLIENT** `/analytics/client` — empty state has CTA
+- [ ] **CLIENT** `/analytics/client` — mobile layout OK (375px)
+- [ ] **CLIENT** `/analytics/client` — no dead buttons
+- [ ] **CLIENT** `/analytics/client` — forms validate
+- [ ] **CLIENT** `/analytics/client` — error state shown
+- [ ] **CLIENT** `/analytics/client` — success feedback shown
+- [ ] **CLIENT** `/wallet` — loads without crash
+- [ ] **CLIENT** `/wallet` — correct access for role
+- [ ] **CLIENT** `/wallet` — primary CTA works
+- [ ] **CLIENT** `/wallet` — secondary CTA works
+- [ ] **CLIENT** `/wallet` — empty state has CTA
+- [ ] **CLIENT** `/wallet` — mobile layout OK (375px)
+- [ ] **CLIENT** `/wallet` — no dead buttons
+- [ ] **CLIENT** `/wallet` — forms validate
+- [ ] **CLIENT** `/wallet` — error state shown
+- [ ] **CLIENT** `/wallet` — success feedback shown
+- [ ] **CLIENT** `/messages` — loads without crash
+- [ ] **CLIENT** `/messages` — correct access for role
+- [ ] **CLIENT** `/messages` — primary CTA works
+- [ ] **CLIENT** `/messages` — secondary CTA works
+- [ ] **CLIENT** `/messages` — empty state has CTA
+- [ ] **CLIENT** `/messages` — mobile layout OK (375px)
+- [ ] **CLIENT** `/messages` — no dead buttons
+- [ ] **CLIENT** `/messages` — forms validate
+- [ ] **CLIENT** `/messages` — error state shown
+- [ ] **CLIENT** `/messages` — success feedback shown
+- [ ] **CLIENT** `/notifications` — loads without crash
+- [ ] **CLIENT** `/notifications` — correct access for role
+- [ ] **CLIENT** `/notifications` — primary CTA works
+- [ ] **CLIENT** `/notifications` — secondary CTA works
+- [ ] **CLIENT** `/notifications` — empty state has CTA
+- [ ] **CLIENT** `/notifications` — mobile layout OK (375px)
+- [ ] **CLIENT** `/notifications` — no dead buttons
+- [ ] **CLIENT** `/notifications` — forms validate
+- [ ] **CLIENT** `/notifications` — error state shown
+- [ ] **CLIENT** `/notifications` — success feedback shown
+- [ ] **CLIENT** `/settings` — loads without crash
+- [ ] **CLIENT** `/settings` — correct access for role
+- [ ] **CLIENT** `/settings` — primary CTA works
+- [ ] **CLIENT** `/settings` — secondary CTA works
+- [ ] **CLIENT** `/settings` — empty state has CTA
+- [ ] **CLIENT** `/settings` — mobile layout OK (375px)
+- [ ] **CLIENT** `/settings` — no dead buttons
+- [ ] **CLIENT** `/settings` — forms validate
+- [ ] **CLIENT** `/settings` — error state shown
+- [ ] **CLIENT** `/settings` — success feedback shown
+- [ ] **CLIENT** `/saved` — loads without crash
+- [ ] **CLIENT** `/saved` — correct access for role
+- [ ] **CLIENT** `/saved` — primary CTA works
+- [ ] **CLIENT** `/saved` — secondary CTA works
+- [ ] **CLIENT** `/saved` — empty state has CTA
+- [ ] **CLIENT** `/saved` — mobile layout OK (375px)
+- [ ] **CLIENT** `/saved` — no dead buttons
+- [ ] **CLIENT** `/saved` — forms validate
+- [ ] **CLIENT** `/saved` — error state shown
+- [ ] **CLIENT** `/saved` — success feedback shown
+- [ ] **CLIENT** `/subscription` — loads without crash
+- [ ] **CLIENT** `/subscription` — correct access for role
+- [ ] **CLIENT** `/subscription` — primary CTA works
+- [ ] **CLIENT** `/subscription` — secondary CTA works
+- [ ] **CLIENT** `/subscription` — empty state has CTA
+- [ ] **CLIENT** `/subscription` — mobile layout OK (375px)
+- [ ] **CLIENT** `/subscription` — no dead buttons
+- [ ] **CLIENT** `/subscription` — forms validate
+- [ ] **CLIENT** `/subscription` — error state shown
+- [ ] **CLIENT** `/subscription` — success feedback shown
+- [ ] **CLIENT** `/profile` — loads without crash
+- [ ] **CLIENT** `/profile` — correct access for role
+- [ ] **CLIENT** `/profile` — primary CTA works
+- [ ] **CLIENT** `/profile` — secondary CTA works
+- [ ] **CLIENT** `/profile` — empty state has CTA
+- [ ] **CLIENT** `/profile` — mobile layout OK (375px)
+- [ ] **CLIENT** `/profile` — no dead buttons
+- [ ] **CLIENT** `/profile` — forms validate
+- [ ] **CLIENT** `/profile` — error state shown
+- [ ] **CLIENT** `/profile` — success feedback shown
+
+## Freelancer routes
+
+- [ ] **FREELANCER** `/dashboard/freelancer` — loads without crash
+- [ ] **FREELANCER** `/dashboard/freelancer` — correct access for role
+- [ ] **FREELANCER** `/dashboard/freelancer` — primary CTA works
+- [ ] **FREELANCER** `/dashboard/freelancer` — secondary CTA works
+- [ ] **FREELANCER** `/dashboard/freelancer` — empty state has CTA
+- [ ] **FREELANCER** `/dashboard/freelancer` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/dashboard/freelancer` — no dead buttons
+- [ ] **FREELANCER** `/dashboard/freelancer` — forms validate
+- [ ] **FREELANCER** `/dashboard/freelancer` — error state shown
+- [ ] **FREELANCER** `/dashboard/freelancer` — success feedback shown
+- [ ] **FREELANCER** `/my-services` — loads without crash
+- [ ] **FREELANCER** `/my-services` — correct access for role
+- [ ] **FREELANCER** `/my-services` — primary CTA works
+- [ ] **FREELANCER** `/my-services` — secondary CTA works
+- [ ] **FREELANCER** `/my-services` — empty state has CTA
+- [ ] **FREELANCER** `/my-services` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/my-services` — no dead buttons
+- [ ] **FREELANCER** `/my-services` — forms validate
+- [ ] **FREELANCER** `/my-services` — error state shown
+- [ ] **FREELANCER** `/my-services` — success feedback shown
+- [ ] **FREELANCER** `/services/create` — loads without crash
+- [ ] **FREELANCER** `/services/create` — correct access for role
+- [ ] **FREELANCER** `/services/create` — primary CTA works
+- [ ] **FREELANCER** `/services/create` — secondary CTA works
+- [ ] **FREELANCER** `/services/create` — empty state has CTA
+- [ ] **FREELANCER** `/services/create` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/services/create` — no dead buttons
+- [ ] **FREELANCER** `/services/create` — forms validate
+- [ ] **FREELANCER** `/services/create` — error state shown
+- [ ] **FREELANCER** `/services/create` — success feedback shown
+- [ ] **FREELANCER** `/applications` — loads without crash
+- [ ] **FREELANCER** `/applications` — correct access for role
+- [ ] **FREELANCER** `/applications` — primary CTA works
+- [ ] **FREELANCER** `/applications` — secondary CTA works
+- [ ] **FREELANCER** `/applications` — empty state has CTA
+- [ ] **FREELANCER** `/applications` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/applications` — no dead buttons
+- [ ] **FREELANCER** `/applications` — forms validate
+- [ ] **FREELANCER** `/applications` — error state shown
+- [ ] **FREELANCER** `/applications` — success feedback shown
+- [ ] **FREELANCER** `/applications/$id` — loads without crash
+- [ ] **FREELANCER** `/applications/$id` — correct access for role
+- [ ] **FREELANCER** `/applications/$id` — primary CTA works
+- [ ] **FREELANCER** `/applications/$id` — secondary CTA works
+- [ ] **FREELANCER** `/applications/$id` — empty state has CTA
+- [ ] **FREELANCER** `/applications/$id` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/applications/$id` — no dead buttons
+- [ ] **FREELANCER** `/applications/$id` — forms validate
+- [ ] **FREELANCER** `/applications/$id` — error state shown
+- [ ] **FREELANCER** `/applications/$id` — success feedback shown
+- [ ] **FREELANCER** `/portfolio` — loads without crash
+- [ ] **FREELANCER** `/portfolio` — correct access for role
+- [ ] **FREELANCER** `/portfolio` — primary CTA works
+- [ ] **FREELANCER** `/portfolio` — secondary CTA works
+- [ ] **FREELANCER** `/portfolio` — empty state has CTA
+- [ ] **FREELANCER** `/portfolio` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/portfolio` — no dead buttons
+- [ ] **FREELANCER** `/portfolio` — forms validate
+- [ ] **FREELANCER** `/portfolio` — error state shown
+- [ ] **FREELANCER** `/portfolio` — success feedback shown
+- [ ] **FREELANCER** `/portfolio/create` — loads without crash
+- [ ] **FREELANCER** `/portfolio/create` — correct access for role
+- [ ] **FREELANCER** `/portfolio/create` — primary CTA works
+- [ ] **FREELANCER** `/portfolio/create` — secondary CTA works
+- [ ] **FREELANCER** `/portfolio/create` — empty state has CTA
+- [ ] **FREELANCER** `/portfolio/create` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/portfolio/create` — no dead buttons
+- [ ] **FREELANCER** `/portfolio/create` — forms validate
+- [ ] **FREELANCER** `/portfolio/create` — error state shown
+- [ ] **FREELANCER** `/portfolio/create` — success feedback shown
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — loads without crash
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — correct access for role
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — primary CTA works
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — secondary CTA works
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — empty state has CTA
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — no dead buttons
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — forms validate
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — error state shown
+- [ ] **FREELANCER** `/portfolio/edit/$slug` — success feedback shown
+- [ ] **FREELANCER** `/freelancers/manage` — loads without crash
+- [ ] **FREELANCER** `/freelancers/manage` — correct access for role
+- [ ] **FREELANCER** `/freelancers/manage` — primary CTA works
+- [ ] **FREELANCER** `/freelancers/manage` — secondary CTA works
+- [ ] **FREELANCER** `/freelancers/manage` — empty state has CTA
+- [ ] **FREELANCER** `/freelancers/manage` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/freelancers/manage` — no dead buttons
+- [ ] **FREELANCER** `/freelancers/manage` — forms validate
+- [ ] **FREELANCER** `/freelancers/manage` — error state shown
+- [ ] **FREELANCER** `/freelancers/manage` — success feedback shown
+- [ ] **FREELANCER** `/analytics/freelancer` — loads without crash
+- [ ] **FREELANCER** `/analytics/freelancer` — correct access for role
+- [ ] **FREELANCER** `/analytics/freelancer` — primary CTA works
+- [ ] **FREELANCER** `/analytics/freelancer` — secondary CTA works
+- [ ] **FREELANCER** `/analytics/freelancer` — empty state has CTA
+- [ ] **FREELANCER** `/analytics/freelancer` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/analytics/freelancer` — no dead buttons
+- [ ] **FREELANCER** `/analytics/freelancer` — forms validate
+- [ ] **FREELANCER** `/analytics/freelancer` — error state shown
+- [ ] **FREELANCER** `/analytics/freelancer` — success feedback shown
+- [ ] **FREELANCER** `/promotions` — loads without crash
+- [ ] **FREELANCER** `/promotions` — correct access for role
+- [ ] **FREELANCER** `/promotions` — primary CTA works
+- [ ] **FREELANCER** `/promotions` — secondary CTA works
+- [ ] **FREELANCER** `/promotions` — empty state has CTA
+- [ ] **FREELANCER** `/promotions` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/promotions` — no dead buttons
+- [ ] **FREELANCER** `/promotions` — forms validate
+- [ ] **FREELANCER** `/promotions` — error state shown
+- [ ] **FREELANCER** `/promotions` — success feedback shown
+- [ ] **FREELANCER** `/ai` — loads without crash
+- [ ] **FREELANCER** `/ai` — correct access for role
+- [ ] **FREELANCER** `/ai` — primary CTA works
+- [ ] **FREELANCER** `/ai` — secondary CTA works
+- [ ] **FREELANCER** `/ai` — empty state has CTA
+- [ ] **FREELANCER** `/ai` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/ai` — no dead buttons
+- [ ] **FREELANCER** `/ai` — forms validate
+- [ ] **FREELANCER** `/ai` — error state shown
+- [ ] **FREELANCER** `/ai` — success feedback shown
+- [ ] **FREELANCER** `/ai/proposal-assistant` — loads without crash
+- [ ] **FREELANCER** `/ai/proposal-assistant` — correct access for role
+- [ ] **FREELANCER** `/ai/proposal-assistant` — primary CTA works
+- [ ] **FREELANCER** `/ai/proposal-assistant` — secondary CTA works
+- [ ] **FREELANCER** `/ai/proposal-assistant` — empty state has CTA
+- [ ] **FREELANCER** `/ai/proposal-assistant` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/ai/proposal-assistant` — no dead buttons
+- [ ] **FREELANCER** `/ai/proposal-assistant` — forms validate
+- [ ] **FREELANCER** `/ai/proposal-assistant` — error state shown
+- [ ] **FREELANCER** `/ai/proposal-assistant` — success feedback shown
+- [ ] **FREELANCER** `/ai/project-generator` — loads without crash
+- [ ] **FREELANCER** `/ai/project-generator` — correct access for role
+- [ ] **FREELANCER** `/ai/project-generator` — primary CTA works
+- [ ] **FREELANCER** `/ai/project-generator` — secondary CTA works
+- [ ] **FREELANCER** `/ai/project-generator` — empty state has CTA
+- [ ] **FREELANCER** `/ai/project-generator` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/ai/project-generator` — no dead buttons
+- [ ] **FREELANCER** `/ai/project-generator` — forms validate
+- [ ] **FREELANCER** `/ai/project-generator` — error state shown
+- [ ] **FREELANCER** `/ai/project-generator` — success feedback shown
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — loads without crash
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — correct access for role
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — primary CTA works
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — secondary CTA works
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — empty state has CTA
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — no dead buttons
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — forms validate
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — error state shown
+- [ ] **FREELANCER** `/ai/portfolio-optimizer` — success feedback shown
+- [ ] **FREELANCER** `/ai/trust-coach` — loads without crash
+- [ ] **FREELANCER** `/ai/trust-coach` — correct access for role
+- [ ] **FREELANCER** `/ai/trust-coach` — primary CTA works
+- [ ] **FREELANCER** `/ai/trust-coach` — secondary CTA works
+- [ ] **FREELANCER** `/ai/trust-coach` — empty state has CTA
+- [ ] **FREELANCER** `/ai/trust-coach` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/ai/trust-coach` — no dead buttons
+- [ ] **FREELANCER** `/ai/trust-coach` — forms validate
+- [ ] **FREELANCER** `/ai/trust-coach` — error state shown
+- [ ] **FREELANCER** `/ai/trust-coach` — success feedback shown
+- [ ] **FREELANCER** `/ai/onboarding` — loads without crash
+- [ ] **FREELANCER** `/ai/onboarding` — correct access for role
+- [ ] **FREELANCER** `/ai/onboarding` — primary CTA works
+- [ ] **FREELANCER** `/ai/onboarding` — secondary CTA works
+- [ ] **FREELANCER** `/ai/onboarding` — empty state has CTA
+- [ ] **FREELANCER** `/ai/onboarding` — mobile layout OK (375px)
+- [ ] **FREELANCER** `/ai/onboarding` — no dead buttons
+- [ ] **FREELANCER** `/ai/onboarding` — forms validate
+- [ ] **FREELANCER** `/ai/onboarding` — error state shown
+- [ ] **FREELANCER** `/ai/onboarding` — success feedback shown
+
+## Agency routes
+
+- [ ] **AGENCY** `/agencies/create` — loads without crash
+- [ ] **AGENCY** `/agencies/create` — correct access for role
+- [ ] **AGENCY** `/agencies/create` — primary CTA works
+- [ ] **AGENCY** `/agencies/create` — secondary CTA works
+- [ ] **AGENCY** `/agencies/create` — empty state has CTA
+- [ ] **AGENCY** `/agencies/create` — mobile layout OK (375px)
+- [ ] **AGENCY** `/agencies/create` — no dead buttons
+- [ ] **AGENCY** `/agencies/create` — forms validate
+- [ ] **AGENCY** `/agencies/create` — error state shown
+- [ ] **AGENCY** `/agencies/create` — success feedback shown
+- [ ] **AGENCY** `/dashboard/agency` — loads without crash
+- [ ] **AGENCY** `/dashboard/agency` — correct access for role
+- [ ] **AGENCY** `/dashboard/agency` — primary CTA works
+- [ ] **AGENCY** `/dashboard/agency` — secondary CTA works
+- [ ] **AGENCY** `/dashboard/agency` — empty state has CTA
+- [ ] **AGENCY** `/dashboard/agency` — mobile layout OK (375px)
+- [ ] **AGENCY** `/dashboard/agency` — no dead buttons
+- [ ] **AGENCY** `/dashboard/agency` — forms validate
+- [ ] **AGENCY** `/dashboard/agency` — error state shown
+- [ ] **AGENCY** `/dashboard/agency` — success feedback shown
+- [ ] **AGENCY** `/agency/clients` — loads without crash
+- [ ] **AGENCY** `/agency/clients` — correct access for role
+- [ ] **AGENCY** `/agency/clients` — primary CTA works
+- [ ] **AGENCY** `/agency/clients` — secondary CTA works
+- [ ] **AGENCY** `/agency/clients` — empty state has CTA
+- [ ] **AGENCY** `/agency/clients` — mobile layout OK (375px)
+- [ ] **AGENCY** `/agency/clients` — no dead buttons
+- [ ] **AGENCY** `/agency/clients` — forms validate
+- [ ] **AGENCY** `/agency/clients` — error state shown
+- [ ] **AGENCY** `/agency/clients` — success feedback shown
+
+## Admin routes
+
+- [ ] **ADMIN** `/admin` — loads without crash
+- [ ] **ADMIN** `/admin` — correct access for role
+- [ ] **ADMIN** `/admin` — primary CTA works
+- [ ] **ADMIN** `/admin` — secondary CTA works
+- [ ] **ADMIN** `/admin` — empty state has CTA
+- [ ] **ADMIN** `/admin` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin` — no dead buttons
+- [ ] **ADMIN** `/admin` — forms validate
+- [ ] **ADMIN** `/admin` — error state shown
+- [ ] **ADMIN** `/admin` — success feedback shown
+- [ ] **ADMIN** `/admin/users` — loads without crash
+- [ ] **ADMIN** `/admin/users` — correct access for role
+- [ ] **ADMIN** `/admin/users` — primary CTA works
+- [ ] **ADMIN** `/admin/users` — secondary CTA works
+- [ ] **ADMIN** `/admin/users` — empty state has CTA
+- [ ] **ADMIN** `/admin/users` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/users` — no dead buttons
+- [ ] **ADMIN** `/admin/users` — forms validate
+- [ ] **ADMIN** `/admin/users` — error state shown
+- [ ] **ADMIN** `/admin/users` — success feedback shown
+- [ ] **ADMIN** `/admin/users/$id` — loads without crash
+- [ ] **ADMIN** `/admin/users/$id` — correct access for role
+- [ ] **ADMIN** `/admin/users/$id` — primary CTA works
+- [ ] **ADMIN** `/admin/users/$id` — secondary CTA works
+- [ ] **ADMIN** `/admin/users/$id` — empty state has CTA
+- [ ] **ADMIN** `/admin/users/$id` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/users/$id` — no dead buttons
+- [ ] **ADMIN** `/admin/users/$id` — forms validate
+- [ ] **ADMIN** `/admin/users/$id` — error state shown
+- [ ] **ADMIN** `/admin/users/$id` — success feedback shown
+- [ ] **ADMIN** `/admin/verifications` — loads without crash
+- [ ] **ADMIN** `/admin/verifications` — correct access for role
+- [ ] **ADMIN** `/admin/verifications` — primary CTA works
+- [ ] **ADMIN** `/admin/verifications` — secondary CTA works
+- [ ] **ADMIN** `/admin/verifications` — empty state has CTA
+- [ ] **ADMIN** `/admin/verifications` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/verifications` — no dead buttons
+- [ ] **ADMIN** `/admin/verifications` — forms validate
+- [ ] **ADMIN** `/admin/verifications` — error state shown
+- [ ] **ADMIN** `/admin/verifications` — success feedback shown
+- [ ] **ADMIN** `/admin/projects` — loads without crash
+- [ ] **ADMIN** `/admin/projects` — correct access for role
+- [ ] **ADMIN** `/admin/projects` — primary CTA works
+- [ ] **ADMIN** `/admin/projects` — secondary CTA works
+- [ ] **ADMIN** `/admin/projects` — empty state has CTA
+- [ ] **ADMIN** `/admin/projects` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/projects` — no dead buttons
+- [ ] **ADMIN** `/admin/projects` — forms validate
+- [ ] **ADMIN** `/admin/projects` — error state shown
+- [ ] **ADMIN** `/admin/projects` — success feedback shown
+- [ ] **ADMIN** `/admin/services` — loads without crash
+- [ ] **ADMIN** `/admin/services` — correct access for role
+- [ ] **ADMIN** `/admin/services` — primary CTA works
+- [ ] **ADMIN** `/admin/services` — secondary CTA works
+- [ ] **ADMIN** `/admin/services` — empty state has CTA
+- [ ] **ADMIN** `/admin/services` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/services` — no dead buttons
+- [ ] **ADMIN** `/admin/services` — forms validate
+- [ ] **ADMIN** `/admin/services` — error state shown
+- [ ] **ADMIN** `/admin/services` — success feedback shown
+- [ ] **ADMIN** `/admin/portfolios` — loads without crash
+- [ ] **ADMIN** `/admin/portfolios` — correct access for role
+- [ ] **ADMIN** `/admin/portfolios` — primary CTA works
+- [ ] **ADMIN** `/admin/portfolios` — secondary CTA works
+- [ ] **ADMIN** `/admin/portfolios` — empty state has CTA
+- [ ] **ADMIN** `/admin/portfolios` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/portfolios` — no dead buttons
+- [ ] **ADMIN** `/admin/portfolios` — forms validate
+- [ ] **ADMIN** `/admin/portfolios` — error state shown
+- [ ] **ADMIN** `/admin/portfolios` — success feedback shown
+- [ ] **ADMIN** `/admin/orders` — loads without crash
+- [ ] **ADMIN** `/admin/orders` — correct access for role
+- [ ] **ADMIN** `/admin/orders` — primary CTA works
+- [ ] **ADMIN** `/admin/orders` — secondary CTA works
+- [ ] **ADMIN** `/admin/orders` — empty state has CTA
+- [ ] **ADMIN** `/admin/orders` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/orders` — no dead buttons
+- [ ] **ADMIN** `/admin/orders` — forms validate
+- [ ] **ADMIN** `/admin/orders` — error state shown
+- [ ] **ADMIN** `/admin/orders` — success feedback shown
+- [ ] **ADMIN** `/admin/escrow` — loads without crash
+- [ ] **ADMIN** `/admin/escrow` — correct access for role
+- [ ] **ADMIN** `/admin/escrow` — primary CTA works
+- [ ] **ADMIN** `/admin/escrow` — secondary CTA works
+- [ ] **ADMIN** `/admin/escrow` — empty state has CTA
+- [ ] **ADMIN** `/admin/escrow` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/escrow` — no dead buttons
+- [ ] **ADMIN** `/admin/escrow` — forms validate
+- [ ] **ADMIN** `/admin/escrow` — error state shown
+- [ ] **ADMIN** `/admin/escrow` — success feedback shown
+- [ ] **ADMIN** `/admin/escrow/$id` — loads without crash
+- [ ] **ADMIN** `/admin/escrow/$id` — correct access for role
+- [ ] **ADMIN** `/admin/escrow/$id` — primary CTA works
+- [ ] **ADMIN** `/admin/escrow/$id` — secondary CTA works
+- [ ] **ADMIN** `/admin/escrow/$id` — empty state has CTA
+- [ ] **ADMIN** `/admin/escrow/$id` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/escrow/$id` — no dead buttons
+- [ ] **ADMIN** `/admin/escrow/$id` — forms validate
+- [ ] **ADMIN** `/admin/escrow/$id` — error state shown
+- [ ] **ADMIN** `/admin/escrow/$id` — success feedback shown
+- [ ] **ADMIN** `/admin/disputes` — loads without crash
+- [ ] **ADMIN** `/admin/disputes` — correct access for role
+- [ ] **ADMIN** `/admin/disputes` — primary CTA works
+- [ ] **ADMIN** `/admin/disputes` — secondary CTA works
+- [ ] **ADMIN** `/admin/disputes` — empty state has CTA
+- [ ] **ADMIN** `/admin/disputes` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/disputes` — no dead buttons
+- [ ] **ADMIN** `/admin/disputes` — forms validate
+- [ ] **ADMIN** `/admin/disputes` — error state shown
+- [ ] **ADMIN** `/admin/disputes` — success feedback shown
+- [ ] **ADMIN** `/admin/payments` — loads without crash
+- [ ] **ADMIN** `/admin/payments` — correct access for role
+- [ ] **ADMIN** `/admin/payments` — primary CTA works
+- [ ] **ADMIN** `/admin/payments` — secondary CTA works
+- [ ] **ADMIN** `/admin/payments` — empty state has CTA
+- [ ] **ADMIN** `/admin/payments` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/payments` — no dead buttons
+- [ ] **ADMIN** `/admin/payments` — forms validate
+- [ ] **ADMIN** `/admin/payments` — error state shown
+- [ ] **ADMIN** `/admin/payments` — success feedback shown
+- [ ] **ADMIN** `/admin/moderation` — loads without crash
+- [ ] **ADMIN** `/admin/moderation` — correct access for role
+- [ ] **ADMIN** `/admin/moderation` — primary CTA works
+- [ ] **ADMIN** `/admin/moderation` — secondary CTA works
+- [ ] **ADMIN** `/admin/moderation` — empty state has CTA
+- [ ] **ADMIN** `/admin/moderation` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/moderation` — no dead buttons
+- [ ] **ADMIN** `/admin/moderation` — forms validate
+- [ ] **ADMIN** `/admin/moderation` — error state shown
+- [ ] **ADMIN** `/admin/moderation` — success feedback shown
+- [ ] **ADMIN** `/admin/support` — loads without crash
+- [ ] **ADMIN** `/admin/support` — correct access for role
+- [ ] **ADMIN** `/admin/support` — primary CTA works
+- [ ] **ADMIN** `/admin/support` — secondary CTA works
+- [ ] **ADMIN** `/admin/support` — empty state has CTA
+- [ ] **ADMIN** `/admin/support` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/support` — no dead buttons
+- [ ] **ADMIN** `/admin/support` — forms validate
+- [ ] **ADMIN** `/admin/support` — error state shown
+- [ ] **ADMIN** `/admin/support` — success feedback shown
+- [ ] **ADMIN** `/admin/analytics` — loads without crash
+- [ ] **ADMIN** `/admin/analytics` — correct access for role
+- [ ] **ADMIN** `/admin/analytics` — primary CTA works
+- [ ] **ADMIN** `/admin/analytics` — secondary CTA works
+- [ ] **ADMIN** `/admin/analytics` — empty state has CTA
+- [ ] **ADMIN** `/admin/analytics` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/analytics` — no dead buttons
+- [ ] **ADMIN** `/admin/analytics` — forms validate
+- [ ] **ADMIN** `/admin/analytics` — error state shown
+- [ ] **ADMIN** `/admin/analytics` — success feedback shown
+- [ ] **ADMIN** `/admin/audit` — loads without crash
+- [ ] **ADMIN** `/admin/audit` — correct access for role
+- [ ] **ADMIN** `/admin/audit` — primary CTA works
+- [ ] **ADMIN** `/admin/audit` — secondary CTA works
+- [ ] **ADMIN** `/admin/audit` — empty state has CTA
+- [ ] **ADMIN** `/admin/audit` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/audit` — no dead buttons
+- [ ] **ADMIN** `/admin/audit` — forms validate
+- [ ] **ADMIN** `/admin/audit` — error state shown
+- [ ] **ADMIN** `/admin/audit` — success feedback shown
+- [ ] **ADMIN** `/admin/system` — loads without crash
+- [ ] **ADMIN** `/admin/system` — correct access for role
+- [ ] **ADMIN** `/admin/system` — primary CTA works
+- [ ] **ADMIN** `/admin/system` — secondary CTA works
+- [ ] **ADMIN** `/admin/system` — empty state has CTA
+- [ ] **ADMIN** `/admin/system` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/system` — no dead buttons
+- [ ] **ADMIN** `/admin/system` — forms validate
+- [ ] **ADMIN** `/admin/system` — error state shown
+- [ ] **ADMIN** `/admin/system` — success feedback shown
+- [ ] **ADMIN** `/admin/founder` — loads without crash
+- [ ] **ADMIN** `/admin/founder` — correct access for role
+- [ ] **ADMIN** `/admin/founder` — primary CTA works
+- [ ] **ADMIN** `/admin/founder` — secondary CTA works
+- [ ] **ADMIN** `/admin/founder` — empty state has CTA
+- [ ] **ADMIN** `/admin/founder` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/founder` — no dead buttons
+- [ ] **ADMIN** `/admin/founder` — forms validate
+- [ ] **ADMIN** `/admin/founder` — error state shown
+- [ ] **ADMIN** `/admin/founder` — success feedback shown
+- [ ] **ADMIN** `/admin/ai` — loads without crash
+- [ ] **ADMIN** `/admin/ai` — correct access for role
+- [ ] **ADMIN** `/admin/ai` — primary CTA works
+- [ ] **ADMIN** `/admin/ai` — secondary CTA works
+- [ ] **ADMIN** `/admin/ai` — empty state has CTA
+- [ ] **ADMIN** `/admin/ai` — mobile layout OK (375px)
+- [ ] **ADMIN** `/admin/ai` — no dead buttons
+- [ ] **ADMIN** `/admin/ai` — forms validate
+- [ ] **ADMIN** `/admin/ai` — error state shown
+- [ ] **ADMIN** `/admin/ai` — success feedback shown
+- [ ] **ADMIN** `/revenue` — loads without crash
+- [ ] **ADMIN** `/revenue` — correct access for role
+- [ ] **ADMIN** `/revenue` — primary CTA works
+- [ ] **ADMIN** `/revenue` — secondary CTA works
+- [ ] **ADMIN** `/revenue` — empty state has CTA
+- [ ] **ADMIN** `/revenue` — mobile layout OK (375px)
+- [ ] **ADMIN** `/revenue` — no dead buttons
+- [ ] **ADMIN** `/revenue` — forms validate
+- [ ] **ADMIN** `/revenue` — error state shown
+- [ ] **ADMIN** `/revenue` — success feedback shown
+
+## Modals & dialogs
+
+- [ ] **MODAL** `DepositModal` — opens
+- [ ] **MODAL** `DepositModal` — closes on cancel
+- [ ] **MODAL** `DepositModal` — primary action mutates state
+- [ ] **MODAL** `DepositModal` — mobile usable
+- [ ] **MODAL** `DepositModal` — focus visible
+- [ ] **MODAL** `WithdrawModal` — opens
+- [ ] **MODAL** `WithdrawModal` — closes on cancel
+- [ ] **MODAL** `WithdrawModal` — primary action mutates state
+- [ ] **MODAL** `WithdrawModal` — mobile usable
+- [ ] **MODAL** `WithdrawModal` — focus visible
+- [ ] **MODAL** `SendOfferModal` — opens
+- [ ] **MODAL** `SendOfferModal` — closes on cancel
+- [ ] **MODAL** `SendOfferModal` — primary action mutates state
+- [ ] **MODAL** `SendOfferModal` — mobile usable
+- [ ] **MODAL** `SendOfferModal` — focus visible
+- [ ] **MODAL** `EscrowActionModal` — opens
+- [ ] **MODAL** `EscrowActionModal` — closes on cancel
+- [ ] **MODAL** `EscrowActionModal` — primary action mutates state
+- [ ] **MODAL** `EscrowActionModal` — mobile usable
+- [ ] **MODAL** `EscrowActionModal` — focus visible
+- [ ] **MODAL** `FileAttachModal` — opens
+- [ ] **MODAL** `FileAttachModal` — closes on cancel
+- [ ] **MODAL** `FileAttachModal` — primary action mutates state
+- [ ] **MODAL** `FileAttachModal` — mobile usable
+- [ ] **MODAL** `FileAttachModal` — focus visible
+- [ ] **MODAL** `EmojiPickerModal` — opens
+- [ ] **MODAL** `EmojiPickerModal` — closes on cancel
+- [ ] **MODAL** `EmojiPickerModal` — primary action mutates state
+- [ ] **MODAL** `EmojiPickerModal` — mobile usable
+- [ ] **MODAL** `EmojiPickerModal` — focus visible
+- [ ] **MODAL** `ChangePasswordModal` — opens
+- [ ] **MODAL** `ChangePasswordModal` — closes on cancel
+- [ ] **MODAL** `ChangePasswordModal` — primary action mutates state
+- [ ] **MODAL** `ChangePasswordModal` — mobile usable
+- [ ] **MODAL** `ChangePasswordModal` — focus visible
+- [ ] **MODAL** `TwoFactorModal` — opens
+- [ ] **MODAL** `TwoFactorModal` — closes on cancel
+- [ ] **MODAL** `TwoFactorModal` — primary action mutates state
+- [ ] **MODAL** `TwoFactorModal` — mobile usable
+- [ ] **MODAL** `TwoFactorModal` — focus visible
+- [ ] **MODAL** `VerificationUploadModal` — opens
+- [ ] **MODAL** `VerificationUploadModal` — closes on cancel
+- [ ] **MODAL** `VerificationUploadModal` — primary action mutates state
+- [ ] **MODAL** `VerificationUploadModal` — mobile usable
+- [ ] **MODAL** `VerificationUploadModal` — focus visible
+- [ ] **MODAL** `Payment modals` — opens
+- [ ] **MODAL** `Payment modals` — closes on cancel
+- [ ] **MODAL** `Payment modals` — primary action mutates state
+- [ ] **MODAL** `Payment modals` — mobile usable
+- [ ] **MODAL** `Payment modals` — focus visible
+- [ ] **MODAL** `confirmDestructive` — opens
+- [ ] **MODAL** `confirmDestructive` — closes on cancel
+- [ ] **MODAL** `confirmDestructive` — primary action mutates state
+- [ ] **MODAL** `confirmDestructive` — mobile usable
+- [ ] **MODAL** `confirmDestructive` — focus visible
+- [ ] **MODAL** `Admin confirm` — opens
+- [ ] **MODAL** `Admin confirm` — closes on cancel
+- [ ] **MODAL** `Admin confirm` — primary action mutates state
+- [ ] **MODAL** `Admin confirm` — mobile usable
+- [ ] **MODAL** `Admin confirm` — focus visible
+
+---
+
+**Total checklist items: 870**

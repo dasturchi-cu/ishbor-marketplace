@@ -7,6 +7,8 @@ import { getPublishedServices, subscribeServices } from "@/lib/services-store";
 import { recommendServices } from "@/lib/recommendations";
 import { useSyncExternalStore } from "react";
 import { usePageReady } from "@/hooks/use-page-ready";
+import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
+import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
 import { filterServices, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { categories } from "@/lib/mock-data";
@@ -33,6 +35,11 @@ function ServicesPage() {
   const filtered = filterServices(
     search.sort === "newest" && !search.q && !search.category ? recommended : allServices,
     search,
+  );
+  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+    filtered,
+    MARKETPLACE_PAGE_SIZE,
+    `${search.q ?? ""}-${search.category ?? ""}-${search.sort ?? ""}-${search.filter ?? ""}`,
   );
 
   return (
@@ -87,9 +94,17 @@ function ServicesPage() {
             }
           />
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
-            {filtered.map((s) => <ServiceCard key={s.id} s={s} />)}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
+              {visible.map((s) => <ServiceCard key={s.id} s={s} />)}
+            </div>
+            <IncrementalListFooter
+              hasMore={hasMore}
+              showing={showing}
+              total={total}
+              onLoadMore={loadMore}
+            />
+          </>
         )}
       </section>
 

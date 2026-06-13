@@ -178,7 +178,7 @@ function CreateProjectPage() {
     }
     const project = publishProject(buildInput(), ctx, edit);
     toast.success("Loyiha joylandi", { description: "Frilanserlar endi taklif yuborishi mumkin." });
-    navigate({ to: "/projects/$slug", params: { slug: project.slug }, search: { published: "true" } });
+    navigate({ to: "/projects/$slug", params: { slug: project.slug }, search: { published: true } });
   };
 
   const handleMockAttach = () => {

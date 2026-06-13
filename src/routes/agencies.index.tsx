@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { Building2 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -10,6 +10,8 @@ import { getRankedAgencies, agencySortLabels, normalizeAgencySearch, filterAgenc
 import { computeAgencyMetrics } from "@/lib/agency-metrics-store";
 import type { AgencySearchParams, AgencySortOption } from "@/lib/agency-types";
 import { useNavigate } from "@tanstack/react-router";
+import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
+import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
 
 export const Route = createFileRoute("/agencies/")({
   validateSearch: (search: Record<string, unknown>): AgencySearchParams => normalizeAgencySearch(search),
@@ -37,11 +39,14 @@ function AgenciesPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
 
-  useSyncExternalStore(subscribeAgencies, () => getPublishedAgencies().length, () => 0);
-
-  const agencies = getPublishedAgencies();
-  const ranked = getRankedAgencies(agencies);
-  const filtered = filterAgencies(agencies, search);
+  const agencies = useSyncExternalStore(subscribeAgencies, getPublishedAgencies, () => []);
+  const ranked = useMemo(() => getRankedAgencies(agencies), [agencies]);
+  const filtered = useMemo(() => filterAgencies(agencies, search), [agencies, search]);
+  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+    filtered,
+    MARKETPLACE_PAGE_SIZE,
+    `${search.q ?? ""}-${search.sort ?? ""}-${search.filter ?? ""}-${search.country ?? ""}`,
+  );
 
   const setSearch = (patch: Partial<AgencySearchParams>) => {
     navigate({ to: "/agencies", search: { ...search, ...patch } });
@@ -127,19 +132,27 @@ function AgenciesPage() {
             />
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((agency) => {
-              const rankedEntry = ranked.find((r) => r.slug === agency.slug);
-              return (
-                <AgencyCard
-                  key={agency.slug}
-                  agency={agency}
-                  metrics={rankedEntry?.metrics ?? computeAgencyMetrics(agency)}
-                  rankingScore={rankedEntry?.rankingScore}
-                />
-              );
-            })}
-          </div>
+          <>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {visible.map((agency) => {
+                const rankedEntry = ranked.find((r) => r.slug === agency.slug);
+                return (
+                  <AgencyCard
+                    key={agency.slug}
+                    agency={agency}
+                    metrics={rankedEntry?.metrics ?? computeAgencyMetrics(agency)}
+                    rankingScore={rankedEntry?.rankingScore}
+                  />
+                );
+              })}
+            </div>
+            <IncrementalListFooter
+              hasMore={hasMore}
+              showing={showing}
+              total={total}
+              onLoadMore={loadMore}
+            />
+          </>
         )}
       </div>
       <SiteFooter />

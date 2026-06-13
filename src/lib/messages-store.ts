@@ -146,6 +146,13 @@ function updateConversationMeta(
 
 const EMPTY_THREAD: ThreadMessage[] = [];
 
+export function rehydrateFromStorage(userId?: string) {
+  const uid = userId ?? getSession()?.user.id ?? "guest";
+  cache.delete(uid);
+  conversationsSnapshot = null;
+  notify();
+}
+
 export function getConversations(includeArchived = false): Conversation[] {
   return getConversationsByInbox(includeArchived ? "all" : "active");
 }

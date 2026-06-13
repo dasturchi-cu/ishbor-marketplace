@@ -63,24 +63,6 @@ function CreateServicePage() {
   const [delivery, setDelivery] = useState(existing?.delivery ?? "7 kun");
   const [included, setIncluded] = useState((existing?.included ?? []).join("\n"));
 
-  if (activeRole !== "freelancer" && user?.userType !== "freelancer") {
-    return (
-      <div className="min-h-screen bg-background">
-        <SiteNav />
-        <div className="mx-auto max-w-lg px-4 py-20 text-center">
-          <h1 className="font-display text-2xl font-bold">Frilanser hisobi talab qilinadi</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Faqat frilanserlar xizmat yaratishi mumkin.
-          </p>
-          <Link to="/dashboard" className="mt-6 inline-block text-sm text-primary hover:underline">
-            Boshqaruv paneliga qaytish
-          </Link>
-        </div>
-        <SiteFooter />
-      </div>
-    );
-  }
-
   if (!user?.username) {
     return (
       <div className="min-h-screen bg-background">

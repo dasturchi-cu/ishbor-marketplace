@@ -77,6 +77,7 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && submit()}
             placeholder={modes.find((m) => m.key === mode)!.placeholder}
+            aria-label={`${modes.find((m) => m.key === mode)!.label} bo'yicha qidiruv`}
             className="min-h-11 w-full min-w-0 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground/50 focus-ring"
           />
           <button

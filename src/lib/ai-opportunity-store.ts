@@ -1,4 +1,5 @@
 import type { AuthUser } from "./auth";
+import { getActiveRole } from "./active-role-store";
 import { computeProfileCompletionPercent } from "./profile-store";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
 import { getMyPublishedServices } from "./services-store";
@@ -19,7 +20,7 @@ export type OpportunityBreakdown = {
 /** Opportunity score 0–100 from real stored user data */
 export function computeOpportunityScore(user: AuthUser): OpportunityBreakdown {
   const username = user.username ?? "";
-  const userType = user.userType === "client" ? "client" : "freelancer";
+  const userType = getActiveRole();
 
   const profilePct = computeProfileCompletionPercent(user.id, userType);
   const profileCompletion = Math.round(profilePct * 0.25);

@@ -16,17 +16,11 @@ import {
 
   Briefcase,
 
-  Bookmark,
-
   CircleCheck as CheckCircle2,
-
-  Sparkles,
 
 } from "lucide-react";
 
 import { useState, useSyncExternalStore, useEffect } from "react";
-
-import { toast } from "sonner";
 
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 
@@ -36,40 +30,17 @@ import { ApplicationStatusBadge, OrderStatusBadge, EscrowFundedBadge } from "@/c
 
 import { EmptyState } from "@/components/site/feedback";
 
-import { TrustProfileCard } from "@/components/trust/trust-profile-card";
-
-import { PortfolioAnalyticsWidget } from "@/components/portfolio/portfolio-analytics-widget";
-import { QualitySuggestionsCard } from "@/components/quality/quality-suggestions-card";
-import { UpsellBanner } from "@/components/monetization/upsell-banner";
-import { OpportunityScoreCard } from "@/components/ai/opportunity-score-card";
-import { SmartMatchPanel } from "@/components/ai/smart-match-panel";
-import { matchProjectsForFreelancer } from "@/lib/ai-matching-store";
 import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
-import { getFreelancerQualityIssues } from "@/lib/quality-engine";
 
 import { computeSuccessScore, computeResponseRate, formatResponseTime, getMonthlyEarnings, getEarningsLast30Days } from "@/lib/growth-metrics";
 import { getOrdersForFreelancer, subscribeOrders, readStoredOrders } from "@/lib/orders-store";
 import { getReviewsForFreelancer, subscribeReviews } from "@/lib/reviews-store";
-import { getProfileCompletionItems, computeProfileCompletionPercent, updateAvailability, getAvailabilityStatus } from "@/lib/profile-store";
-import { ProfileCompletionCard } from "@/components/trust/profile-completion-card";
-import { getFreelancerJourney } from "@/lib/ftue-store";
-import { WelcomeBanner } from "@/components/ftue/welcome-banner";
-import { GettingStartedCard } from "@/components/ftue/getting-started-card";
-import { FeatureDiscoveryGrid } from "@/components/ftue/feature-discovery-grid";
-import { JourneyMap } from "@/components/ftue/journey-map";
 import { NextActionCard } from "@/components/ftue/next-action-card";
-import { TrustTip } from "@/components/ftue/trust-tip";
 
 import { getAllApplications, subscribeApplications } from "@/lib/applications-store";
-import type { SavedState } from "@/lib/saved-store";
 import type { StoredReview } from "@/lib/reviews-store";
 import type { Order } from "@/lib/mock-data";
 import type { Application } from "@/lib/mock-data";
-
-import { getSaved, subscribeSaved } from "@/lib/saved-store";
-
-import { getMyPortfolios, subscribePortfolios } from "@/lib/portfolio-store";
-import { getMyPublishedServices } from "@/lib/services-store";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
@@ -86,8 +57,6 @@ export const Route = createFileRoute("/dashboard/freelancer")({
 
 
 
-const EMPTY_PORTFOLIOS: ReturnType<typeof getMyPortfolios> = [];
-const EMPTY_SAVED_SNAPSHOT: SavedState = { services: [], freelancers: [], projects: [], portfolios: [] };
 const EMPTY_APPLICATIONS_SNAPSHOT: Application[] = [];
 const EMPTY_ORDERS_SNAPSHOT: Order[] = [];
 const EMPTY_REVIEWS_SNAPSHOT: StoredReview[] = [];
@@ -109,27 +78,7 @@ function FreelancerDashboard() {
 
   useEffect(() => {
     if (user?.id) syncSmartNotifications(user.id);
-  }, [user?.id]);
-
-  const matchedProjects = user ? matchProjectsForFreelancer(user.id, 5) : [];
-
-  const saved = useSyncExternalStore(
-    subscribeSaved,
-    () => getSaved(user?.id),
-    () => EMPTY_SAVED_SNAPSHOT,
-  );
-
-  const myPortfolios = useSyncExternalStore(
-
-    subscribePortfolios,
-
-    () => (user ? getMyPortfolios(user.id) : EMPTY_PORTFOLIOS),
-
-    () => EMPTY_PORTFOLIOS,
-
-  );
-
-
+  }, [user?.id, activeRole]);
 
   const applications = useSyncExternalStore(
     subscribeApplications,
@@ -158,41 +107,16 @@ function FreelancerDashboard() {
   const rejectedApplications = myApplications.filter((a) => a.status === "rejected").length;
   const winRate = applicationCount > 0 ? Math.round((acceptedApplications / applicationCount) * 100) : 0;
 
-  const savedProjects = saved.projects.length;
   const reviewCount = userReviews.length;
   const activeOrdersCount = activeOrders.length;
 
-  const earnings30 = user?.username ? getEarningsLast30Days(user.id) : 0;
+  const earnings30 = user?.username ? getEarningsLast30Days(user.username) : 0;
   const earningsData = user?.username ? getMonthlyEarnings(user.username) : [];
   const maxEarning = Math.max(...earningsData.map((d) => d.value), 1);
   const totalEarnings = earningsData.reduce((sum, d) => sum + d.value, 0);
 
   const successMetrics = user?.username ? computeSuccessScore(user.username) : null;
   const responseMetrics = user?.username ? computeResponseRate(user.username) : null;
-
-  const profileCompletion = user ? computeProfileCompletionPercent(user.id, "freelancer") : 0;
-  const completionItems = user ? getProfileCompletionItems(user.id, "freelancer") : [];
-
-  const availabilityStatus = user ? getAvailabilityStatus(user.id) : "available";
-  const [availability, setAvailability] = useState<"available" | "busy" | "away">("available");
-
-  useEffect(() => {
-    setAvailability(availabilityStatus);
-  }, [availabilityStatus]);
-
-
-
-  const availabilityOptions = [
-
-    { key: "available" as const, label: "Mavjud", dot: "bg-success" },
-
-    { key: "busy" as const, label: "Band", dot: "bg-warning" },
-
-    { key: "away" as const, label: "Yo'q", dot: "bg-destructive" },
-
-  ];
-
-
 
   return (
 
@@ -203,165 +127,22 @@ function FreelancerDashboard() {
       title={`Xush kelibsiz, ${user?.fullName.split(" ")[0] ?? "do'stim"}.`}
 
       actions={
-
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-
-          <Link
-
-            to="/projects"
-
-            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
-
-          >
-
-            <Briefcase className="size-4" /> Ish topish
-
-          </Link>
-
-          <Link
-
-            to="/applications"
-
-            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-5 text-sm font-semibold hover:border-primary/20 sm:w-auto"
-
-          >
-
-            <FileText className="size-4" /> Mening arizalarim
-
-          </Link>
-
-          <Link
-
-            to="/ai"
-
-            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 px-5 text-sm font-semibold text-primary hover:border-primary/40 sm:w-auto"
-
-          >
-
-            <Sparkles className="size-4" /> AI markaz
-
-          </Link>
-
-          <div className="mobile-scroll-x flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
-
-            {availabilityOptions.map((opt) => (
-
-              <button
-
-                key={opt.key}
-
-                onClick={() => {
-                  setAvailability(opt.key);
-                  if (user) {
-                    updateAvailability(user.id, {
-                      status: opt.key,
-                      available: opt.key === "available",
-                    });
-                  }
-                  toast.success(`Mavjudlik: ${opt.label}`);
-                }}
-
-                className={`touch-target inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-default focus-ring ${
-
-                  availability === opt.key
-
-                    ? "bg-primary text-primary-foreground"
-
-                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-
-                }`}
-
-              >
-
-                <div className={`size-2 rounded-full ${availability === opt.key ? opt.dot : "bg-muted-foreground/40"}`} />
-
-                {opt.label}
-
-              </button>
-
-            ))}
-
-          </div>
-
-        </div>
-
+        <Link
+          to="/projects"
+          className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+        >
+          <Briefcase className="size-4" /> Ish topish
+        </Link>
       }
 
     >
 
-      {user && <QualitySuggestionsCard issues={getFreelancerQualityIssues(user)} />}
+      {user && <NextActionCard user={user} />}
 
-      {user && (
-        <div className="mt-4 space-y-4">
-          <WelcomeBanner
-            user={user}
-            roleLabel="Frilanser"
-            primaryHref="/portfolio/create"
-            primaryLabel="Portfel yaratish"
-            secondaryHref="/ai/onboarding"
-            secondaryLabel="Yo'riqnomani ko'rish"
-          />
-          <GettingStartedCard user={user} />
-          <NextActionCard user={user} />
-          <JourneyMap
-            stages={getFreelancerJourney(
-              myPortfolios.length > 0,
-              user ? getMyPublishedServices(user.id).length > 0 : false,
-              applicationCount > 0,
-            )}
-            compact
-          />
-          {myPortfolios.length === 0 && <TrustTip topic="portfolio" />}
-          {reviewCount === 0 && applicationCount > 0 && <TrustTip topic="reviews" />}
-        </div>
-      )}
-
-      {user && profileCompletion < 100 && (
-        <div className="mt-4">
-          <FeatureDiscoveryGrid role="freelancer" compact />
-        </div>
-      )}
-
-      {user && (
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-stretch">
-          <OpportunityScoreCard user={user} />
-          <SmartMatchPanel
-            variant="projects"
-            title="Sizga mos loyihalar"
-            viewAllHref="/projects"
-            items={matchedProjects}
-            emptyMessage="Hozircha mos loyiha topilmadi. Profil va ko'nikmalarni to'ldiring."
-            links={[
-              { label: "Taklif yordamchisi", to: "/ai/proposal-assistant" },
-              { label: "Portfolio optimizatsiyasi", to: "/ai/portfolio-optimizer" },
-              { label: "Trust coach", to: "/ai/trust-coach" },
-            ]}
-          />
-        </div>
-      )}
-
-      <div className="mt-4">
-        <UpsellBanner context="dashboard" />
-      </div>
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        <Link to="/analytics/freelancer" className="block">
-          <StatCard label="Analitika" value="Ko'rish" trend="Daromad va portfolio tahlili →" accent icon={DollarSign} />
-        </Link>
-
-        <StatCard label="Daromad (30 kun)" value={earnings30 > 0 ? `$${earnings30.toLocaleString()}` : "$0"} trend={successMetrics ? `${successMetrics.completedJobs} ta yakunlangan buyurtma` : "Hali buyurtma yo'q"} icon={DollarSign} />
-
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Daromad (30 kun)" value={earnings30 > 0 ? `$${earnings30.toLocaleString()}` : "$0"} trend={successMetrics ? `${successMetrics.completedJobs} ta yakunlangan` : "Hali buyurtma yo'q"} icon={DollarSign} />
         <StatCard label="Faol buyurtmalar" value={activeOrdersCount.toString()} trend={`${pendingApplications} ta kutilayotgan ariza`} icon={Package} />
-
-        <StatCard label="Arizalar" value={applicationCount.toString()} trend={`${pendingApplications} ta kutilmoqda`} icon={FileText} />
-
-        <Link to="/saved" className="block">
-
-          <StatCard label="Saqlangan loyihalar" value={savedProjects.toString()} trend="Saqlangan ishlarni ko'rish" icon={Bookmark} />
-
-        </Link>
-
+        <StatCard label="Arizalar" value={applicationCount.toString()} trend={`${winRate}% qabul qilinish`} icon={FileText} />
       </div>
 
 
@@ -446,12 +227,6 @@ function FreelancerDashboard() {
             )}
 
           </section>
-
-
-
-          {myPortfolios.length > 0 && <PortfolioAnalyticsWidget items={myPortfolios} />}
-
-
 
           <div className="grid gap-8 lg:grid-cols-2">
 
@@ -684,13 +459,6 @@ function FreelancerDashboard() {
 
 
         <aside className="flex flex-col gap-8">
-
-          {user && completionItems.length > 0 && (
-            <ProfileCompletionCard percent={profileCompletion} items={completionItems} />
-          )}
-
-          {user && <TrustProfileCard profile={user} />}
-
           <section className="rounded-2xl border border-border bg-card p-5">
             <div className="flex items-center gap-2 eyebrow">
               <Star className="size-3" /> Reyting

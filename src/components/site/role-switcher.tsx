@@ -1,6 +1,8 @@
 import { Briefcase, Building2, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import type { UserType } from "@/lib/auth-constants";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { getActiveDashboardPath, getRedirectAfterRoleSwitch } from "@/lib/active-role-store";
 
 const options: {
   key: UserType;
@@ -22,6 +24,20 @@ const options: {
   },
 ];
 
+function useRoleSwitchHandler() {
+  const { switchRole } = useActiveRole();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  return (role: UserType) => {
+    switchRole(role);
+    const redirect = getRedirectAfterRoleSwitch(role, pathname);
+    if (redirect) {
+      navigate({ to: redirect, replace: true });
+    }
+  };
+}
+
 export function RoleSwitcher({
   variant = "card",
   className = "",
@@ -29,7 +45,8 @@ export function RoleSwitcher({
   variant?: "card" | "compact";
   className?: string;
 }) {
-  const { activeRole, switchRole } = useActiveRole();
+  const { activeRole } = useActiveRole();
+  const handleSwitch = useRoleSwitchHandler();
 
   if (variant === "compact") {
     return (
@@ -44,7 +61,7 @@ export function RoleSwitcher({
             <button
               key={opt.key}
               type="button"
-              onClick={() => switchRole(opt.key)}
+              onClick={() => handleSwitch(opt.key)}
               className={`touch-target inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-default focus-ring ${
                 active
                   ? "bg-primary text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)]"
@@ -90,7 +107,7 @@ export function RoleSwitcher({
             <button
               key={opt.key}
               type="button"
-              onClick={() => switchRole(opt.key)}
+              onClick={() => handleSwitch(opt.key)}
               aria-pressed={active}
               className={`group relative flex items-start gap-3 rounded-xl border p-4 text-left transition-default focus-ring sm:p-5 ${
                 active
@@ -121,3 +138,5 @@ export function RoleSwitcher({
     </section>
   );
 }
+
+export { getActiveDashboardPath };

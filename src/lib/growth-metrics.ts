@@ -4,7 +4,7 @@ import { readStoredReviews } from "./reviews-store";
 import { computeProfileCompletionPercent } from "./profile-store";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
 import type { AuthUser } from "./auth";
-import { getSession } from "./auth";
+import { getActiveRole } from "./active-role-store";
 
 const SERVICES_STORAGE_KEY = "ishbor-user-services";
 const RESPONSE_METRICS_KEY = "ishbor-response-metrics";
@@ -210,7 +210,7 @@ export function formatResponseTime(medianMinutes: number | null): string {
 export function computeTrustScore(user: AuthUser, username?: string): TrustScoreResult {
   const uname = username ?? user.username;
   const userId = user.id;
-  const userType = user.userType === "client" ? "client" : "freelancer";
+  const userType: "client" | "freelancer" = uname ? "freelancer" : getActiveRole();
 
   const profileCompletion = computeProfileCompletionPercent(userId, userType);
 
@@ -290,10 +290,7 @@ export function getWinRate(username: string): number {
   return Math.round((accepted / apps.length) * 100);
 }
 
-export function getEarningsLast30Days(userId: string): number {
-  const session = getSession();
-  const username = session?.user.username;
-  if (!username) return 0;
+export function getEarningsLast30Days(username: string): number {
   const orders = getOrdersForFreelancer(username).filter((o) => o.status === "completed");
   const thirtyDaysAgo = Date.now() - 30 * 86400000;
   return orders

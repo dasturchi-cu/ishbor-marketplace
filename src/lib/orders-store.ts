@@ -156,6 +156,10 @@ export function updateOrderStatus(
   return updated;
 }
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function fundOrderEscrow(orderId: string): Order | undefined {
   const stored = readStored();
   const idx = stored.findIndex((o) => o.id === orderId);

@@ -2,7 +2,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useState, useSyncExternalStore } from "react";
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, DollarSign, Users, FolderOpen, Shield } from "lucide-react";
+import { FolderOpen, DollarSign, Users, Shield } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -45,7 +45,6 @@ function ClientAnalyticsPage() {
               {r} kun
             </button>
           ))}
-          <Link to="/projects/create" className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Loyiha joylash</Link>
         </div>
       }
     >
@@ -64,13 +63,9 @@ function ClientAnalyticsPage() {
       <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard icon={FolderOpen} label="Yaratilgan loyihalar" value={analytics.projectsCreated} />
-        <MetricCard icon={Briefcase} label="Olingan takliflar" value={analytics.proposalsReceived} />
         <MetricCard icon={Users} label="Yollangan frilanserlar" value={analytics.freelancersHired} />
         <MetricCard icon={DollarSign} label="Jami xarajat" value={`$${analytics.totalSpend.toLocaleString()}`} />
         <MetricCard icon={Shield} label="Eskrou moliyalashtirilgan" value={`$${analytics.escrowFunded.toLocaleString()}`} />
-        <MetricCard icon={Briefcase} label="Buyurtmalar" value={analytics.ordersCreated} />
-        <MetricCard icon={Users} label="Takroriy frilanser" value={`${analytics.repeatFreelancerRate}%`} />
-        <MetricCard icon={Shield} label="Ishonch darajasi" value={`${analytics.trustScore}%`} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

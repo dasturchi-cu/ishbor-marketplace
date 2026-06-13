@@ -29,13 +29,7 @@ function ClientCrmPage() {
   useSyncExternalStore(subscribeOrders, () => true, () => false);
   useSyncExternalStore(subscribeSaved, () => true, () => false);
 
-  if (!user || user.userType !== "client") {
-    return (
-      <WorkspaceShell title="Mijozlar CRM">
-        <EmptyState icon={Users} title="Faqat mijozlar uchun" description="Bu bo'lim mijoz hisobida mavjud." />
-      </WorkspaceShell>
-    );
-  }
+  if (!user) return null;
 
   const crm = getClientCrmData(user.id, user.companySlug, user.company ?? user.fullName);
 

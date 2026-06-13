@@ -1,6 +1,8 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useSyncExternalStore } from "react";
 import { toast } from "sonner";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
+import { LoadingSpinner } from "@/components/site/feedback";
 import { Star, Clock, Check, ChevronRight, Users, ShieldCheck, MessageSquare, Share2, ShoppingCart, Lock, Repeat2 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -19,7 +21,7 @@ import {
   getServiceReviews,
   getSimilarServices,
 } from "@/lib/mock-data";
-import { getServiceBySlug } from "@/lib/services-store";
+import { getServiceBySlug, subscribeServices } from "@/lib/services-store";
 import { applyLiveServiceMetrics } from "@/lib/growth-metrics";
 import { recordServiceView } from "@/lib/analytics-utils";
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
@@ -29,39 +31,72 @@ import { getSession } from "@/lib/auth";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/services/$slug")({
-  loader: ({ params }) => {
-    const stored = getServiceBySlug(params.slug);
-    const raw = stored ?? services.find((x) => x.slug === params.slug);
-    if (!raw) throw notFound();
-    const session = typeof window !== "undefined" ? getSession() : null;
-    const status = stored?.status ?? "published";
-    const isOwner = !!(session && stored?.ownerUserId === session.user.id);
-    if (status !== "published" && !isOwner) throw notFound();
-    const service = applyLiveServiceMetrics(enrichService(raw));
-    const serviceReviews = getServiceReviews(params.slug);
-    const similarServices = getSimilarServices(params.slug);
-    return { service, serviceReviews, similarServices };
-  },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.service?.title ?? "Xizmat"} — Ishbor` },
-      { name: "description", content: loaderData?.service?.description ?? "" },
-    ],
-  }),
-  notFoundComponent: () => (
-    <EntityNotFound
-      title="Xizmat topilmadi"
-      description="Bu xizmat mavjud emas, arxivlangan yoki hali e'lon qilinmagan."
-      backTo="/services"
-      backLabel="Xizmatlarni ko'rish"
-    />
-  ),
+  head: () => ({ meta: [{ title: "Xizmat — Ishbor" }] }),
   component: ServiceDetail,
 });
 
+function resolveService(slug: string) {
+  const stored = getServiceBySlug(slug);
+  const raw = stored ?? services.find((x) => x.slug === slug);
+  if (!raw) return null;
+  const session = getSession();
+  const status = stored?.status ?? "published";
+  const isOwner = !!(session && stored?.ownerUserId === session.user.id);
+  if (status !== "published" && !isOwner) return null;
+  return {
+    service: applyLiveServiceMetrics(enrichService(raw)),
+    serviceReviews: getServiceReviews(slug),
+    similarServices: getSimilarServices(slug),
+  };
+}
+
 function ServiceDetail() {
-  const { service, serviceReviews, similarServices } = Route.useLoaderData();
+  const { slug } = Route.useParams();
+  const hydrated = useClientHydrated();
+  const data = useSyncExternalStore(
+    subscribeServices,
+    () => (hydrated ? resolveService(slug) : undefined),
+    () => undefined,
+  );
   const { user } = useAuth();
+
+  if (!hydrated || data === undefined) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteNav />
+        <div className="flex justify-center py-32">
+          <LoadingSpinner />
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <EntityNotFound
+        title="Xizmat topilmadi"
+        description="Bu xizmat mavjud emas, arxivlangan yoki hali e'lon qilinmagan."
+        backTo="/services"
+        backLabel="Xizmatlarni ko'rish"
+      />
+    );
+  }
+
+  return <ServiceDetailContent {...data} user={user} />;
+}
+
+function ServiceDetailContent({
+  service,
+  serviceReviews,
+  similarServices,
+  user,
+}: {
+  service: ReturnType<typeof enrichService>;
+  serviceReviews: ReturnType<typeof getServiceReviews>;
+  similarServices: ReturnType<typeof getSimilarServices>;
+  user: ReturnType<typeof useAuth>["user"];
+}) {
   const defaultPkg = service.packages.find((p) => p.popular)?.tier.toLowerCase() ?? "premium";
   const isOwner = user?.username === service.sellerUsername;
 

@@ -45,6 +45,40 @@ export function normalizeSearch<T extends MarketplaceSearch>(search: Record<stri
   } as T;
 }
 
+type SearchDestination = "/services" | "/freelancers" | "/projects";
+
+const SERVICE_KEYWORDS = [
+  "dizayn",
+  "design",
+  "dasturlash",
+  "web",
+  "ios",
+  "logo",
+  "brend",
+  "xizmat",
+  "api",
+  "figma",
+  "mobil",
+  "marketing",
+];
+const PROJECT_KEYWORDS = ["loyiha", "project", "shartnoma", "ish topish", "freelance"];
+
+/** Route nav/hero search to the most relevant marketplace tab. */
+export function pickSearchRoute(q: string): { to: SearchDestination; search: MarketplaceSearch } {
+  const trimmed = q.trim();
+  const base: MarketplaceSearch = { sort: "newest", category: "", filter: "" };
+  if (!trimmed) return { to: "/projects", search: { ...base, q: "" } };
+
+  const lower = trimmed.toLowerCase();
+  if (PROJECT_KEYWORDS.some((k) => lower.includes(k))) {
+    return { to: "/projects", search: { ...base, q: trimmed } };
+  }
+  if (SERVICE_KEYWORDS.some((k) => lower.includes(k))) {
+    return { to: "/services", search: { ...base, q: trimmed } };
+  }
+  return { to: "/freelancers", search: { ...base, q: trimmed } };
+}
+
 function matchesQuery(text: string, q: string) {
   if (!q.trim()) return true;
   return text.toLowerCase().includes(q.trim().toLowerCase());

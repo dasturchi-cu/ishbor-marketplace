@@ -98,6 +98,10 @@ export function getStoredApplications(): Application[] {
 
 
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function getAllApplications(): Application[] {
 
   if (typeof window === "undefined") {

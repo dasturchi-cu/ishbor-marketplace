@@ -27,6 +27,8 @@ import {
   portfolioToFormInput,
 } from "@/lib/portfolio-store";
 import type { PortfolioItem, PortfolioStatus } from "@/lib/portfolio-types";
+import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
+import { useIncrementalList, WORKSPACE_PAGE_SIZE } from "@/hooks/use-incremental-list";
 export const Route = createFileRoute("/portfolio/")({
   head: () => ({ meta: [{ title: "Portfel — Ishbor" }] }),
   component: PortfolioDashboardPage,
@@ -80,6 +82,11 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
 
   const filtered =
     tab === "all" ? items : items.filter((p) => p.status === tab);
+  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+    filtered,
+    WORKSPACE_PAGE_SIZE,
+    tab,
+  );
 
   return (
     <WorkspaceShell
@@ -140,11 +147,19 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
           }
         />
       ) : (
-        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-          {filtered.map((p) => (
-            <PortfolioRow key={p.id} item={p} ctx={user} />
-          ))}
-        </div>
+        <>
+          <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+            {visible.map((p) => (
+              <PortfolioRow key={p.id} item={p} ctx={user} />
+            ))}
+          </div>
+          <IncrementalListFooter
+            hasMore={hasMore}
+            showing={showing}
+            total={total}
+            onLoadMore={loadMore}
+          />
+        </>
       )}
     </WorkspaceShell>
   );

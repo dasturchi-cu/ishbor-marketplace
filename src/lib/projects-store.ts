@@ -271,6 +271,10 @@ export function deleteProject(slug: string): boolean {
   return true;
 }
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function isProjectOwner(slug: string, userId: string): boolean {
   const project = readStored().find((p) => p.slug === slug);
   return project?.ownerUserId === userId;

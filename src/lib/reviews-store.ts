@@ -1,6 +1,9 @@
 import type { Review } from "./mock-data";
 import { reviews as seedReviews } from "./mock-data";
+import type { AuthUser } from "./auth";
 import { getSession } from "./auth";
+import { getOrderById } from "./orders-store";
+import { getOrder } from "./mock-data";
 import { addNotification } from "./notifications-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
 
@@ -58,6 +61,10 @@ function readStored(): StoredReview[] {
 function writeStored(reviews: StoredReview[]) {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(reviews));
+}
+
+export function rehydrateFromStorage() {
+  notify();
 }
 
 export function getAllReviews(): StoredReview[] {
@@ -154,10 +161,39 @@ export function hasUserReviewedOrder(orderId: string, direction: ReviewInput["di
   return !!getReviewForOrder(orderId, direction);
 }
 
+type OrderParticipant = {
+  ownerUserId?: string;
+  freelancerUsername?: string;
+  clientSlug?: string;
+  client?: string;
+};
+
+export function isOrderClient(user: AuthUser, order: OrderParticipant): boolean {
+  if (order.ownerUserId && order.ownerUserId === user.id) return true;
+  if (order.clientSlug && order.clientSlug === user.companySlug) return true;
+  if (order.client && (order.client === user.fullName || order.client === user.company)) return true;
+  return false;
+}
+
+export function isOrderFreelancer(user: AuthUser, order: OrderParticipant): boolean {
+  return !!(order.freelancerUsername && order.freelancerUsername === user.username);
+}
+
+export function getOrderReviewDirection(
+  user: AuthUser,
+  order: OrderParticipant,
+): ReviewInput["direction"] | null {
+  if (isOrderFreelancer(user, order)) return "freelancer_to_client";
+  if (isOrderClient(user, order)) return "client_to_freelancer";
+  return null;
+}
+
 export function canReviewOrder(orderId: string): boolean {
   const session = getSession();
   if (!session) return false;
-  const dir: ReviewInput["direction"] =
-    session.user.userType === "client" ? "client_to_freelancer" : "freelancer_to_client";
+  const order = getOrderById(orderId) ?? getOrder(orderId);
+  if (!order) return false;
+  const dir = getOrderReviewDirection(session.user, order);
+  if (!dir) return false;
   return !hasUserReviewedOrder(orderId, dir);
 }

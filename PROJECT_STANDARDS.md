@@ -304,3 +304,19 @@ Vizual dizayn funksionallikdan ustun emas.
 ---
 
 **STANDART OXIRI**
+
+---
+
+# 16. Enterprise documentation (Single Source of Truth)
+
+Har bir vazifadan oldin quyidagi hujjatlarni o'qing:
+
+1. `docs/PROJECT_BIBLE.md`
+2. `PROJECT_STANDARDS.md` (bu fayl)
+3. `docs/PRODUCT_REQUIREMENTS.md`
+4. `docs/LAUNCH_CHECKLIST.md`
+5. `docs/AUDIT_PLAYBOOK.md`
+
+To'liq indeks: `docs/README.md`
+
+Hujjat va kod ziddiyati bo'lsa — avval hujjatni tekshiring, keyin kodni audit qiling va moslashtiring.

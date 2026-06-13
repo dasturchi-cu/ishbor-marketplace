@@ -15,6 +15,8 @@ import {
   archiveApplication,
 } from "@/lib/applications-store";
 import type { Application } from "@/lib/mock-data";
+import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
+import { useIncrementalList, WORKSPACE_PAGE_SIZE } from "@/hooks/use-incremental-list";
 
 export const Route = createFileRoute("/applications/")({
   beforeLoad: requireRole(["freelancer"]),
@@ -58,6 +60,11 @@ function ApplicationsPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]["key"]>("pending");
   const applications = useSyncExternalStore(subscribeApplications, getAllApplications, getAllApplications);
   const filtered = filterByTab(applications, tab);
+  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+    filtered,
+    WORKSPACE_PAGE_SIZE,
+    tab,
+  );
 
   return (
     <WorkspaceShell eyebrow="Frilanser ish maydoni" title="Mening arizalarim">
@@ -103,11 +110,19 @@ function ApplicationsPage() {
           }
         />
       ) : (
-        <div className="mt-4 divide-y divide-border rounded-2xl border border-border bg-card">
-          {filtered.map((app) => (
-            <ApplicationRow key={app.id} app={app} showArchive={tab === "rejected"} />
-          ))}
-        </div>
+        <>
+          <div className="mt-4 divide-y divide-border rounded-2xl border border-border bg-card">
+            {visible.map((app) => (
+              <ApplicationRow key={app.id} app={app} showArchive={tab === "rejected"} />
+            ))}
+          </div>
+          <IncrementalListFooter
+            hasMore={hasMore}
+            showing={showing}
+            total={total}
+            onLoadMore={loadMore}
+          />
+        </>
       )}
     </WorkspaceShell>
   );

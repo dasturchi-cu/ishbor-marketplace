@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
-import { Briefcase, DollarSign, Users, MessageSquare, RotateCcw } from "lucide-react";
-import { WorkspaceShell } from "@/components/site/workspace-shell";
+import { Briefcase, DollarSign, Users, MessageSquare, RotateCcw, UserCircle } from "lucide-react";import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -25,16 +24,26 @@ function FreelancerCrmPage() {
   const { user } = useAuth();
   useSyncExternalStore(subscribeOrders, () => true, () => false);
 
-  if (!user || user.userType !== "freelancer" || !user.username) {
+  if (!user) return null;
+
+  if (!user.username) {
     return (
       <WorkspaceShell title="Frilanser CRM">
-        <EmptyState icon={Briefcase} title="Faqat frilanserlar uchun" description="Bu bo'lim frilanser hisobida mavjud." />
+        <EmptyState
+          icon={UserCircle}
+          title="Frilanser username kerak"
+          description="CRM ma'lumotlarini ko'rish uchun sozlamalarda username belgilang."
+          action={
+            <Link to="/settings" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              Sozlamalarga o'tish
+            </Link>
+          }
+        />
       </WorkspaceShell>
     );
   }
 
   const crm = getFreelancerCrmData(user.username);
-
   return (
     <WorkspaceShell
       eyebrow="Frilanser markazi"

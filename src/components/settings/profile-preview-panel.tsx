@@ -6,21 +6,27 @@ import { ReputationBadge } from "@/components/reputation/reputation-badge";
 import type { AuthUser } from "@/lib/auth";
 import type { ReputationTier } from "@/lib/reputation-store";
 import { PortfolioCover } from "@/components/portfolio/portfolio-preview-card";
+import { useActiveRole } from "@/hooks/use-active-role";
+import type { UserType } from "@/lib/auth-constants";
 
 export function ProfilePreviewPanel({
   user,
   headline,
   completionPercent,
   tier,
+  previewRole,
 }: {
   user: AuthUser;
   headline: string;
   completionPercent: number;
   tier?: ReputationTier;
+  previewRole?: UserType;
 }) {
+  const { activeRole } = useActiveRole();
+  const role = previewRole ?? activeRole;
   const username = user.username ?? user.fullName.toLowerCase().replace(/\s+/g, "-").slice(0, 20);
   const profilePath =
-    user.userType === "freelancer" && user.username
+    role === "freelancer" && user.username
       ? `/freelancers/${user.username}`
       : user.companySlug
         ? `/clients/${user.companySlug}`

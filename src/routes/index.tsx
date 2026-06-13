@@ -78,24 +78,25 @@ const rolePaths = [
     tag: "Jamoa bilan ishlayman",
     title: "Agentlik yarating, jamoa bilan katta loyihalar",
     body: "Jamoa a'zolarini taklif qiling, portfolio hikoyalari e'lon qiling va korporativ mijozlarga xizmat ko'rsating.",
-    href: "/agencies/create",
+    href: "/login",
+    search: { redirect: "/agencies/create" as const },
     cta: "Agentlik yaratish",
     icon: Building2,
   },
 ];
 
 const trustBadges = [
-  { icon: Lock, label: "Eskrou himoyasi", sub: "100% tranzaksiyalar" },
-  { icon: BadgeCheck, label: "Tasdiqlangan", sub: "12,400+ mutaxassis" },
+  { icon: Lock, label: "Eskrou himoyasi", sub: "Har bir tranzaksiya" },
+  { icon: BadgeCheck, label: "Tasdiqlangan", sub: `${freelancers.length}+ mutaxassis` },
   { icon: ShieldCheck, label: "Nizo hal qilish", sub: "24 soat ichida" },
-  { icon: Star, label: "Sharh tizimi", sub: "Haqiqiy fikrlar" },
+  { icon: Star, label: "Sharh tizimi", sub: "Ikki tomonlama baho" },
 ];
 
 const stats = [
-  { label: "Savdo hajmi", value: "$42M+" },
-  { label: "Tasdiqlangan mutaxassislar", value: "12,400" },
+  { label: "Ochiq loyihalar", value: `${projects.length}+` },
+  { label: "Tekshirilgan mutaxassislar", value: `${freelancers.length}+` },
   { label: "Eskrou himoyasi", value: "100%" },
-  { label: "O'rtacha yollash vaqti", value: "2 soat" },
+  { label: "O'rtacha javob vaqti", value: "< 2 soat" },
 ];
 
 const testimonials = [
@@ -166,7 +167,8 @@ function Landing() {
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
             <Link
-              to="/projects/create"
+              to="/login"
+              search={{ redirect: "/projects/create" }}
               className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-left transition-default hover:border-primary/40"
             >
               <div className="font-mono text-[10px] uppercase tracking-widest text-primary">Men yollamoqchiman</div>
@@ -521,7 +523,7 @@ function Landing() {
             <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
               <Building2 className="mx-auto size-8 text-muted-foreground" />
               <p className="mt-3 text-sm text-muted-foreground">Agentliklar tez orada qo'shiladi.</p>
-              <Link to="/agencies/create" className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              <Link to="/login" search={{ redirect: "/agencies/create" }} className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                 Birinchi agentlikni yaratish
               </Link>
             </div>
@@ -576,7 +578,8 @@ function Landing() {
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-2.5">
             <Link
-              to="/projects/create"
+              to="/login"
+              search={{ redirect: "/projects/create" }}
               className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
             >
               Loyiha joylash

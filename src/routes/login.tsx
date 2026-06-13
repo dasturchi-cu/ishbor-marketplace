@@ -13,6 +13,7 @@ import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components
 import { GoogleButton } from "@/components/auth/google-button";
 
 import { loginWithCredentials } from "@/lib/auth";
+import { getActiveRole, getActiveDashboardPath } from "@/lib/active-role-store";
 
 import { requireGuest } from "@/lib/guards";
 
@@ -60,13 +61,27 @@ function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
 
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
 
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState("");
 
 
+
+  const demoLogin = (email: string) => {
+    const result = loginWithCredentials(email, "demo1234", true);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
+    if (redirectTo) {
+      window.location.href = redirectTo;
+      return;
+    }
+    navigate({ to: getActiveDashboardPath(getActiveRole()) });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
 
@@ -102,7 +117,7 @@ function LoginPage() {
 
         navigate({
 
-          to: result.session.user.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard",
+          to: getActiveDashboardPath(getActiveRole()),
 
         });
 
@@ -138,7 +153,7 @@ function LoginPage() {
 
       }
 
-      navigate({ to: "/dashboard/freelancer" });
+      navigate({ to: getActiveDashboardPath(getActiveRole()) });
 
     }
 
@@ -174,15 +189,15 @@ function LoginPage() {
 
       <div className="mb-4 rounded-lg border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
 
-        Demo: <button type="button" onClick={() => { setEmail("sardor@asaka.uz"); setPassword("demo1234"); }} className="font-medium text-primary hover:underline">mijoz</button>
+        Demo: <button type="button" onClick={() => demoLogin("sardor@asaka.uz")} className="font-medium text-primary hover:underline">mijoz</button>
 
         {" · "}
 
-        <button type="button" onClick={() => { setEmail("nargiza@ishbor.uz"); setPassword("demo1234"); }} className="font-medium text-primary hover:underline">frilanser</button>
+        <button type="button" onClick={() => demoLogin("nargiza@ishbor.uz")} className="font-medium text-primary hover:underline">frilanser</button>
 
         {" · "}
 
-        <button type="button" onClick={() => { setEmail("admin@ishbor.uz"); setPassword("demo1234"); }} className="font-medium text-primary hover:underline">admin</button>
+        <button type="button" onClick={() => demoLogin("admin@ishbor.uz")} className="font-medium text-primary hover:underline">admin</button>
 
         {" · parol: demo1234"}
 

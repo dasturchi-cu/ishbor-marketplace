@@ -6,12 +6,14 @@ import {
   computeProfileCompletionPercent,
   getProfileCompletionItems,
 } from "@/lib/profile-store";
+import { useActiveRole } from "@/hooks/use-active-role";
 
 export function NextActionCard({ user }: { user: AuthUser }) {
+  const { activeRole } = useActiveRole();
   const plan = enrichOnboardingPlan(user);
   const nextWizardStep = plan.steps.find((s) => !s.done);
 
-  const userType = user.userType === "client" ? "client" : "freelancer";
+  const userType = activeRole;
   const completionItems = getProfileCompletionItems(user.id, userType);
   const completionPercent = computeProfileCompletionPercent(user.id, userType);
   const nextProfileItem = completionItems.find((i) => !i.done);

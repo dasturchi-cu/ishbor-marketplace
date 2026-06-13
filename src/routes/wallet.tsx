@@ -172,9 +172,6 @@ function WalletPage() {
       title="Hamyon"
       actions={
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <button onClick={handleDownloadReport} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
-            <Download className="size-4" /> Hisobot
-          </button>
           <button onClick={() => setWithdrawOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
             Yechib olish
           </button>
@@ -394,6 +391,12 @@ function WalletPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handleDownloadReport}
+                className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
+              >
+                <Download className="size-3.5" /> Hisobot
+              </button>
               <button
                 onClick={handleExportCsv}
                 className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium transition-default hover:border-primary/20 focus-ring"

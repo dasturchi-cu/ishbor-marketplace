@@ -120,6 +120,10 @@ export function getPublishedServices(): StoredService[] {
   return cachedPublished;
 }
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function getServiceBySlug(slug: string): StoredService | undefined {
   return getAllServices().find((s) => s.slug === slug);
 }

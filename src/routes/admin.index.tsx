@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Users, UserCheck, Briefcase, Building2, FolderOpen, ClipboardList,
-  Lock, DollarSign, ArrowDownToLine, AlertTriangle, ShieldCheck, Activity,
+  Users, ShieldCheck, ClipboardList,
+  Lock, DollarSign, AlertTriangle, Activity,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/shell";
 import { AdminStatCard } from "@/components/admin/actions";
@@ -22,25 +22,18 @@ function AdminDashboard() {
 
   return (
     <AdminShell eyebrow="Korporativ Admin OS" title="Boshqaruv paneli" onSearchOpen={onSearchOpen}>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard label="Jami foydalanuvchilar" value={adminStats.totalUsers.toLocaleString()} trend="+8%" trendUp icon={Users} />
-        <AdminStatCard label="Faol foydalanuvchilar" value={adminStats.activeUsers.toLocaleString()} trend="+5%" trendUp icon={UserCheck} />
-        <AdminStatCard label="Freelancerlar" value={adminStats.freelancers.toLocaleString()} trend="+6%" trendUp icon={Briefcase} />
-        <AdminStatCard label="Mijozlar" value={adminStats.clients.toLocaleString()} trend="+4%" trendUp icon={Building2} />
-        <AdminStatCard label="Ochiq loyihalar" value={adminStats.openProjects.toLocaleString()} trend="+12%" trendUp icon={FolderOpen} />
         <AdminStatCard label="Faol buyurtmalar" value={adminStats.activeOrders.toLocaleString()} trend="+9%" trendUp icon={ClipboardList} />
         <AdminStatCard label="Eskrou hajmi" value={`$${(adminStats.escrowVolume / 1e6).toFixed(2)}M`} trend="+18%" trendUp icon={Lock} />
         <AdminStatCard label="Daromad (30 kun)" value={`$${adminStats.revenue.toLocaleString()}`} trend="+24%" trendUp icon={DollarSign} />
-        <AdminStatCard label="Yechib olishlar" value={`$${adminStats.withdrawals.toLocaleString()}`} trend="-3%" trendUp={false} icon={ArrowDownToLine} />
         <AdminStatCard label="Nizolar" value={String(adminStats.disputes)} trend="-2" trendUp={false} icon={AlertTriangle} />
         <AdminStatCard label="Tasdiqlash so'rovlari" value={String(adminStats.verificationRequests)} trend="+4" trendUp icon={ShieldCheck} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <AdminLineChart title="Daromad o'sishi" data={chartData.revenue} formatValue={(v) => `$${(v / 1000).toFixed(0)}k`} />
-        <AdminLineChart title="Foydalanuvchi o'sishi" data={chartData.users} formatValue={(v) => `${(v / 1000).toFixed(1)}k`} />
         <AdminLineChart title="Buyurtma o'sishi" data={chartData.orders} />
-        <AdminLineChart title="Eskrou o'sishi ($M)" data={chartData.escrow} formatValue={(v) => `$${v}M`} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">

@@ -1,4 +1,5 @@
 import type { AuthUser } from "./auth";
+import { getActiveRole } from "./active-role-store";
 import { computeTrustScore } from "./growth-metrics";
 import { computeProfileCompletionPercent, getProfileCompletionItems } from "./profile-store";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
@@ -22,7 +23,7 @@ export type TrustCoachInsight = {
 
 export function getTrustCoachInsights(user: AuthUser): TrustCoachInsight {
   const username = user.username ?? "";
-  const userType = user.userType === "client" ? "client" : "freelancer";
+  const userType = getActiveRole();
   const trust = computeTrustScore(user, username);
   const completion = computeProfileCompletionPercent(user.id, userType);
   const items = getProfileCompletionItems(user.id, userType);

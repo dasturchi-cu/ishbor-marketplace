@@ -1,4 +1,5 @@
 import type { AuthUser } from "./auth";
+import { getActiveRole } from "./active-role-store";
 import { getAgenciesForUser } from "./agency-store";
 import { getMyPublishedProjects } from "./projects-store";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
@@ -28,7 +29,7 @@ export function getAiOnboardingPlan(user: AuthUser): AiOnboardingPlan {
     return getAgencyOnboarding(agencies[0]!);
   }
 
-  if (user.userType === "client") {
+  if (getActiveRole() === "client") {
     return getClientOnboarding(user);
   }
 

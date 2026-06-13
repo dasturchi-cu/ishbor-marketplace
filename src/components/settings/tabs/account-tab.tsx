@@ -21,6 +21,7 @@ import {
   computeClientReputation,
 } from "@/lib/reputation-store";
 import { getRecentEventsForUser, getEventLabel } from "@/lib/analytics-events-store";
+import { useActiveRole } from "@/hooks/use-active-role";
 
 export function AccountTab({
   user,
@@ -33,12 +34,13 @@ export function AccountTab({
 }) {
   const [form, setForm] = useState<AccountFormData>(() => buildAccountFormFromSession(user.id));
   const [baseline, setBaseline] = useState<AccountFormData>(() => buildAccountFormFromSession(user.id));
+  const { activeRole } = useActiveRole();
 
-  const userType = user.userType === "client" ? "client" : "freelancer";
+  const userType = activeRole;
   const completion = computeProfileCompletionPercent(user.id, userType);
   const items = getProfileCompletionItems(user.id, userType);
   const reputation =
-    user.userType === "freelancer" && user.username
+    activeRole === "freelancer" && user.username
       ? computeFreelancerReputation(user.username, user)
       : computeClientReputation(user.companySlug ?? "", user.fullName, user);
   const recentEvents = getRecentEventsForUser(user.id, 5);

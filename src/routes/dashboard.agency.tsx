@@ -32,10 +32,6 @@ import { getAgencyDashboardMetrics } from "@/lib/agency-metrics-store";
 import { createCaseStudy, publishCaseStudy, getCaseStudiesByAgency, subscribeAgencyPortfolio } from "@/lib/agency-portfolio-store";
 import { agencyRoleLabels, agencyVerificationLabels, type AgencyRole } from "@/lib/agency-types";
 import type { AuthUser } from "@/lib/auth";
-import { GettingStartedCard } from "@/components/ftue/getting-started-card";
-import { JourneyMap } from "@/components/ftue/journey-map";
-import { getAgencyJourney } from "@/lib/ftue-store";
-import { TrustTip } from "@/components/ftue/trust-tip";
 
 export const Route = createFileRoute("/dashboard/agency")({
   beforeLoad: requireAuth,
@@ -180,27 +176,23 @@ function AgencyDashboardContent({
       eyebrow="Agentlik markazi"
       title={agency.name}
       actions={
-        <div className="flex flex-wrap gap-2">
-          <Link to="/agencies/$slug" params={{ slug: agency.slug }} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium">
-            Profil
+        canPublish && agency.status === "draft" ? (
+          <button
+            type="button"
+            onClick={() => {
+              const r = publishAgency(agency.slug);
+              if ("error" in r) toast.error(r.error);
+              else { toast.success("E'lon qilindi"); onRefresh(); }
+            }}
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            E'lon qilish
+          </button>
+        ) : (
+          <Link to="/agencies/$slug" params={{ slug: agency.slug }} className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:border-primary/20">
+            Agentlik profili
           </Link>
-          <Link to="/agency/clients" className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium">
-            Mijozlar CRM
-          </Link>
-          {canPublish && agency.status === "draft" && (
-            <button
-              type="button"
-              onClick={() => {
-                const r = publishAgency(agency.slug);
-                if ("error" in r) toast.error(r.error);
-                else { toast.success("E'lon qilindi"); onRefresh(); }
-              }}
-              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
-            >
-              E'lon qilish
-            </button>
-          )}
-        </div>
+        )
       }
     >
       <div className="mb-4 flex items-center gap-2">
@@ -210,25 +202,15 @@ function AgencyDashboardContent({
         )}
       </div>
 
-      <div className="mb-6 space-y-4">
-        <GettingStartedCard user={user} />
-        <JourneyMap
-          stages={getAgencyJourney(
-            agency.status === "published",
-            agency.members.filter((m) => m.status === "active").length >= 2,
-            caseStudies.length > 0,
-          )}
-          title="Agentlik yo'li"
-          compact
-        />
-        {agency.status !== "published" && <TrustTip topic="verification" />}
+      <div className="mb-6">
+        <Link to="/agency/clients" className="text-xs font-medium text-primary hover:underline">
+          Mijozlar CRM →
+        </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Metric icon={TrendingUp} label="Jamoa samaradorligi" value={`${dash.teamPerformance}%`} />
+      <div className="grid gap-4 sm:grid-cols-3">
         <Metric icon={DollarSign} label="Daromad" value={`$${dash.revenue.toLocaleString()}`} />
         <Metric icon={Briefcase} label="Buyurtmalar" value={dash.orders} />
-        <Metric icon={TrendingUp} label="Konversiya" value={`${dash.conversion}%`} />
         <Metric icon={Users} label="Jamoa foydalanishi" value={`${dash.teamUtilization}%`} />
       </div>
 

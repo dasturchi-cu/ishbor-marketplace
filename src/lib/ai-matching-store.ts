@@ -5,6 +5,7 @@ import { getStoredProjects } from "./projects-store";
 import { getStoredServices } from "./services-store";
 import { freelancers } from "./mock-data";
 import { getSession } from "./auth";
+import { getActiveRole } from "./active-role-store";
 import { getUserProfile } from "./profile-store";
 import type { Project } from "./mock-data";
 import type { Freelancer } from "./mock-data";
@@ -84,7 +85,7 @@ export function getSmartMatchesForUser(userId?: string) {
   const session = getSession();
   const uid = userId ?? session?.user.id;
   const profile = uid ? getUserProfile(uid) : null;
-  const userType = session?.user.userType ?? "freelancer";
+  const userType = getActiveRole();
 
   if (userType === "client") {
     return {

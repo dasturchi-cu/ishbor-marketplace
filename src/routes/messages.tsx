@@ -28,6 +28,7 @@ import { ProtectedGate } from "@/components/auth/protected-gate";
 import { downloadDemoFile } from "@/lib/export-utils";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
 import { createOrder } from "@/lib/orders-store";
 import { createEscrowFromOrder } from "@/lib/escrow-store";
 import { addNotification } from "@/lib/notifications-store";
@@ -226,6 +227,7 @@ function EscrowNotification({ m }: { m: ThreadMessage }) {
 function MessagesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { activeRole } = useActiveRole();
   const [input, setInput] = useState("");
   const [showList, setShowList] = useState(true);
   const [activeId, setActiveId] = useState(getActiveConversationId);
@@ -265,7 +267,7 @@ function MessagesPage() {
     filteredConversations.find((c) => c.id === activeId) ?? filteredConversations[0] ?? null;
 
   const participant = activeConversation ? getParticipantDisplay(activeConversation) : null;
-  const isClient = user?.userType === "client";
+  const isClient = activeRole === "client";
   const projectTitle = activeConversation?.projectContext ?? "Faol loyiha";
   const escrowTotal = activeConversation?.escrowAmount ?? 0;
   const matchedEscrow = activeConversation?.projectContext

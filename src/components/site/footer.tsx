@@ -1,7 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./logo";
 
-const cols = [
+type FooterLink = {
+  to: string;
+  label: string;
+  search?: Record<string, string>;
+};
+
+const cols: { title: string; links: FooterLink[] }[] = [
   {
     title: "Bozor",
     links: [
@@ -14,18 +20,16 @@ const cols = [
   {
     title: "Ish",
     links: [
-      { to: "/dashboard", label: "Mijoz boshqaruv paneli" },
-      { to: "/dashboard/freelancer", label: "Frilanser boshqaruv paneli" },
-      { to: "/wallet", label: "Hamyon va eskrou" },
+      { to: "/login", label: "Mijoz paneli", search: { redirect: "/dashboard" } },
+      { to: "/login", label: "Frilanser paneli", search: { redirect: "/dashboard/freelancer" } },
+      { to: "/login", label: "Hamyon va eskrou", search: { redirect: "/wallet" } },
       { to: "/pricing", label: "Tariflar" },
-      { to: "/subscription", label: "Obuna boshqaruvi" },
-      { to: "/promotions", label: "Rivojlantirish va kreditlar" },
     ],
   },
   {
     title: "Kompaniya",
     links: [
-      { to: "/terms", label: "Biz haqimizda" },
+      { to: "/terms", label: "Savdo shartlari" },
       { to: "/privacy", label: "Maxfiylik" },
       { to: "/register", label: "Ishborda qo'shilish" },
     ],
@@ -61,6 +65,7 @@ export function SiteFooter() {
                     <li key={l.label}>
                       <Link
                         to={l.to}
+                        search={l.search}
                         className="text-muted-foreground transition-default hover:text-foreground"
                       >
                         {l.label}

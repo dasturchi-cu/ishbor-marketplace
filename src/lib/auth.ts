@@ -247,16 +247,6 @@ export function isAdminUser(user?: AuthUser | null): boolean {
   return !!user?.isAdmin;
 }
 
-export function getProfilePath(user: AuthUser): string {
-  if (user.userType === "freelancer" && user.username) {
-    return `/freelancers/${user.username}`;
-  }
-  if (user.companySlug) {
-    return `/clients/${user.companySlug}`;
-  }
-  return "/profile";
-}
-
 /** Map marketplace freelancer username to wallet/session user id. */
 export function resolveFreelancerUserId(username: string): string {
   if (username === "nargiza") return "u-freelancer-1";

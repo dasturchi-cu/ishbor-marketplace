@@ -2,14 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { useSyncExternalStore, useMemo, useEffect } from "react";
 
-import { Clock, Plus, Shield, TrendingUp, Lock, Heart, FolderOpen, Wallet, BarChart3, Users, Sparkles } from "lucide-react";
+import { Clock, Plus, Shield, TrendingUp, Lock, FolderOpen, Users, Wallet, Heart } from "lucide-react";
 
 import { WorkspaceShell } from "@/components/site/workspace-shell";
-import { QualitySuggestionsCard } from "@/components/quality/quality-suggestions-card";
-import { getClientQualityIssues } from "@/lib/quality-engine";
-import { OpportunityScoreCard } from "@/components/ai/opportunity-score-card";
-import { SmartMatchPanel } from "@/components/ai/smart-match-panel";
-import { matchFreelancersForClient } from "@/lib/ai-matching-store";
 import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
 
 import { GradientAvatar } from "@/components/site/avatar";
@@ -34,15 +29,7 @@ import { getSaved, subscribeSaved } from "@/lib/saved-store";
 import { getAllEscrowWorkflows, subscribeEscrow } from "@/lib/escrow-store";
 
 import { getWallet, subscribeWallet } from "@/lib/wallet-store";
-import { getProfileCompletionItems, computeProfileCompletionPercent } from "@/lib/profile-store";
-import { getClientJourney } from "@/lib/ftue-store";
-import { ProfileCompletionCard } from "@/components/trust/profile-completion-card";
-import { WelcomeBanner } from "@/components/ftue/welcome-banner";
-import { GettingStartedCard } from "@/components/ftue/getting-started-card";
-import { FeatureDiscoveryGrid } from "@/components/ftue/feature-discovery-grid";
-import { JourneyMap } from "@/components/ftue/journey-map";
 import { NextActionCard } from "@/components/ftue/next-action-card";
-import { TrustTip } from "@/components/ftue/trust-tip";
 
 
 
@@ -100,9 +87,8 @@ function ClientDashboard() {
 
   useEffect(() => {
     if (user) syncSmartNotifications(user.id);
-  }, [user?.id]);
+  }, [user?.id, activeRole]);
 
-  const matchedFreelancers = user ? matchFreelancersForClient(user.id, 5) : [];
   const userId = user?.id;
 
 
@@ -193,112 +179,26 @@ function ClientDashboard() {
       title={`Xayrli kech, ${user?.fullName.split(" ")[0] ?? "do'stim"}.`}
 
       actions={
-
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-
-          <Link to="/my-projects" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-5 text-sm font-semibold hover:border-primary/20 sm:w-auto">
-
-            Mening loyihalarim
-
-          </Link>
-
-          <Link to="/projects/create" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
-
-            <Plus className="size-4" />
-
-            Loyiha joylash
-
-          </Link>
-
-          <Link to="/ai" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 px-5 text-sm font-semibold text-primary hover:border-primary/40 sm:w-auto">
-
-            <Sparkles className="size-4" />
-
-            AI markaz
-
-          </Link>
-
-        </div>
-
+        <Link
+          to="/projects/create"
+          className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+        >
+          <Plus className="size-4" />
+          Loyiha joylash
+        </Link>
       }
 
     >
 
-      {user && <QualitySuggestionsCard issues={getClientQualityIssues(user)} />}
+      {user && <NextActionCard user={user} />}
 
-      {user && (
-        <div className="mt-4 space-y-4">
-          <WelcomeBanner
-            user={user}
-            roleLabel="Mijoz"
-            primaryHref="/projects/create"
-            primaryLabel="Birinchi loyihani joylash"
-            secondaryHref="/ai/onboarding"
-            secondaryLabel="Yo'riqnomani ko'rish"
-          />
-          <GettingStartedCard user={user} />
-          <NextActionCard user={user} />
-          <JourneyMap
-            stages={getClientJourney(user, myProjects.length > 0, !!user.verified)}
-            compact
-          />
-          {myProjects.length === 0 && <TrustTip topic="escrow" />}
-          {!user.verified && <TrustTip topic="verification" />}
-        </div>
-      )}
-
-      {user && (
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <ProfileCompletionCard
-            percent={computeProfileCompletionPercent(user.id, "client")}
-            items={getProfileCompletionItems(user.id, "client")}
-          />
-          <FeatureDiscoveryGrid role="client" compact />
-        </div>
-      )}
-
-      {user && (
-        <div className="mt-4 grid gap-4 lg:grid-cols-2 lg:items-stretch">
-          <OpportunityScoreCard user={user} />
-          <SmartMatchPanel
-            variant="freelancers"
-            title="Tavsiya etilgan frilanserlar"
-            viewAllHref="/freelancers"
-            items={matchedFreelancers}
-            emptyMessage="Hozircha tavsiya yo'q. Loyiha e'lon qiling yoki qidiruvdan foydalaning."
-            links={[
-              { label: "Loyiha generatori", to: "/ai/project-generator" },
-              { label: "AI onboarding", to: "/ai/onboarding" },
-            ]}
-          />
-        </div>
-      )}
-
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-        <Link to="/analytics/client" className="block">
-          <StatCard label="Analitika" value="Ko'rish" trend="Xarajat va yollash tahlili →" accent />
-        </Link>
-
-        <Link to="/clients/manage" className="block">
-          <StatCard label="Frilanserlar CRM" value="Boshqarish" trend="Yollash va aloqa tarixlari →" />
-        </Link>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
 
         <StatCard label="Jami sarflangan" value={`$${lifetimeSpent.toLocaleString()}`} trend="Platformada umumiy" />
 
         <StatCard label="Eskrouda" value={`$${totalEscrow.toLocaleString()}`} trend={`${fundedMilestones} faol bosqich`} accent />
 
-      </div>
-
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-
         <StatCard label="Mavjud balans" value={`$${availableBalance.toLocaleString()}`} trend="Xarajat qilishga tayyor" />
-
-        <Link to="/saved" className="block">
-
-          <StatCard label="Saqlangan frilanserlar" value={savedFreelancers.toString()} trend="Saqlanganlarni ko'rish →" />
-
-        </Link>
 
       </div>
 

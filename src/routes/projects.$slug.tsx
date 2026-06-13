@@ -1,6 +1,8 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { toast } from "sonner";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
+import { LoadingSpinner } from "@/components/site/feedback";
 import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, Send, ChevronRight, UserCheck, X, FileText, Sparkles, Pencil, FolderOpen } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -15,7 +17,7 @@ import {
   subscribeApplications,
   shortlistApplication,
 } from "@/lib/applications-store";
-import { getProjectBySlug, isProjectOwner } from "@/lib/projects-store";
+import { getProjectBySlug, isProjectOwner, subscribeProjects } from "@/lib/projects-store";
 import {
   budgetTypeLabels,
   experienceLevelLabels,
@@ -29,46 +31,83 @@ import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-c
 import { isFeaturedActive } from "@/lib/featured-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 
-type ProjectSearch = { proposal?: boolean; published?: string };
+type ProjectSearch = { proposal?: boolean; published?: boolean };
 
 export const Route = createFileRoute("/projects/$slug")({
   validateSearch: (search: Record<string, unknown>): ProjectSearch => ({
     proposal: search.proposal === true || search.proposal === "true",
-    published: typeof search.published === "string" ? search.published : undefined,
+    published: search.published === true || search.published === "true" || search.published === '"true"',
   }),
-  loader: ({ params }) => {
-    const p = getProjectBySlug(params.slug);
-    if (!p) throw notFound();
-    if (p.status === "draft" || p.status === "paused" || p.status === "closed") {
-      const session = typeof window !== "undefined" ? getSession() : null;
-      const isOwner = session && p.ownerUserId === session.user.id;
-      if (!isOwner) throw notFound();
-    }
-    return { project: p };
-  },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.project?.title ?? "Loyiha"} — Ishbor` },
-      { name: "description", content: loaderData?.project?.description ?? "" },
-    ],
+  head: () => ({
+    meta: [{ title: "Loyiha — Ishbor" }],
   }),
-  notFoundComponent: () => (
-    <EntityNotFound
-      title="Loyiha topilmadi"
-      description="Bu loyiha mavjud emas, yopilgan yoki faqat egasiga ko'rinadi."
-      backTo="/projects"
-      backLabel="Loyihalarni ko'rish"
-    />
-  ),
   component: ProjectDetail,
 });
 
 function ProjectDetail() {
-  const { project: p } = Route.useLoaderData();
+  const { slug } = Route.useParams();
   const { proposal: openProposal, published } = Route.useSearch();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const hydrated = useClientHydrated();
+  const p = useSyncExternalStore(
+    subscribeProjects,
+    () => (hydrated ? getProjectBySlug(slug) : undefined),
+    () => undefined,
+  );
+
+  if (!hydrated || p === undefined) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteNav />
+        <div className="flex justify-center py-32">
+          <LoadingSpinner size="md" />
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!p) {
+    return (
+      <EntityNotFound
+        title="Loyiha topilmadi"
+        description="Bu loyiha mavjud emas, yopilgan yoki faqat egasiga ko'rinadi."
+        backTo="/projects"
+        backLabel="Loyihalarni ko'rish"
+      />
+    );
+  }
+
   const isOwner = user ? isProjectOwner(p.slug, user.id) : false;
+
+  if ((p.status === "draft" || p.status === "paused" || p.status === "closed") && !isOwner) {
+    return (
+      <EntityNotFound
+        title="Loyiha topilmadi"
+        description="Bu loyiha mavjud emas, yopilgan yoki faqat egasiga ko'rinadi."
+        backTo="/projects"
+        backLabel="Loyihalarni ko'rish"
+      />
+    );
+  }
+
+  return <ProjectDetailContent p={p} openProposal={openProposal} published={published} isOwner={isOwner} />;
+}
+
+function ProjectDetailContent({
+  p,
+  openProposal,
+  published,
+  isOwner,
+}: {
+  p: NonNullable<ReturnType<typeof getProjectBySlug>>;
+  openProposal?: boolean;
+  published?: boolean;
+  isOwner: boolean;
+}) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [showPublishedBanner, setShowPublishedBanner] = useState(!!published);
   const applications = useSyncExternalStore(
     subscribeApplications,

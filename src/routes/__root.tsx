@@ -12,7 +12,9 @@ import { Toaster } from "sonner";
 import { AlertTriangle, SearchX } from "lucide-react";
 
 import appCss from "../styles.css?url";
+import { runClientAuthBootstrap } from "../lib/client-auth-bootstrap";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { installStressSeedGlobals } from "../lib/stress-seed";
 
 function NotFoundComponent() {
   return (
@@ -127,8 +129,15 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="uz" className="dark">
       <head>
         <HeadContent />
+        <script src="/auth-bootstrap.js" />
       </head>
       <body>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+        >
+          Asosiy kontentga o&apos;tish
+        </a>
         {children}
         <Scripts />
       </body>
@@ -139,9 +148,16 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => {
+    runClientAuthBootstrap(window.location.pathname);
+    installStressSeedGlobals();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <div id="main-content" tabIndex={-1}>
+        <Outlet />
+      </div>
       <Toaster
         position="top-center"
         toastOptions={{

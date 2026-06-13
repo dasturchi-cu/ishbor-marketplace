@@ -116,6 +116,10 @@ export function getUnreadCount(userId?: string): number {
   return getNotifications(userId).filter((n) => !n.read).length;
 }
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function dismissNotification(id: string, userId?: string): void {
   const uid = userId ?? getSession()?.user.id;
   if (!uid) return;

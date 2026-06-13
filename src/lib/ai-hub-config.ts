@@ -9,6 +9,7 @@ import {
   Building2,
 } from "lucide-react";
 import type { AuthUser } from "./auth";
+import { getActiveRole } from "./active-role-store";
 import { enrichOnboardingPlan } from "./ai-onboarding-wizard";
 import { analyzePortfolio } from "./ai-portfolio-optimizer";
 import { getTrustCoachInsights } from "./ai-trust-coach";
@@ -34,7 +35,7 @@ export type AiFeature = {
 function resolveRole(user: AuthUser): "client" | "freelancer" {
   const agencies = getAgenciesForUser(user.id);
   if (agencies.some((a) => a.ownerUserId === user.id)) return "client";
-  return user.userType === "freelancer" ? "freelancer" : "client";
+  return getActiveRole();
 }
 
 export function getAiHubFeatures(user: AuthUser): AiFeature[] {

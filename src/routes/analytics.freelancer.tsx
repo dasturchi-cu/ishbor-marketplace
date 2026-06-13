@@ -1,8 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useSyncExternalStore } from "react";
-import { hasAdvancedAnalytics } from "@/lib/subscription-store";
-import { UpsellBanner } from "@/components/monetization/upsell-banner";
-import { Sparkles, BarChart3, TrendingUp, Eye, DollarSign, Star, MessageSquare } from "lucide-react";
+import { BarChart3, Eye, DollarSign, Star, MessageSquare } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -43,7 +41,6 @@ function FreelancerAnalyticsPage() {
   const topServices = user.username ? getTopServicesForFreelancer(user.username) : [];
   const maxChart = Math.max(...chartData.map((d) => d.value), 1);
   const maxEarnings = Math.max(...earningsChart.map((d) => d.value), 1);
-  const showAdvanced = hasAdvancedAnalytics(user.id);
 
   return (
     <WorkspaceShell
@@ -61,14 +58,9 @@ function FreelancerAnalyticsPage() {
               {r} kun
             </button>
           ))}
-          <Link to="/my-services" className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-primary/20">
-            Mening xizmatlarim
-          </Link>
         </div>
       }
     >
-      {!showAdvanced && <UpsellBanner context="analytics" />}
-
       {analytics.profileViews === 0 && analytics.earnings30 === 0 && analytics.ordersCompleted === 0 ? (
         <EmptyState
           icon={BarChart3}
@@ -85,20 +77,9 @@ function FreelancerAnalyticsPage() {
       <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard icon={Eye} label="Profil ko'rishlar" value={analytics.profileViews} />
-        <MetricCard icon={BarChart3} label="Portfel ko'rishlar" value={analytics.portfolioViews} />
         <MetricCard icon={DollarSign} label={`Daromad (${range} kun)`} value={`$${analytics.earnings30.toLocaleString()}`} />
         <MetricCard icon={Star} label="Ishonch balli" value={analytics.trustScore} />
-        <MetricCard icon={TrendingUp} label="Muvaffaqiyat balli" value={analytics.successScore} />
         <MetricCard icon={MessageSquare} label="Javob foizi" value={`${analytics.responseRate}%`} />
-        <MetricCard icon={BarChart3} label="Taklif qabul foizi" value={`${analytics.proposalAcceptanceRate}%`} />
-        <MetricCard icon={Eye} label="Xizmat buyurtmalari" value={analytics.serviceOrders} />
-        {showAdvanced && (
-          <>
-            <MetricCard icon={Sparkles} label="Kredit sarfi" value={`${analytics.creditSpend.toLocaleString()} UZS`} />
-            <MetricCard icon={TrendingUp} label="Rivojlantirish daromadligi" value={`${analytics.promotionRoi}x`} />
-            <MetricCard icon={Eye} label="Ajratilgan faol" value={analytics.featuredPerformance.activeListings} />
-          </>
-        )}
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -130,21 +111,6 @@ function FreelancerAnalyticsPage() {
         <TopList title="Eng yaxshi xizmatlar" items={topServices.map((s) => ({ name: s.title, stat: `${s.orders} buyurtma` }))} empty="Xizmat yarating" href="/services/create" />
       </div>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-3 rounded-xl border border-border bg-card p-4 text-sm">
-        <div><span className="text-muted-foreground">Saqlashlar:</span> {analytics.portfolioSaves + analytics.serviceSaves}</div>
-        <div><span className="text-muted-foreground">Ulushlar:</span> {analytics.portfolioShares}</div>
-        <div><span className="text-muted-foreground">Kontakt bosishlar:</span> {analytics.contactClicks}</div>
-        <div><span className="text-muted-foreground">Yollash konversiyasi:</span> {analytics.hireConversions}</div>
-        <div><span className="text-muted-foreground">Profil to'ldirilishi:</span> {analytics.profileCompletion}%</div>
-        <div><span className="text-muted-foreground">Yakunlangan buyurtmalar:</span> {analytics.ordersCompleted}</div>
-        {showAdvanced && (
-          <>
-            <div><span className="text-muted-foreground">Ko'rishlar (voronka):</span> {analytics.visibilityFunnel.views}</div>
-            <div><span className="text-muted-foreground">Kontakt → buyurtma:</span> {analytics.visibilityFunnel.contactToOrder}%</div>
-            <div><span className="text-muted-foreground">Ajratilgan sarflangan:</span> {analytics.featuredPerformance.creditsSpent.toLocaleString()} UZS</div>
-          </>
-        )}
-      </div>
       </>
       )}
     </WorkspaceShell>

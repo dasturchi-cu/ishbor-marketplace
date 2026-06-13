@@ -1,6 +1,8 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useSyncExternalStore } from "react";
 import { MessageCircle } from "lucide-react";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
+import { LoadingSpinner } from "@/components/site/feedback";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
@@ -9,9 +11,9 @@ import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { getSession } from "@/lib/auth";
 import { getOrder, getEscrowByOrderId } from "@/lib/mock-data";
-import { getOrderById } from "@/lib/orders-store";
+import { getOrderById, subscribeOrders } from "@/lib/orders-store";
 import { getEscrowByOrderId as getStoredEscrowByOrderId } from "@/lib/escrow-store";
-import { hasUserReviewedOrder, getReviewsForOrder } from "@/lib/reviews-store";
+import { hasUserReviewedOrder, getReviewsForOrder, getOrderReviewDirection } from "@/lib/reviews-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 
 function canAccessOrder(order: ReturnType<typeof getOrderById>, session: ReturnType<typeof getSession>) {
@@ -25,36 +27,35 @@ function canAccessOrder(order: ReturnType<typeof getOrderById>, session: ReturnT
 
 export const Route = createFileRoute("/orders/$id")({
   beforeLoad: requireAuth,
-  loader: ({ params }) => {
-    const order = getOrderById(params.id) ?? getOrder(params.id);
-    if (!order) throw notFound();
-    if (typeof window !== "undefined") {
-      const session = getSession();
-      if (!session || !canAccessOrder(order, session)) throw notFound();
-    }
-    return { order };
-  },
-  head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.order?.title ?? "Buyurtma"} — Ishbor` }],
-  }),
-  notFoundComponent: () => (
-    <EntityNotFound
-      title="Buyurtma topilmadi"
-      description="Bu buyurtma mavjud emas yoki sizda ko'rish huquqi yo'q."
-      backTo="/orders"
-      backLabel="Buyurtmalarga qaytish"
-      compact
-    />
-  ),
+  head: () => ({ meta: [{ title: "Buyurtma — Ishbor" }] }),
   component: OrderDetailPage,
 });
 
 function OrderDetailPage() {
-  const { order } = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const hydrated = useClientHydrated();
+  const order = useSyncExternalStore(
+    subscribeOrders,
+    () => {
+      if (!hydrated) return undefined;
+      return getOrderById(id) ?? getOrder(id);
+    },
+    () => undefined,
+  );
   const { user, session } = useAuth();
   const [reviewed, setReviewed] = useState(false);
 
-  if (!session || !canAccessOrder(order, session)) {
+  if (!hydrated || order === undefined) {
+    return (
+      <WorkspaceShell eyebrow="Buyurtma" title="Yuklanmoqda…">
+        <div className="flex justify-center py-20">
+          <LoadingSpinner />
+        </div>
+      </WorkspaceShell>
+    );
+  }
+
+  if (!order || !session || !canAccessOrder(order, session)) {
     return (
       <EntityNotFound
         title="Buyurtma topilmadi"
@@ -67,9 +68,10 @@ function OrderDetailPage() {
   }
 
   const escrow = getStoredEscrowByOrderId(order.id) ?? getEscrowByOrderId(order.id);
-  const direction = user?.userType === "client" ? "client_to_freelancer" as const : "freelancer_to_client" as const;
+  const direction = user ? getOrderReviewDirection(user, order) : null;
   const showReview =
     user &&
+    direction &&
     order.status === "completed" &&
     !hasUserReviewedOrder(order.id, direction) &&
     !reviewed;

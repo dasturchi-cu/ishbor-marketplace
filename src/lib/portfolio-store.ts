@@ -87,6 +87,10 @@ export function getStoredPortfolios(): PortfolioItem[] {
   return cachedStored;
 }
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function getAllPortfolios(): PortfolioItem[] {
   if (typeof window === "undefined") {
     const stored = readStored();

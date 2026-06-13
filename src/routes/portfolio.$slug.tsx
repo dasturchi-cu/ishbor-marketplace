@@ -1,7 +1,9 @@
-import { createFileRoute, Link, notFound, useNavigate, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate, redirect } from "@tanstack/react-router";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
+import { LoadingSpinner } from "@/components/site/feedback";
 import {
   ChevronRight,
   ExternalLink,
@@ -23,8 +25,9 @@ import { PortfolioCover } from "@/components/portfolio/portfolio-preview-card";
 import { SaveButtonInline } from "@/components/site/save-button";
 import { useSaved } from "@/hooks/use-saved";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
 import { EntityNotFound } from "@/components/site/entity-not-found";
-import { getPortfolioBySlug, getPublicPortfolioBySlug } from "@/lib/portfolio-store";
+import { getPortfolioBySlug, getPublicPortfolioBySlug, subscribePortfolios } from "@/lib/portfolio-store";
 import {
   recordPortfolioView,
   recordPortfolioSave,
@@ -42,25 +45,10 @@ export const Route = createFileRoute("/portfolio/$slug")({
       throw redirect({ to: "/portfolio" });
     }
   },
-  loader: ({ params }) => {
-    const item = getPortfolioBySlug(params.slug);
-    if (!item) throw notFound();
-    return { item };
-  },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.item?.title ?? "Portfolio"} — Ishbor` },
-      { name: "description", content: loaderData?.item?.description ?? "" },
-    ],
+  loader: ({ params }) => ({ slug: params.slug }),
+  head: () => ({
+    meta: [{ title: "Portfolio — Ishbor" }],
   }),
-  notFoundComponent: () => (
-    <EntityNotFound
-      title="Portfolio topilmadi"
-      description="Bu portfolio elementi mavjud emas yoki o'chirilgan."
-      backTo="/freelancers"
-      backLabel="Frilanserlarni ko'rish"
-    />
-  ),
   component: PortfolioDetailPage,
 });
 
@@ -88,10 +76,51 @@ function PortfolioSaveButton({ slug }: { slug: string }) {
 }
 
 function PortfolioDetailPage() {
-  const { item: rawItem } = Route.useLoaderData();
   const { slug } = Route.useParams();
+  const hydrated = useClientHydrated();
+  const rawItem = useSyncExternalStore(
+    subscribePortfolios,
+    () => (hydrated ? getPortfolioBySlug(slug) : undefined),
+    () => undefined,
+  );
+
+  if (!hydrated || rawItem === undefined) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteNav />
+        <div className="flex justify-center py-32">
+          <LoadingSpinner />
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (!rawItem) {
+    return (
+      <EntityNotFound
+        title="Portfolio topilmadi"
+        description="Bu portfolio elementi mavjud emas yoki o'chirilgan."
+        backTo="/freelancers"
+        backLabel="Frilanserlarni ko'rish"
+      />
+    );
+  }
+
+  return <PortfolioDetailContent rawItem={rawItem} slug={slug} />;
+}
+
+function PortfolioDetailContent({
+  rawItem,
+  slug,
+}: {
+  rawItem: NonNullable<ReturnType<typeof getPortfolioBySlug>>;
+  slug: string;
+}) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { activeRole } = useActiveRole();
+  const isClientViewer = activeRole === "client";
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -222,7 +251,7 @@ function PortfolioDetailPage() {
                   <button type="button" onClick={handleShare} className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:border-primary/20">
                     <Share2 className="inline size-4 mr-1" /> Ulashish
                   </button>
-                  {user?.userType === "client" && (
+                  {isClientViewer && (
                     <button type="button" onClick={handleHire} className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-95">
                       Yollash <ArrowRight className="inline size-4 ml-1" />
                     </button>
@@ -368,7 +397,7 @@ function PortfolioDetailPage() {
               </div>
             )}
 
-            {!isAuthenticated || user?.userType === "client" ? (
+            {!isAuthenticated || isClientViewer ? (
               <div className="rounded-2xl border border-primary/20 bg-gradient-to-b from-primary/[0.08] to-card p-5">
                 <h3 className="font-display text-sm font-bold">O'xshash ish qiziqtiradimi?</h3>
                 <p className="mt-2 text-xs text-muted-foreground">Yollash {item.freelancerName.split(" ")[0]}ni keyingi loyihangiz uchun yollang.</p>

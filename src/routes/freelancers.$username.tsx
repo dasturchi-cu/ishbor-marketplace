@@ -40,6 +40,7 @@ import {
 } from "@/lib/mock-data";
 import { getReviewsForFreelancer } from "@/lib/reviews-store";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
 import { getMyPublishedProjects, subscribeProjects } from "@/lib/projects-store";
 import { createDirectHireApplication } from "@/lib/applications-store";
 import { getPublishedPortfoliosByUsername, subscribePortfolios } from "@/lib/portfolio-store";
@@ -98,6 +99,8 @@ function FreelancerProfile() {
   const { freelancer: f, freelancerReviews, freelancerServices } = Route.useLoaderData();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { activeRole } = useActiveRole();
+  const isClientViewer = activeRole === "client";
   const [showInvite, setShowInvite] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
   const [activeTab, setActiveTab] = useState<ProfileTab>("about");
@@ -146,7 +149,7 @@ function FreelancerProfile() {
   };
 
   const handleInvite = () => {
-    if (!isAuthenticated || user?.userType !== "client") {
+    if (!isAuthenticated || !isClientViewer) {
       toast.info("Frilanserlarni taklif qilish uchun mijoz sifatida kiring");
       navigate({ to: "/login", search: { redirect: `/freelancers/${f.username}` } });
       return;
@@ -287,7 +290,7 @@ function FreelancerProfile() {
                   >
                     <MessageSquare className="size-4" /> Xabar
                   </Link>
-                  {user?.userType === "client" ? (
+                  {isClientViewer ? (
                     <>
                       <button
                         type="button"
@@ -486,7 +489,7 @@ function FreelancerProfile() {
                   >
                     Frilanserni yollash <ArrowRight className="size-4" />
                   </Link>
-                  {user?.userType === "client" && (
+                  {isClientViewer && (
                     <button
                       type="button"
                       onClick={handleInvite}

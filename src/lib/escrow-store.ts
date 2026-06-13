@@ -41,6 +41,10 @@ function buildMerged(): EscrowWorkflow[] {
   return [...stored, ...mockEscrow.filter((e) => !storedIds.has(e.id))];
 }
 
+export function rehydrateFromStorage() {
+  notify();
+}
+
 export function getAllEscrowWorkflows(): EscrowWorkflow[] {
   if (typeof window === "undefined") {
     return buildMerged();

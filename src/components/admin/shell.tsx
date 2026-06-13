@@ -6,7 +6,7 @@ import {
 
   FileText, Lock, AlertTriangle, CreditCard, Eye, Headphones, BarChart3,
 
-  ScrollText, Server, ChevronLeft, Menu, Search, Command, Image, TrendingUp, DollarSign, Sparkles,
+  ScrollText, Server, ChevronLeft, Menu, Search, Command, Image, TrendingUp, DollarSign, Sparkles, ChevronDown,
 
 } from "lucide-react";
 
@@ -35,133 +35,95 @@ import { cn } from "@/lib/utils";
 
 
 type NavItem = {
-
   to: string;
-
   label: string;
-
   icon: typeof LayoutDashboard;
-
   section: AdminSection;
-
+  tier: "core" | "more";
   badge?: number;
-
   exact?: boolean;
-
 };
 
-
-
 const NAV_ITEMS: NavItem[] = [
+  { to: "/admin", label: "Boshqaruv paneli", icon: LayoutDashboard, section: "dashboard", tier: "core", exact: true },
+  { to: "/admin/users", label: "Foydalanuvchilar", icon: Users, section: "users", tier: "core" },
+  { to: "/admin/verifications", label: "Tasdiqlashlar", icon: ShieldCheck, section: "verifications", tier: "core", badge: adminStats.verificationRequests },
+  { to: "/admin/orders", label: "Buyurtmalar", icon: ClipboardList, section: "orders", tier: "core" },
+  { to: "/admin/disputes", label: "Nizolar", icon: AlertTriangle, section: "disputes", tier: "core", badge: adminStats.disputes },
+  { to: "/admin/payments", label: "To'lovlar", icon: CreditCard, section: "payments", tier: "core" },
 
-  { to: "/admin", label: "Boshqaruv paneli", icon: LayoutDashboard, section: "dashboard", exact: true },
-
-  { to: "/admin/users", label: "Foydalanuvchilar", icon: Users, section: "users" },
-
-  { to: "/admin/verifications", label: "Tasdiqlashlar", icon: ShieldCheck, section: "verifications", badge: adminStats.verificationRequests },
-
-  { to: "/admin/projects", label: "Loyihalar", icon: Briefcase, section: "projects" },
-
-  { to: "/admin/portfolios", label: "Portfoliolar", icon: Image, section: "portfolios" },
-
-  { to: "/admin/services", label: "Xizmatlar", icon: Package, section: "services" },
-
-  { to: "/admin/orders", label: "Buyurtmalar", icon: ClipboardList, section: "orders" },
-
-  { to: "/admin/applications", label: "Arizalar", icon: FileText, section: "applications" },
-
-  { to: "/admin/escrow", label: "Eskrou", icon: Lock, section: "escrow" },
-
-  { to: "/admin/disputes", label: "Nizolar", icon: AlertTriangle, section: "disputes", badge: adminStats.disputes },
-
-  { to: "/admin/payments", label: "To'lovlar", icon: CreditCard, section: "payments" },
-
-  { to: "/admin/moderation", label: "Moderatsiya", icon: Eye, section: "moderation" },
-
-  { to: "/admin/support", label: "Qo'llab-quvvatlash", icon: Headphones, section: "support" },
-
-  { to: "/admin/analytics", label: "Analitika", icon: BarChart3, section: "analytics" },
-
-  { to: "/revenue", label: "Daromad paneli", icon: DollarSign, section: "analytics" },
-
-  { to: "/admin/founder", label: "Asoschilar paneli", icon: TrendingUp, section: "analytics" },
-
-  { to: "/admin/ai", label: "AI Markaz", icon: Sparkles, section: "analytics" },
-
-  { to: "/admin/audit", label: "Audit jurnallari", icon: ScrollText, section: "audit" },
-
-  { to: "/admin/system", label: "Tizim holati", icon: Server, section: "system" },
-
+  { to: "/admin/projects", label: "Loyihalar", icon: Briefcase, section: "projects", tier: "more" },
+  { to: "/admin/portfolios", label: "Portfoliolar", icon: Image, section: "portfolios", tier: "more" },
+  { to: "/admin/services", label: "Xizmatlar", icon: Package, section: "services", tier: "more" },
+  { to: "/admin/applications", label: "Arizalar", icon: FileText, section: "applications", tier: "more" },
+  { to: "/admin/escrow", label: "Eskrou", icon: Lock, section: "escrow", tier: "more" },
+  { to: "/admin/moderation", label: "Moderatsiya", icon: Eye, section: "moderation", tier: "more" },
+  { to: "/admin/support", label: "Qo'llab-quvvatlash", icon: Headphones, section: "support", tier: "more" },
+  { to: "/admin/analytics", label: "Analitika", icon: BarChart3, section: "analytics", tier: "more" },
+  { to: "/revenue", label: "Daromad paneli", icon: DollarSign, section: "analytics", tier: "more" },
+  { to: "/admin/founder", label: "Asoschilar paneli", icon: TrendingUp, section: "analytics", tier: "more" },
+  { to: "/admin/ai", label: "AI Markaz", icon: Sparkles, section: "analytics", tier: "more" },
+  { to: "/admin/audit", label: "Audit jurnallari", icon: ScrollText, section: "audit", tier: "more" },
+  { to: "/admin/system", label: "Tizim holati", icon: Server, section: "system", tier: "more" },
 ];
 
 
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
-
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-
   const { role } = useAdmin();
-
+  const [moreOpen, setMoreOpen] = useState(false);
   const items = NAV_ITEMS.filter((n) => canAccessSection(role, n.section));
+  const coreItems = items.filter((n) => n.tier === "core");
+  const moreItems = items.filter((n) => n.tier === "more");
+  const moreActive = moreItems.some((n) => (n.exact ? pathname === n.to : pathname.startsWith(n.to)));
 
-
+  const renderItem = (n: NavItem) => {
+    const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
+    return (
+      <Link
+        key={n.to}
+        to={n.to}
+        onClick={onNavigate}
+        className={cn(
+          "group flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-default",
+          active ? "bg-primary/8 font-medium text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
+        )}
+      >
+        <span className="flex items-center gap-2.5">
+          <n.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+          {n.label}
+        </span>
+        {n.badge && !active && (
+          <Badge variant="default" className="size-5 justify-center rounded-full p-0 text-[9px]">
+            {n.badge}
+          </Badge>
+        )}
+      </Link>
+    );
+  };
 
   return (
-
     <nav className="space-y-0.5">
-
-      {items.map((n) => {
-
-        const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
-
-        return (
-
-          <Link
-
-            key={n.to}
-
-            to={n.to}
-
-            onClick={onNavigate}
-
+      {coreItems.map(renderItem)}
+      {moreItems.length > 0 && (
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((o) => !o)}
             className={cn(
-
-              "group flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-default",
-
-              active ? "bg-primary/8 font-medium text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
-
+              "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-default",
+              moreActive ? "font-medium text-primary" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
             )}
-
           >
-
-            <span className="flex items-center gap-2.5">
-
-              <n.icon className={cn("size-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
-
-              {n.label}
-
-            </span>
-
-            {n.badge && !active && (
-
-              <Badge variant="default" className="size-5 justify-center rounded-full p-0 text-[9px]">
-
-                {n.badge}
-
-              </Badge>
-
-            )}
-
-          </Link>
-
-        );
-
-      })}
-
+            <span>Yana</span>
+            <ChevronDown className={cn("size-4 transition-transform", moreOpen || moreActive ? "rotate-180" : "")} />
+          </button>
+          {(moreOpen || moreActive) && <div className="mt-0.5 space-y-0.5">{moreItems.map(renderItem)}</div>}
+        </div>
+      )}
     </nav>
-
   );
-
 }
 
 

@@ -1,9 +1,12 @@
-import { Navigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import type { UserType } from "@/lib/auth-constants";
 import { getActiveDashboardPath } from "@/lib/active-role-store";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { useAuth } from "@/hooks/use-auth";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
+import { LoadingSpinner } from "@/components/site/feedback";
 
 export function RoleGate({
   roles,
@@ -14,11 +17,30 @@ export function RoleGate({
 }) {
   const { isAuthenticated } = useAuth();
   const { activeRole } = useActiveRole();
+  const navigate = useNavigate();
+  const hydrated = useClientHydrated();
 
-  if (!isAuthenticated) return null;
+  const allowed = roles.includes(activeRole);
 
-  if (!roles.includes(activeRole)) {
-    return <Navigate to={getActiveDashboardPath(activeRole)} replace />;
+  useEffect(() => {
+    if (!hydrated || !isAuthenticated || allowed) return;
+    navigate({ to: getActiveDashboardPath(activeRole), replace: true });
+  }, [hydrated, isAuthenticated, allowed, activeRole, navigate]);
+
+  if (!hydrated || !isAuthenticated) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!allowed) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return <>{children}</>;

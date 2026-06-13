@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/site/footer";
 import { ProjectCard } from "@/components/site/cards";
 import { CardSkeleton, EmptyState } from "@/components/site/feedback";
 import { usePageReady } from "@/hooks/use-page-ready";
+import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
+import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
 import { filterProjects, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { getPublishedProjects, subscribeProjects } from "@/lib/projects-store";
@@ -39,12 +41,12 @@ function ProjectsPage() {
   const setSearch = useMarketplaceSearch(search, "/projects");
   const allProjects = useSyncExternalStore(subscribeProjects, getPublishedProjects, getPublishedProjects);
   const filtered = filterProjects(allProjects, search);
-  const createTo =
-    !user
-      ? "/login"
-      : user.userType === "client"
-        ? "/projects/create"
-        : "/projects/create";
+  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+    filtered,
+    MARKETPLACE_PAGE_SIZE,
+    `${search.q ?? ""}-${search.category ?? ""}-${search.sort ?? ""}`,
+  );
+  const createTo = !user ? "/login" : activeRole === "client" ? "/projects/create" : "/applications";
   const createSearch = !user ? { redirect: "/projects/create" } : {};
 
   return (
@@ -122,9 +124,17 @@ function ProjectsPage() {
             }
           />
         ) : (
-          <div className="grid gap-5 lg:grid-cols-2 stagger-children">
-            {filtered.map((p) => <ProjectCard key={p.id} p={p} />)}
-          </div>
+          <>
+            <div className="grid gap-5 lg:grid-cols-2 stagger-children">
+              {visible.map((p) => <ProjectCard key={p.id} p={p} />)}
+            </div>
+            <IncrementalListFooter
+              hasMore={hasMore}
+              showing={showing}
+              total={total}
+              onLoadMore={loadMore}
+            />
+          </>
         )}
       </section>
 

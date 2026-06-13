@@ -1,4 +1,5 @@
 import { getSession } from "./auth";
+import { getActiveRole } from "./active-role-store";
 import { addNotification } from "./notifications-store";
 import { computeProfileCompletionPercent } from "./profile-store";
 import { computeOpportunityScore } from "./ai-opportunity-store";
@@ -37,7 +38,7 @@ export function syncSmartNotifications(userId?: string): number {
 
   const sent = getSentIds(uid);
   let created = 0;
-  const userType = session.user.userType;
+  const userType = getActiveRole();
 
   const completion = computeProfileCompletionPercent(uid, userType);
   if (completion >= 80 && completion < 100 && !sent.has("profile-80")) {
