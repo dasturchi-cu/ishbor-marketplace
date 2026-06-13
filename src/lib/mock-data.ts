@@ -165,6 +165,7 @@ export type Application = {
   freelancerName?: string;
   freelancerHue?: number;
   orderId?: string;
+  archived?: boolean;
 };
 
 export type ClientCompany = {

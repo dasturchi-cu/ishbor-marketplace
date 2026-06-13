@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen, FileText, Briefcase } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { ProjectCard } from "@/components/site/cards";
@@ -37,7 +37,13 @@ function ProjectsPage() {
   const setSearch = useMarketplaceSearch(search, "/projects");
   const allProjects = useSyncExternalStore(subscribeProjects, getPublishedProjects, getPublishedProjects);
   const filtered = filterProjects(allProjects, search);
-  const createTo = user?.userType === "client" ? "/projects/create" : "/register";
+  const createTo =
+    !user
+      ? "/login"
+      : user.userType === "client"
+        ? "/projects/create"
+        : "/projects/create";
+  const createSearch = !user ? { redirect: "/projects/create" } : {};
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,13 +61,33 @@ function ProjectsPage() {
                 Vetted clients. Funded escrow. Bid with confidence.
               </p>
             </div>
-            <Link
-              to={createTo}
-              search={{}}
-              className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:w-auto"
-            >
-              <Plus className="size-4" /> Post a project
-            </Link>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              {user?.userType === "freelancer" ? (
+                <Link
+                  to="/applications"
+                  className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:w-auto"
+                >
+                  <FileText className="size-4" /> My applications
+                </Link>
+              ) : (
+                <Link
+                  to={createTo}
+                  search={createSearch}
+                  className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 sm:w-auto"
+                >
+                  <Plus className="size-4" /> Post project
+                </Link>
+              )}
+              {!user && (
+                <Link
+                  to="/login"
+                  search={{ redirect: "/projects" }}
+                  className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border px-5 text-sm font-semibold hover:border-primary/20 sm:w-auto"
+                >
+                  <Briefcase className="size-4" /> Sign in to apply
+                </Link>
+              )}
+            </div>
           </div>
 
           <MarketplaceToolbar

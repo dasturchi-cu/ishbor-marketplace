@@ -4,9 +4,17 @@ import { projects as mockProjects } from "./mock-data";
 const STORAGE_KEY = "ishbor-user-projects";
 const listeners = new Set<() => void>();
 let cachedProjects: Project[] | null = null;
+let cachedPublished: Project[] | null = null;
+let cachedPublishedSource: Project[] | null = null;
+let cachedMyProjects: Map<string, Project[]> | null = null;
+let cachedMyProjectsSource: Project[] | null = null;
 
 function invalidateCache() {
   cachedProjects = null;
+  cachedPublished = null;
+  cachedPublishedSource = null;
+  cachedMyProjects = null;
+  cachedMyProjectsSource = null;
 }
 
 function notify() {
@@ -72,7 +80,13 @@ export function getAllProjects(): Project[] {
 }
 
 export function getPublishedProjects(): Project[] {
-  return getAllProjects().filter((p) => !p.status || p.status === "published");
+  const all = getAllProjects();
+  if (cachedPublished && cachedPublishedSource === all) {
+    return cachedPublished;
+  }
+  cachedPublished = all.filter((p) => !p.status || p.status === "published");
+  cachedPublishedSource = all;
+  return cachedPublished;
 }
 
 export function getProjectBySlug(slug: string): Project | undefined {
@@ -80,7 +94,28 @@ export function getProjectBySlug(slug: string): Project | undefined {
 }
 
 export function getMyProjects(ownerUserId: string): Project[] {
-  return readStored().filter((p) => p.ownerUserId === ownerUserId);
+  const stored = readStored();
+  if (cachedMyProjects && cachedMyProjectsSource === stored && cachedMyProjects.has(ownerUserId)) {
+    return cachedMyProjects.get(ownerUserId)!;
+  }
+  if (!cachedMyProjects || cachedMyProjectsSource !== stored) {
+    cachedMyProjects = new Map();
+    cachedMyProjectsSource = stored;
+  }
+  const filtered = stored.filter((p) => p.ownerUserId === ownerUserId);
+  cachedMyProjects.set(ownerUserId, filtered);
+  return filtered;
+}
+
+export function getMyPublishedProjects(ownerUserId: string): Project[] {
+  const mine = getMyProjects(ownerUserId);
+  const key = `${ownerUserId}:published`;
+  if (cachedMyProjects && cachedMyProjectsSource === readStored() && cachedMyProjects.has(key)) {
+    return cachedMyProjects.get(key)!;
+  }
+  const filtered = mine.filter((p) => p.status === "published");
+  cachedMyProjects!.set(key, filtered);
+  return filtered;
 }
 
 export type ProjectFormInput = {

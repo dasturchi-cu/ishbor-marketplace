@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 
-import { Search, Bell, Wallet, MessageSquare, Menu, X, LogOut } from "lucide-react";
+import { Search, Bell, Wallet, MessageSquare, Menu, X, LogOut, FolderOpen, FileText, Briefcase, Plus } from "lucide-react";
 
 import { useState } from "react";
 
@@ -52,6 +52,56 @@ function NavProfileLink({ user }: { user: AuthUser }) {
 
 
 
+function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; isAuthenticated: boolean }) {
+  const secondary =
+    "touch-target hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-default hover:border-primary/20 focus-ring sm:inline-flex";
+  const primary =
+    "touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:px-4";
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Link to="/projects" className={secondary}>
+          <Briefcase className="size-3.5" /> Find work
+        </Link>
+        <Link to="/login" search={{ redirect: "/projects/create" }} className={primary}>
+          <Plus className="size-3.5" /> Post project
+        </Link>
+      </>
+    );
+  }
+
+  if (user?.userType === "client") {
+    return (
+      <>
+        <Link to="/my-projects" className={secondary}>
+          <FolderOpen className="size-3.5" /> My projects
+        </Link>
+        <Link to="/projects/create" className={primary}>
+          <Plus className="size-3.5" />
+          <span className="hidden sm:inline">Post project</span>
+          <span className="sm:hidden">Post</span>
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Link to="/applications" className={secondary}>
+        <FileText className="size-3.5" /> My applications
+      </Link>
+      <Link to="/projects" className={primary}>
+        <Briefcase className="size-3.5" />
+        <span className="hidden sm:inline">Find work</span>
+        <span className="sm:hidden">Projects</span>
+      </Link>
+    </>
+  );
+}
+
+
+
 const links = [
 
   { to: "/services", label: "Services" },
@@ -76,7 +126,7 @@ export function SiteNav() {
 
   const { isAuthenticated, user, logout } = useAuth();
 
-  const onWorkspace = ["/dashboard", "/messages", "/notifications", "/wallet", "/admin", "/orders", "/applications", "/escrow", "/profile", "/settings"].some(
+  const onWorkspace = ["/dashboard", "/my-projects", "/messages", "/notifications", "/wallet", "/admin", "/orders", "/applications", "/escrow", "/profile", "/settings"].some(
 
     (p) => pathname.startsWith(p),
 
@@ -166,6 +216,8 @@ export function SiteNav() {
 
             <>
 
+              <NavBusinessActions user={user} isAuthenticated={isAuthenticated} />
+
               <Link
 
                 to="/messages"
@@ -232,19 +284,7 @@ export function SiteNav() {
 
               </Link>
 
-              <Link
-
-                to="/projects/create"
-
-                className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:px-4"
-
-              >
-
-                <span className="sm:hidden">Post</span>
-
-                <span className="hidden sm:inline">Post a project</span>
-
-              </Link>
+              <NavBusinessActions user={user} isAuthenticated={isAuthenticated} />
 
             </>
 
@@ -266,19 +306,7 @@ export function SiteNav() {
 
               </Link>
 
-              <Link
-
-                to="/projects/create"
-
-                className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:px-4"
-
-              >
-
-                <span className="sm:hidden">Post</span>
-
-                <span className="hidden sm:inline">Post a project</span>
-
-              </Link>
+              <NavBusinessActions user={user} isAuthenticated={isAuthenticated} />
 
             </>
 
@@ -357,37 +385,58 @@ export function SiteNav() {
                 <Link to={user!.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard"} onClick={() => setOpen(false)} className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
                   Dashboard
                 </Link>
+                {user!.userType === "client" ? (
+                  <>
+                    <Link to="/my-projects" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                      <FolderOpen className="size-4" /> My projects
+                    </Link>
+                    <Link to="/projects/create" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                      <Plus className="size-4" /> Post project
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/applications" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                      <FileText className="size-4" /> My applications
+                    </Link>
+                    <Link to="/projects" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                      <Briefcase className="size-4" /> Find work
+                    </Link>
+                  </>
+                )}
                 <button onClick={() => { logout(); setOpen(false); }} className="touch-target flex w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-secondary">
                   <LogOut className="size-4" /> Sign out
                 </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                onClick={() => setOpen(false)}
-                className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-secondary transition-default"
-              >
-                Sign in
-              </Link>
+              <>
+                <Link to="/projects" onClick={() => setOpen(false)} className="touch-target flex items-center gap-2 rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                  <Briefcase className="size-4" /> Find work
+                </Link>
+                <Link
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-secondary transition-default"
+                >
+                  Sign in
+                </Link>
+              </>
             )}
 
             <div className="flex items-center justify-between gap-3 pt-2">
 
               <ThemeToggle className="!size-11" />
 
-              <Link
-
-                to="/projects/create"
-
-                onClick={() => setOpen(false)}
-
-                className="touch-target rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"
-
-              >
-
-                Post a project
-
-              </Link>
+              {!isAuthenticated && (
+                <Link
+                  to="/login"
+                  search={{ redirect: "/projects/create" }}
+                  onClick={() => setOpen(false)}
+                  className="touch-target rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"
+                >
+                  Post project
+                </Link>
+              )}
 
             </div>
 

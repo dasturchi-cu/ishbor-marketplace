@@ -39,8 +39,10 @@ import {
   getFreelancerReviews,
 } from "@/lib/mock-data";
 import { useAuth } from "@/hooks/use-auth";
-import { getMyProjects, subscribeProjects } from "@/lib/projects-store";
+import { getMyPublishedProjects, subscribeProjects } from "@/lib/projects-store";
 import { createDirectHireApplication } from "@/lib/applications-store";
+
+const EMPTY_PROJECTS: never[] = [];
 
 export const Route = createFileRoute("/freelancers/$username")({
   loader: ({ params }) => {
@@ -71,8 +73,8 @@ function FreelancerProfile() {
   const [selectedProject, setSelectedProject] = useState("");
   const myProjects = useSyncExternalStore(
     subscribeProjects,
-    () => (user ? getMyProjects(user.id).filter((p) => p.status === "published") : []),
-    () => [],
+    () => (user ? getMyPublishedProjects(user.id) : EMPTY_PROJECTS),
+    () => EMPTY_PROJECTS,
   );
 
   const handleSave = () => {

@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
-import { requireRole } from "@/lib/guards";
+import { requireAuth } from "@/lib/guards";
+import { loginDemo, logout } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import {
   publishProject,
@@ -33,7 +34,7 @@ const projectCategoryOptions = [
 ];
 
 export const Route = createFileRoute("/projects/create")({
-  beforeLoad: requireRole(["client"]),
+  beforeLoad: requireAuth,
   validateSearch: (search: Record<string, unknown>): CreateSearch => ({
     edit: typeof search.edit === "string" ? search.edit : undefined,
     published: typeof search.published === "string" ? search.published : undefined,
@@ -51,6 +52,49 @@ function CreateProjectPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { edit } = Route.useSearch();
+
+  if (user?.userType !== "client") {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteNav />
+        <div className="mx-auto max-w-lg px-4 py-20 text-center">
+          <h1 className="font-display text-2xl font-bold">Client account required</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Only clients can post projects and hire freelancers. You are signed in as a{" "}
+            <span className="font-medium text-foreground">freelancer</span>.
+          </p>
+          <div className="mt-8 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                navigate({ to: "/login", search: { redirect: "/projects/create" } });
+              }}
+              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Sign in as client
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                loginDemo("client");
+                navigate({ to: "/projects/create" });
+              }}
+              className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:border-primary/20"
+            >
+              Try demo client (Asaka Capital)
+            </button>
+            <Link to="/dashboard/freelancer" className="text-sm text-muted-foreground hover:text-foreground">
+              Back to freelancer dashboard
+            </Link>
+          </div>
+        </div>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   const existing = edit ? getProjectBySlug(edit) : undefined;
 
   const [title, setTitle] = useState(existing?.title ?? "");

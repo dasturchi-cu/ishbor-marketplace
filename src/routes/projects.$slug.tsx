@@ -13,8 +13,9 @@ import {
   acceptApplication,
   updateApplicationStatus,
   subscribeApplications,
+  shortlistApplication,
 } from "@/lib/applications-store";
-import { getProjectBySlug, subscribeProjects, isProjectOwner } from "@/lib/projects-store";
+import { getProjectBySlug, isProjectOwner } from "@/lib/projects-store";
 import { getSession } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { freelancers } from "@/lib/mock-data";
@@ -59,7 +60,6 @@ function ProjectDetail() {
     () => getApplicationsByProjectSlug(p.slug),
     () => getApplicationsByProjectSlug(p.slug),
   );
-  useSyncExternalStore(subscribeProjects, () => getProjectBySlug(p.slug), () => getProjectBySlug(p.slug));
 
   const [showProposal, setShowProposal] = useState(false);
   const [proposalText, setProposalText] = useState("");
@@ -67,6 +67,17 @@ function ProjectDetail() {
   const [proposalDuration, setProposalDuration] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [createdAppId, setCreatedAppId] = useState<string | null>(null);
+  const [proposalSort, setProposalSort] = useState<"newest" | "amount-asc" | "amount-desc">("newest");
+
+  const sortedApplications = [...applications].sort((a, b) => {
+    if (proposalSort === "amount-asc") {
+      return (a.proposalAmount ?? a.budget) - (b.proposalAmount ?? b.budget);
+    }
+    if (proposalSort === "amount-desc") {
+      return (b.proposalAmount ?? b.budget) - (a.proposalAmount ?? a.budget);
+    }
+    return 0;
+  });
 
   useEffect(() => {
     if (openProposal) setShowProposal(true);
@@ -254,16 +265,31 @@ function ProjectDetail() {
               {isOwner ? (
                 <section className="rounded-2xl border border-border bg-card overflow-hidden">
                   <div className="border-b border-border px-6 py-4">
-                    <h2 className="font-display text-lg font-bold">Proposals ({applications.length})</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Review applications, accept a freelancer, and fund escrow to start the order.
-                    </p>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h2 className="font-display text-lg font-bold">Proposals ({applications.length})</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Compare proposals, accept a freelancer, and fund escrow to start the order.
+                        </p>
+                      </div>
+                      {applications.length > 1 && (
+                        <select
+                          value={proposalSort}
+                          onChange={(e) => setProposalSort(e.target.value as typeof proposalSort)}
+                          className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium outline-none focus:border-primary/30"
+                        >
+                          <option value="newest">Sort: Newest</option>
+                          <option value="amount-asc">Sort: Lowest bid</option>
+                          <option value="amount-desc">Sort: Highest bid</option>
+                        </select>
+                      )}
+                    </div>
                   </div>
                   <div className="divide-y divide-border">
-                    {applications.length === 0 ? (
+                    {sortedApplications.length === 0 ? (
                       <p className="p-6 text-sm text-muted-foreground">No proposals yet. Share your project to attract talent.</p>
                     ) : (
-                      applications.map((app) => (
+                      sortedApplications.map((app) => (
                         <div key={app.id} className="p-6">
                           <div className="flex flex-wrap items-start justify-between gap-4">
                             <div className="flex items-center gap-3">
@@ -288,6 +314,14 @@ function ProjectDetail() {
                               >
                                 <UserCheck className="size-3.5" /> Accept & create order
                               </button>
+                              {app.status === "pending" && (
+                                <button
+                                  onClick={() => { shortlistApplication(app.id); toast.success("Proposal shortlisted"); }}
+                                  className="rounded-lg border border-border px-4 py-2 text-xs font-medium hover:border-primary/20"
+                                >
+                                  Shortlist
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleReject(app.id)}
                                 className="rounded-lg border border-border px-4 py-2 text-xs font-medium hover:border-primary/20"

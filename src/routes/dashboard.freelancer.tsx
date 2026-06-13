@@ -1,21 +1,21 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Plus,
   TrendingUp,
   Package,
   FileText,
   Star,
   Clock,
   DollarSign,
-  CheckCircle2,
+  Briefcase,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 import { EmptyState } from "@/components/site/feedback";
-import { orders, applications, reviews } from "@/lib/mock-data";
+import { orders, reviews } from "@/lib/mock-data";
+import { getAllApplications, subscribeApplications } from "@/lib/applications-store";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/dashboard/freelancer")({
@@ -25,13 +25,13 @@ export const Route = createFileRoute("/dashboard/freelancer")({
 
 function FreelancerDashboard() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [availability, setAvailability] = useState<"available" | "busy" | "away">("available");
   const [activeTab, setActiveTab] = useState<"applications" | "reviews">("applications");
+  const applications = useSyncExternalStore(subscribeApplications, getAllApplications, getAllApplications);
 
   const activeOrders = orders.filter((o) => o.status !== "completed");
-  const applicationCount = applications.length;
-  const pendingApplications = applications.filter((a) => a.status === "pending").length;
+  const applicationCount = applications.filter((a) => !a.archived).length;
+  const pendingApplications = applications.filter((a) => (a.status === "pending" || a.status === "shortlisted") && !a.archived).length;
   const reviewCount = reviews.length;
   const activeOrdersCount = orders.filter((o) => o.status === "in_progress" || o.status === "review").length;
   const endingSoonCount = orders.filter((o) => o.dueDate === "Jun 15" || o.dueDate === "Jun 24").length;
@@ -58,15 +58,18 @@ function FreelancerDashboard() {
       title={`Welcome back, ${user?.fullName.split(" ")[0] ?? "there"}.`}
       actions={
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-          <button
-            onClick={() => {
-              toast.success("Opening service listing");
-              navigate({ to: "/profile" });
-            }}
+          <Link
+            to="/projects"
             className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
           >
-            <Plus className="size-4" /> New service listing
-          </button>
+            <Briefcase className="size-4" /> Find work
+          </Link>
+          <Link
+            to="/applications"
+            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border px-5 text-sm font-semibold hover:border-primary/20 sm:w-auto"
+          >
+            <FileText className="size-4" /> My applications
+          </Link>
           <div className="mobile-scroll-x flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
             {availabilityOptions.map((opt) => (
               <button
@@ -180,7 +183,7 @@ function FreelancerDashboard() {
                 Reviews ({reviewCount})
               </button>
               </div>
-              <Link to="/applications" className="shrink-0 text-xs font-medium text-primary hover:underline">View all</Link>
+              <Link to="/applications" className="shrink-0 text-xs font-medium text-primary hover:underline">My applications →</Link>
             </div>
           </div>
           <div className="max-h-96 divide-y divide-border overflow-y-auto">

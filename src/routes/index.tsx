@@ -89,6 +89,25 @@ function Landing() {
             <UniversalSearch />
           </div>
 
+          <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
+            <Link
+              to="/projects/create"
+              className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-left transition-default hover:border-primary/40"
+            >
+              <div className="font-mono text-[10px] uppercase tracking-widest text-primary">I want to hire</div>
+              <div className="font-display mt-2 text-lg font-bold">Post a project</div>
+              <p className="mt-1 text-sm text-muted-foreground">Get proposals from vetted freelancers within hours.</p>
+            </Link>
+            <Link
+              to="/projects"
+              className="rounded-xl border border-border bg-card p-5 text-left transition-default hover:border-primary/20"
+            >
+              <div className="font-mono text-[10px] uppercase tracking-widest text-primary">I want to work</div>
+              <div className="font-display mt-2 text-lg font-bold">Browse projects</div>
+              <p className="mt-1 text-sm text-muted-foreground">Find open contracts and submit tailored proposals.</p>
+            </Link>
+          </div>
+
           <div className="mt-14 grid grid-cols-2 gap-y-5 border-t border-border pt-8 md:grid-cols-4">
             {stats.map((s) => (
               <div key={s.label} className="text-center">
@@ -324,6 +343,12 @@ function Landing() {
               className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
             >
               Post a project
+            </Link>
+            <Link
+              to="/projects"
+              className="inline-flex h-10 items-center rounded-lg border border-border bg-surface px-5 text-sm font-semibold text-foreground transition-default hover:border-foreground/20 focus-ring"
+            >
+              Find work
             </Link>
             <Link
               to="/freelancers"

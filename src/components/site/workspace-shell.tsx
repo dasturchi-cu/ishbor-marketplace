@@ -13,6 +13,7 @@ import {
   User,
   Settings,
   FolderOpen,
+  Plus,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { SiteNav } from "./nav";
@@ -32,9 +33,11 @@ type NavItem = {
 const allNav: NavItem[] = [
   { to: "/dashboard", label: "Client", icon: LayoutDashboard, exact: true, roles: ["client"] },
   { to: "/my-projects", label: "My Projects", icon: FolderOpen, exact: false, roles: ["client"] },
+  { to: "/projects/create", label: "Post Project", icon: Plus, exact: false, roles: ["client"] },
   { to: "/dashboard/freelancer", label: "Freelancer", icon: Briefcase, exact: true, roles: ["freelancer"] },
+  { to: "/applications", label: "My Applications", icon: FileText, exact: false, roles: ["freelancer"] },
+  { to: "/projects", label: "Find Work", icon: Briefcase, exact: false, roles: ["freelancer"] },
   { to: "/orders", label: "Orders", icon: ClipboardList, exact: false, roles: ["client", "freelancer"] },
-  { to: "/applications", label: "Applications", icon: FileText, exact: false, roles: ["freelancer"] },
   { to: "/escrow", label: "Escrow", icon: Lock, exact: false, roles: ["client", "freelancer"] },
   { to: "/messages", label: "Messages", icon: MessageSquare, exact: false, roles: ["client", "freelancer"], badge: 3 },
   { to: "/notifications", label: "Notifications", icon: Bell, exact: false, roles: ["client", "freelancer"], badge: 3 },

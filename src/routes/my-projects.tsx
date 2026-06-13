@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useState } from "react";
 import { toast } from "sonner";
 import {
   Plus,
@@ -11,6 +11,7 @@ import {
   XCircle,
   Users,
   ChevronRight,
+  Eye,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
@@ -38,13 +39,27 @@ const statusLabels: Record<ProjectStatus, string> = {
   closed: "Closed",
 };
 
+const filterTabs = [
+  { key: "all", label: "All" },
+  { key: "draft", label: "Drafts" },
+  { key: "published", label: "Published" },
+  { key: "paused", label: "Paused" },
+  { key: "closed", label: "Closed" },
+] as const;
+
 function MyProjectsPage() {
   const { user } = useAuth();
+  const [tab, setTab] = useState<(typeof filterTabs)[number]["key"]>("all");
   const projects = useSyncExternalStore(
     subscribeProjects,
     () => getMyProjects(user!.id),
     () => getMyProjects(user!.id),
   );
+
+  const filtered =
+    tab === "all"
+      ? projects
+      : projects.filter((p) => (p.status ?? "published") === tab);
 
   return (
     <WorkspaceShell
@@ -55,10 +70,30 @@ function MyProjectsPage() {
           to="/projects/create"
           className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground sm:w-auto"
         >
-          <Plus className="size-4" /> Post a project
+          <Plus className="size-4" /> Post project
         </Link>
       }
     >
+      <div className="mb-6 flex flex-wrap gap-2">
+        {filterTabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            onClick={() => setTab(t.key)}
+            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-default ${
+              tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50"
+            }`}
+          >
+            {t.label}
+            <span className="ml-1.5 font-mono text-[10px] opacity-70">
+              {t.key === "all"
+                ? projects.length
+                : projects.filter((p) => (p.status ?? "published") === t.key).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
       {projects.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
@@ -73,9 +108,20 @@ function MyProjectsPage() {
             </Link>
           }
         />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={FolderOpen}
+          title={`No ${filterTabs.find((t) => t.key === tab)?.label.toLowerCase()} projects`}
+          description="Try another filter or post a new project."
+          action={
+            <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              Post project
+            </Link>
+          }
+        />
       ) : (
         <div className="divide-y divide-border rounded-2xl border border-border bg-card">
-          {projects.map((p) => (
+          {filtered.map((p) => (
             <ProjectRow key={p.id} project={p} />
           ))}
         </div>
@@ -134,7 +180,14 @@ function ProjectRow({ project: p }: { project: Project }) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:flex-col sm:items-end">
+        <div className="flex flex-wrap gap-2">
+          <Link
+            to="/projects/$slug"
+            params={{ slug: p.slug }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium hover:border-primary/20"
+          >
+            <Eye className="size-3.5" /> View
+          </Link>
           {status !== "closed" && (
             <Link
               to="/projects/create"
@@ -173,13 +226,6 @@ function ProjectRow({ project: p }: { project: Project }) {
           >
             <Trash2 className="size-3.5" /> Delete
           </button>
-          <Link
-            to="/projects/$slug"
-            params={{ slug: p.slug }}
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-          >
-            View detail <ChevronRight className="size-3.5" />
-          </Link>
         </div>
       </div>
     </div>
