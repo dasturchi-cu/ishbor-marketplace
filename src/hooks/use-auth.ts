@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import {
-  getSession,
+  getSessionSnapshot,
   subscribe,
   loginWithCredentials,
   logout,
@@ -11,7 +11,7 @@ import {
 export function useAuth() {
   const session = useSyncExternalStore(
     subscribe,
-    getSession,
+    getSessionSnapshot,
     () => null,
   ) as AuthSession | null;
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import {
   Star,
   MapPin,
@@ -9,6 +9,8 @@ import {
   ArrowRight,
   ChevronRight,
 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
@@ -55,6 +57,14 @@ export const Route = createFileRoute("/freelancers/$username")({
 
 function FreelancerProfile() {
   const { freelancer: f, freelancerReviews, freelancerServices } = Route.useLoaderData();
+  const navigate = useNavigate();
+  const [saved, setSaved] = useState(false);
+
+  const handleMessage = () => navigate({ to: "/messages" });
+  const handleSave = () => {
+    setSaved((v) => !v);
+    toast.success(saved ? "Removed from saved profiles" : "Profile saved");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,13 +138,17 @@ function FreelancerProfile() {
               <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
                 <button
                   type="button"
-                  className="touch-target inline-flex items-center justify-center rounded-lg border border-border bg-surface transition-default hover:border-primary/20 focus-ring"
-                  aria-label="Save profile"
+                  onClick={handleSave}
+                  className={`touch-target inline-flex items-center justify-center rounded-lg border bg-surface transition-default hover:border-primary/20 focus-ring ${
+                    saved ? "border-primary/30 text-primary" : "border-border"
+                  }`}
+                  aria-label={saved ? "Unsave profile" : "Save profile"}
                 >
-                  <Heart className="size-4" />
+                  <Heart className={`size-4 ${saved ? "fill-primary" : ""}`} />
                 </button>
                 <button
                   type="button"
+                  onClick={handleMessage}
                   className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
                 >
                   <MessageSquare className="size-4" /> Message
@@ -283,6 +297,7 @@ function FreelancerProfile() {
                 </Link>
                 <button
                   type="button"
+                  onClick={handleMessage}
                   className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
                 >
                   <MessageSquare className="size-3.5" /> Send message

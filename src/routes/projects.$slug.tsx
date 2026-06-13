@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, MapPin, Briefcase, Send, Lock, ChevronRight } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -9,7 +10,7 @@ import { freelancers, projects } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/projects/$slug")({
   loader: ({ params }) => {
-    const p = projects.find((x) => x.slug === params.slug) ?? projects[0];
+    const p = projects.find((x) => x.slug === params.slug);
     if (!p) throw notFound();
     return { project: p };
   },
@@ -203,7 +204,10 @@ function ProjectDetail() {
                     </div>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => setSubmitted(true)}
+                        onClick={() => {
+                          setSubmitted(true);
+                          toast.success("Proposal submitted", { description: `${p.client} will review your application.` });
+                        }}
                         disabled={!proposalText.trim()}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus-ring"
                       >

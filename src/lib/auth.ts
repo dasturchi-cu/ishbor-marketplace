@@ -58,6 +58,9 @@ const demoUsers: Record<string, { password: string; user: AuthUser }> = {
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
+let cachedRaw: string | null | undefined;
+let cachedSession: AuthSession | null | undefined;
+
 function notify() {
   listeners.forEach((l) => l());
 }
@@ -68,9 +71,20 @@ function readStorage(): AuthSession | null {
     const raw =
       localStorage.getItem(SESSION_STORAGE_KEY) ??
       sessionStorage.getItem(SESSION_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as AuthSession;
+    if (!raw) {
+      cachedRaw = null;
+      cachedSession = null;
+      return null;
+    }
+    if (raw === cachedRaw) {
+      return cachedSession ?? null;
+    }
+    cachedRaw = raw;
+    cachedSession = JSON.parse(raw) as AuthSession;
+    return cachedSession;
   } catch {
+    cachedRaw = null;
+    cachedSession = null;
     return null;
   }
 }
@@ -79,9 +93,16 @@ function writeStorage(session: AuthSession | null) {
   if (typeof window === "undefined") return;
   localStorage.removeItem(SESSION_STORAGE_KEY);
   sessionStorage.removeItem(SESSION_STORAGE_KEY);
-  if (!session) return;
+  if (!session) {
+    cachedRaw = null;
+    cachedSession = null;
+    return;
+  }
   const storage = session.remember ? localStorage : sessionStorage;
-  storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+  const raw = JSON.stringify(session);
+  storage.setItem(SESSION_STORAGE_KEY, raw);
+  cachedRaw = raw;
+  cachedSession = session;
 }
 
 export function subscribe(listener: Listener) {
@@ -90,6 +111,11 @@ export function subscribe(listener: Listener) {
 }
 
 export function getSession(): AuthSession | null {
+  return readStorage();
+}
+
+/** Stable snapshot for useSyncExternalStore — must return same reference until auth changes. */
+export function getSessionSnapshot(): AuthSession | null {
   return readStorage();
 }
 

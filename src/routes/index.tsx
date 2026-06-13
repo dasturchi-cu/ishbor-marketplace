@@ -125,6 +125,7 @@ function Landing() {
               <Link
                 key={c.slug}
                 to="/services"
+                search={{ category: c.slug }}
                 className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)]"
               >
                 <div className="font-display mb-4 text-2xl text-primary">{c.glyph}</div>

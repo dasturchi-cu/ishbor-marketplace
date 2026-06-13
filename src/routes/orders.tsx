@@ -6,7 +6,7 @@ import { GradientAvatar } from "@/components/site/avatar";
 import { OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 import { EmptyState } from "@/components/site/feedback";
 import { requireAuth } from "@/lib/guards";
-import { orders } from "@/lib/mock-data";
+import { orders, type Order } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/orders")({
   beforeLoad: requireAuth,
@@ -14,17 +14,17 @@ export const Route = createFileRoute("/orders")({
   component: OrdersPage,
 });
 
-const tabs = [
+const tabs: { key: string; label: string; statuses: Order["status"][] }[] = [
   { key: "active", label: "Active", statuses: ["in_progress"] },
   { key: "review", label: "In Review", statuses: ["review", "revision"] },
   { key: "completed", label: "Completed", statuses: ["completed"] },
   { key: "cancelled", label: "Cancelled", statuses: ["cancelled", "disputed"] },
-] as const;
+];
 
 function OrdersPage() {
-  const [tab, setTab] = useState<(typeof tabs)[number]["key"]>("active");
+  const [tab, setTab] = useState("active");
   const current = tabs.find((t) => t.key === tab)!;
-  const filtered = orders.filter((o) => current.statuses.includes(o.status as typeof o.status));
+  const filtered = orders.filter((o) => current.statuses.includes(o.status));
 
   return (
     <WorkspaceShell eyebrow="Workspace" title="Orders">

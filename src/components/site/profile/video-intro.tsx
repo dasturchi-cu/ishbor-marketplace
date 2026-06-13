@@ -1,10 +1,12 @@
 import { Play } from "lucide-react";
+import { toast } from "sonner";
 
 export function VideoIntro({ name, hue, duration }: { name: string; hue: number; duration: string }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <button
         type="button"
+        onClick={() => toast.success(`Playing ${name.split(" ")[0]}'s video introduction`)}
         className="group relative block w-full text-left focus-ring"
         aria-label={`Play video introduction from ${name}`}
       >

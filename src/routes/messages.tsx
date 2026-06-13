@@ -105,7 +105,10 @@ function FileBubble({ m }: { m: Message }) {
           <div className="truncate text-sm font-semibold">{m.file.name}</div>
           <div className="font-mono text-[11px] text-muted-foreground">{m.file.size}</div>
         </div>
-        <button className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs font-medium transition-default hover:border-primary/20 focus-ring">
+        <button
+          onClick={() => toast.info(`Opening ${m.file.name}`)}
+          className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
+        >
           Open
         </button>
       </div>
@@ -184,12 +187,19 @@ function EscrowNotification({ m }: { m: Message }) {
 function MessagesPage() {
   const [input, setInput] = useState("");
   const [showList, setShowList] = useState(true);
+  const [activeId, setActiveId] = useState(messages[0]!.id);
+  const [searchQuery, setSearchQuery] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
   const [escrowOpen, setEscrowOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [read, setRead] = useState(true);
+
+  const activeConversation = messages.find((m) => m.id === activeId) ?? messages[0]!;
+  const filteredMessages = messages.filter((m) =>
+    !searchQuery.trim() || m.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.snippet.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   return (
     <WorkspaceShell eyebrow="Inbox" title="Messages">
@@ -200,18 +210,23 @@ function MessagesPage() {
             <div className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
               <Search className="size-3.5 shrink-0 text-muted-foreground" />
               <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search conversations..."
                 className="min-h-11 w-full min-w-0 bg-transparent text-xs outline-none placeholder:text-muted-foreground/60"
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {messages.map((m, i) => (
+            {filteredMessages.map((m) => (
               <button
                 key={m.id}
-                onClick={() => setShowList(false)}
+                onClick={() => {
+                  setActiveId(m.id);
+                  setShowList(false);
+                }}
                 className={`touch-target flex w-full items-center gap-3 border-b border-border p-3 text-left transition-default hover:bg-secondary/30 ${
-                  i === 0 ? "bg-primary/5" : ""
+                  m.id === activeId ? "bg-primary/5" : ""
                 }`}
               >
                 <div className="relative shrink-0">
@@ -252,12 +267,12 @@ function MessagesPage() {
               >
                 <ChevronLeft className="size-4" />
               </button>
-              <GradientAvatar name="Nargiza Akhmedova" hue={250} size={36} />
+              <GradientAvatar name={activeConversation.name} hue={activeConversation.hue} size={36} />
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold">Nargiza Akhmedova</div>
+                <div className="truncate text-sm font-semibold">{activeConversation.name}</div>
                 <div className="font-mono flex items-center gap-1.5 text-[10px] text-success">
                   <span className="size-1.5 rounded-full bg-success" />
-                  Online {read ? "· Read" : "· Delivered"}
+                  {activeConversation.online ? "Online" : "Offline"} {read ? "· Read" : "· Delivered"}
                 </div>
               </div>
             </div>

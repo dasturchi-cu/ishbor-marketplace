@@ -27,6 +27,7 @@ export function LoginRequired({
         </Link>
         <Link
           to="/register"
+          search={{}}
           className="touch-target rounded-lg border border-border px-5 text-sm font-medium hover:border-primary/20"
         >
           Create account

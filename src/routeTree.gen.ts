@@ -13,12 +13,14 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ServicesRouteImport } from './routes/services'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -33,6 +35,7 @@ import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
@@ -71,6 +74,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -99,6 +107,11 @@ const ProjectsRoute = ProjectsRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrdersRoute = OrdersRouteImport.update({
@@ -170,6 +183,11 @@ const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => OnboardingRoute,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
@@ -271,12 +289,14 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
@@ -298,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRoutesByTo {
@@ -305,7 +326,6 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
@@ -313,12 +333,14 @@ export interface FileRoutesByTo {
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
@@ -340,6 +362,7 @@ export interface FileRoutesByTo {
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
 }
 export interface FileRoutesById {
@@ -357,12 +380,14 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
@@ -384,6 +409,7 @@ export interface FileRoutesById {
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRouteTypes {
@@ -402,12 +428,14 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/orders'
+    | '/privacy'
     | '/profile'
     | '/projects'
     | '/register'
     | '/reset-password'
     | '/services'
     | '/settings'
+    | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
@@ -429,6 +457,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/dashboard/'
     | '/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -436,7 +465,6 @@ export interface FileRouteTypes {
     | '/admin'
     | '/applications'
     | '/checkout'
-    | '/dashboard'
     | '/escrow'
     | '/forgot-password'
     | '/freelancers'
@@ -444,12 +472,14 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/orders'
+    | '/privacy'
     | '/profile'
     | '/projects'
     | '/register'
     | '/reset-password'
     | '/services'
     | '/settings'
+    | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
@@ -471,6 +501,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/dashboard'
     | '/onboarding'
   id:
     | '__root__'
@@ -487,12 +518,14 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/orders'
+    | '/privacy'
     | '/profile'
     | '/projects'
     | '/register'
     | '/reset-password'
     | '/services'
     | '/settings'
+    | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
@@ -514,6 +547,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/dashboard/'
     | '/onboarding/'
   fileRoutesById: FileRoutesById
 }
@@ -531,12 +565,14 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   OrdersRoute: typeof OrdersRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ProjectsRoute: typeof ProjectsRouteWithChildren
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ServicesRoute: typeof ServicesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   VerifyOtpRoute: typeof VerifyOtpRoute
   WalletRoute: typeof WalletRoute
@@ -572,6 +608,13 @@ declare module '@tanstack/react-router' {
       path: '/verify-email'
       fullPath: '/verify-email'
       preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -614,6 +657,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orders': {
@@ -713,6 +763,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/onboarding/'
       preLoaderRoute: typeof OnboardingIndexRouteImport
       parentRoute: typeof OnboardingRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/services/$slug': {
       id: '/services/$slug'
@@ -850,10 +907,12 @@ const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
 
 interface DashboardRouteChildren {
   DashboardFreelancerRoute: typeof DashboardFreelancerRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardFreelancerRoute: DashboardFreelancerRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -962,12 +1021,14 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   OrdersRoute: OrdersRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ProjectsRoute: ProjectsRouteWithChildren,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ServicesRoute: ServicesRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   VerifyOtpRoute: VerifyOtpRoute,
   WalletRoute: WalletRoute,

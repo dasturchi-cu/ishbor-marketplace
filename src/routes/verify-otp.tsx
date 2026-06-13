@@ -38,7 +38,7 @@ function VerifyOtpPage() {
     setError("");
     setTimeout(() => {
       setLoading(false);
-      navigate({ to: "/welcome" });
+      navigate({ to: "/welcome", search: {} });
     }, 800);
   };
 

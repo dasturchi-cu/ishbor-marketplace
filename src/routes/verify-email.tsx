@@ -53,7 +53,7 @@ function VerifyEmailPage() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Wrong email?{" "}
-        <Link to="/register" className="font-medium text-primary hover:underline">
+        <Link to="/register" search={{}} className="font-medium text-primary hover:underline">
           Go back
         </Link>
       </p>

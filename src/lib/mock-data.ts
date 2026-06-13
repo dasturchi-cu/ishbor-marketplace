@@ -218,6 +218,7 @@ export type EscrowRecord = {
 export type HiringLead = {
   id: string;
   name: string;
+  username: string;
   hue: number;
   title: string;
   stage: "reviewing" | "shortlisted" | "interview" | "offer";
@@ -578,11 +579,11 @@ export const escrowItems = [
 ];
 
 export const hiringPipeline: HiringLead[] = [
-  { id: "h1", name: "Nargiza Akhmedova", hue: 250, title: "Senior Brand Designer", stage: "shortlisted", project: "Fintech App Redesign", rate: 45, rating: 5.0 },
-  { id: "h2", name: "Azamat Usmanov", hue: 215, title: "Full Stack Engineer", stage: "interview", project: "Fintech App Redesign", rate: 65, rating: 4.97 },
-  { id: "h3", name: "Farrukh Saidov", hue: 210, title: "iOS Engineer", stage: "offer", project: "iOS App", rate: 55, rating: 4.98 },
-  { id: "h4", name: "Dilnoza Kim", hue: 270, title: "3D Artist", stage: "reviewing", project: "Series A Deck", rate: 38, rating: 4.92 },
-  { id: "h5", name: "Madina Azimova", hue: 290, title: "Growth Consultant", stage: "reviewing", project: "Growth Audit", rate: 80, rating: 4.95 },
+  { id: "h1", name: "Nargiza Akhmedova", username: "nargiza", hue: 250, title: "Senior Brand Designer", stage: "shortlisted", project: "Fintech App Redesign", rate: 45, rating: 5.0 },
+  { id: "h2", name: "Azamat Usmanov", username: "azamat", hue: 215, title: "Full Stack Engineer", stage: "interview", project: "Fintech App Redesign", rate: 65, rating: 4.97 },
+  { id: "h3", name: "Farrukh Saidov", username: "farrukh", hue: 210, title: "iOS Engineer", stage: "offer", project: "iOS App", rate: 55, rating: 4.98 },
+  { id: "h4", name: "Dilnoza Kim", username: "dilnoza", hue: 270, title: "3D Artist", stage: "reviewing", project: "Series A Deck", rate: 38, rating: 4.92 },
+  { id: "h5", name: "Madina Azimova", username: "madina", hue: 290, title: "Growth Consultant", stage: "reviewing", project: "Growth Audit", rate: 80, rating: 4.95 },
 ];
 
 const skillCategories: Record<string, string> = {

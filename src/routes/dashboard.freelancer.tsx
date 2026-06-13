@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Plus,
   TrendingUp,
@@ -10,22 +10,22 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 import { EmptyState } from "@/components/site/feedback";
 import { orders, applications, reviews } from "@/lib/mock-data";
-import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/dashboard/freelancer")({
-  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Freelancer Dashboard — Ishbor" }] }),
   component: FreelancerDashboard,
 });
 
 function FreelancerDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [availability, setAvailability] = useState<"available" | "busy" | "away">("available");
   const [activeTab, setActiveTab] = useState<"applications" | "reviews">("applications");
 
@@ -58,14 +58,23 @@ function FreelancerDashboard() {
       title={`Welcome back, ${user?.fullName.split(" ")[0] ?? "there"}.`}
       actions={
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-          <button className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
+          <button
+            onClick={() => {
+              toast.success("Opening service listing");
+              navigate({ to: "/profile" });
+            }}
+            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+          >
             <Plus className="size-4" /> New service listing
           </button>
           <div className="mobile-scroll-x flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
             {availabilityOptions.map((opt) => (
               <button
                 key={opt.key}
-                onClick={() => setAvailability(opt.key)}
+                onClick={() => {
+                  setAvailability(opt.key);
+                  toast.success(`Availability set to ${opt.label}`);
+                }}
                 className={`touch-target inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 text-xs font-medium transition-default focus-ring ${
                   availability === opt.key
                     ? "bg-primary text-primary-foreground"
@@ -123,7 +132,7 @@ function FreelancerDashboard() {
           </div>
           <div className="divide-y divide-border">
             {activeOrders.map((order) => (
-              <div key={order.id} className="p-5 transition-default hover:bg-secondary/20">
+              <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block p-5 transition-default hover:bg-secondary/20">
                 <div className="mb-3 flex items-center gap-3">
                   <GradientAvatar name={order.client} hue={order.clientHue} size={36} rounded="rounded-lg" />
                   <div className="min-w-0 flex-1">
@@ -145,7 +154,7 @@ function FreelancerDashboard() {
                   <span className="flex items-center gap-1"><Clock className="size-3" /> Due {order.dueDate}</span>
                   <span className="font-display text-sm font-semibold text-foreground">${order.amount.toLocaleString()}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </section>

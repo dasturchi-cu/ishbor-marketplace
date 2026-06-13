@@ -7,11 +7,11 @@ import { ServiceCardSkeleton, EmptyState } from "@/components/site/feedback";
 import { services, categories } from "@/lib/mock-data";
 import { usePageReady } from "@/hooks/use-page-ready";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
-import { filterServices, normalizeSearch } from "@/lib/marketplace";
+import { filterServices, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { Package } from "lucide-react";
 
 export const Route = createFileRoute("/services")({
-  validateSearch: (search) => normalizeSearch(search),
+  validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
   head: () => ({
     meta: [
       { title: "Services — Ishbor Marketplace" },

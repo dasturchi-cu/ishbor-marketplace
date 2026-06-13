@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Building2, Banknote, Download, ListFilter as Filter, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock } from "lucide-react";
@@ -19,9 +19,11 @@ export const Route = createFileRoute("/wallet")({
 const txFilters = ["All", "Incoming", "Outgoing", "Fees"];
 
 function WalletPage() {
+  const navigate = useNavigate();
   const [txFilter, setTxFilter] = useState("All");
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
 
   const filteredTx = transactions.filter((t) => {
     if (txFilter === "All") return true;
@@ -107,7 +109,7 @@ function WalletPage() {
         <div className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold">Payout methods</h3>
-            <button className="text-xs font-medium text-primary transition-default hover:opacity-80">Manage</button>
+            <button onClick={() => navigate({ to: "/settings" })} className="text-xs font-medium text-primary transition-default hover:opacity-80">Manage</button>
           </div>
           <ul className="space-y-2">
             {mockPaymentMethods.map((pm) => {
@@ -134,7 +136,13 @@ function WalletPage() {
               );
             })}
           </ul>
-          <button className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring">
+          <button
+            onClick={() => {
+              toast.success("Payout method added", { description: "Your new card will be verified within 24 hours." });
+              navigate({ to: "/settings" });
+            }}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring"
+          >
             <Plus className="size-4" /> Add payout method
           </button>
         </div>
@@ -208,10 +216,18 @@ function WalletPage() {
                 </button>
               ))}
             </div>
-            <button className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-medium transition-default hover:border-primary/20 focus-ring">
+            <button
+              onClick={() => setShowAdvancedFilter((v) => !v)}
+              className={`touch-target inline-flex items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-default focus-ring ${
+                showAdvancedFilter ? "border-primary/30 bg-primary/5 text-primary" : "border-border hover:border-primary/20"
+              }`}
+            >
               <Filter className="size-3.5" /> Filter
             </button>
-            <button className="touch-target text-xs font-medium text-primary transition-default hover:opacity-80">
+            <button
+              onClick={() => toast.success("Transactions exported", { description: "CSV download started." })}
+              className="touch-target text-xs font-medium text-primary transition-default hover:opacity-80"
+            >
               Export
             </button>
           </div>

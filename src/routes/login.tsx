@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components/auth/auth-field";
 import { GoogleButton } from "@/components/auth/google-button";
-import { getDefaultDashboard } from "@/lib/auth";
+import { loginWithCredentials } from "@/lib/auth";
 import { requireGuest } from "@/lib/guards";
 
 type LoginSearch = {
@@ -38,15 +38,25 @@ function LoginPage() {
     setLoading(true);
     setError("");
     setTimeout(() => {
-      const result = loginWithCredentials(email, password, remember);
-      setLoading(false);
-      if (!result.ok) {
-        setError(result.error);
-        return;
+      try {
+        const result = loginWithCredentials(email, password, remember);
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        toast.success("Welcome back!", { description: "Redirecting to your workspace." });
+        if (redirectTo) {
+          window.location.href = redirectTo;
+          return;
+        }
+        navigate({
+          to: result.session.user.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard",
+        });
+      } catch {
+        setError("Something went wrong. Please try again.");
+      } finally {
+        setLoading(false);
       }
-      toast.success("Welcome back!", { description: "Redirecting to your workspace." });
-      const dest = redirectTo || getDefaultDashboard(result.session.user.userType);
-      navigate({ to: dest as "/" });
     }, 400);
   };
 
@@ -54,7 +64,11 @@ function LoginPage() {
     const result = loginWithCredentials("nargiza@ishbor.uz", "demo1234", remember);
     if (result.ok) {
       toast.success("Signed in with Google");
-      navigate({ to: (redirectTo || getDefaultDashboard(result.session.user.userType)) as "/" });
+      if (redirectTo) {
+        window.location.href = redirectTo;
+        return;
+      }
+      navigate({ to: "/dashboard/freelancer" });
     }
   };
 
@@ -65,7 +79,7 @@ function LoginPage() {
       footer={
         <>
           Don&apos;t have an account?{" "}
-          <Link to="/register" className="font-medium text-primary hover:underline">
+          <Link to="/register" search={{}} className="font-medium text-primary hover:underline">
             Create one
           </Link>
         </>

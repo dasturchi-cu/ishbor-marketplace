@@ -6,11 +6,11 @@ import { CardSkeleton, EmptyState } from "@/components/site/feedback";
 import { freelancers } from "@/lib/mock-data";
 import { usePageReady } from "@/hooks/use-page-ready";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
-import { filterFreelancers, normalizeSearch } from "@/lib/marketplace";
+import { filterFreelancers, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { Users } from "lucide-react";
 
 export const Route = createFileRoute("/freelancers")({
-  validateSearch: (search) => normalizeSearch(search),
+  validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
   head: () => ({
     meta: [
       { title: "Find talent — Ishbor Marketplace" },

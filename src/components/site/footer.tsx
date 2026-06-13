@@ -72,10 +72,10 @@ export function SiteFooter() {
         <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-5 text-xs text-muted-foreground sm:flex-row sm:items-center">
           <div>(c) 2026 Ishbor Marketplace · Tashkent, Uzbekistan</div>
           <div className="flex items-center gap-5">
-            <Link to="/" className="transition-default hover:text-foreground">
+            <Link to="/terms" className="transition-default hover:text-foreground">
               Terms of trade
             </Link>
-            <Link to="/" className="transition-default hover:text-foreground">
+            <Link to="/privacy" className="transition-default hover:text-foreground">
               Privacy
             </Link>
             <span className="font-mono">UZ · EN · RU</span>

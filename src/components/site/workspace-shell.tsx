@@ -17,18 +17,29 @@ import type { ReactNode } from "react";
 import { SiteNav } from "./nav";
 import { useAuth } from "@/hooks/use-auth";
 
-const allNav = [
-  { to: "/dashboard", label: "Client", icon: LayoutDashboard, exact: true, roles: ["client"] as const },
-  { to: "/dashboard/freelancer", label: "Freelancer", icon: Briefcase, exact: true, roles: ["freelancer"] as const },
-  { to: "/orders", label: "Orders", icon: ClipboardList, exact: false, roles: ["client", "freelancer"] as const },
-  { to: "/applications", label: "Applications", icon: FileText, exact: false, roles: ["freelancer"] as const },
-  { to: "/escrow", label: "Escrow", icon: Lock, exact: false, roles: ["client", "freelancer"] as const },
-  { to: "/messages", label: "Messages", icon: MessageSquare, exact: false, roles: ["client", "freelancer"] as const, badge: 3 },
-  { to: "/notifications", label: "Notifications", icon: Bell, exact: false, roles: ["client", "freelancer"] as const, badge: 3 },
-  { to: "/wallet", label: "Wallet", icon: Wallet, exact: false, roles: ["client", "freelancer"] as const },
-  { to: "/profile", label: "Profile", icon: User, exact: false, roles: ["client", "freelancer"] as const },
-  { to: "/settings", label: "Settings", icon: Settings, exact: false, roles: ["client", "freelancer"] as const },
-  { to: "/admin", label: "Admin", icon: Shield, exact: false, roles: ["client", "freelancer"] as const },
+import type { UserType } from "@/lib/auth-constants";
+
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact: boolean;
+  roles: UserType[];
+  badge?: number;
+};
+
+const allNav: NavItem[] = [
+  { to: "/dashboard", label: "Client", icon: LayoutDashboard, exact: true, roles: ["client"] },
+  { to: "/dashboard/freelancer", label: "Freelancer", icon: Briefcase, exact: true, roles: ["freelancer"] },
+  { to: "/orders", label: "Orders", icon: ClipboardList, exact: false, roles: ["client", "freelancer"] },
+  { to: "/applications", label: "Applications", icon: FileText, exact: false, roles: ["freelancer"] },
+  { to: "/escrow", label: "Escrow", icon: Lock, exact: false, roles: ["client", "freelancer"] },
+  { to: "/messages", label: "Messages", icon: MessageSquare, exact: false, roles: ["client", "freelancer"], badge: 3 },
+  { to: "/notifications", label: "Notifications", icon: Bell, exact: false, roles: ["client", "freelancer"], badge: 3 },
+  { to: "/wallet", label: "Wallet", icon: Wallet, exact: false, roles: ["client", "freelancer"] },
+  { to: "/profile", label: "Profile", icon: User, exact: false, roles: ["client", "freelancer"] },
+  { to: "/settings", label: "Settings", icon: Settings, exact: false, roles: ["client", "freelancer"] },
+  { to: "/admin", label: "Admin", icon: Shield, exact: false, roles: ["client", "freelancer"] },
 ];
 
 export function WorkspaceShell({

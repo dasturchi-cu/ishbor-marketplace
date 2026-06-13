@@ -12,7 +12,43 @@ import { GradientAvatar } from "./avatar";
 
 import { useAuth } from "@/hooks/use-auth";
 
-import { getDefaultDashboard, getProfilePath } from "@/lib/auth";
+import type { AuthUser } from "@/lib/auth";
+
+function NavProfileLink({ user }: { user: AuthUser }) {
+  const avatar = (
+    <GradientAvatar name={user.fullName} hue={user.avatarHue} size={32} />
+  );
+
+  if (user.userType === "freelancer" && user.username) {
+    return (
+      <Link
+        to="/freelancers/$username"
+        params={{ username: user.username }}
+        className="touch-target ml-0.5 hidden sm:inline-flex"
+      >
+        {avatar}
+      </Link>
+    );
+  }
+
+  if (user.companySlug) {
+    return (
+      <Link
+        to="/clients/$company"
+        params={{ company: user.companySlug }}
+        className="touch-target ml-0.5 hidden sm:inline-flex"
+      >
+        {avatar}
+      </Link>
+    );
+  }
+
+  return (
+    <Link to="/profile" className="touch-target ml-0.5 hidden sm:inline-flex">
+      {avatar}
+    </Link>
+  );
+}
 
 
 
@@ -174,11 +210,7 @@ export function SiteNav() {
 
               </Link>
 
-              <Link to={user ? getProfilePath(user) : "/profile"} className="touch-target ml-0.5 hidden sm:inline-flex">
-
-                <GradientAvatar name={user?.fullName ?? "You"} hue={user?.avatarHue ?? 250} size={32} />
-
-              </Link>
+              <NavProfileLink user={user!} />
 
             </>
 
@@ -190,7 +222,7 @@ export function SiteNav() {
 
               <Link
 
-                to={getDefaultDashboard(user!.userType) as "/"}
+                to={user!.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard"}
 
                 className="touch-target hidden items-center rounded-lg px-3 text-sm font-medium text-muted-foreground transition-default hover:text-foreground sm:inline-flex"
 
@@ -322,7 +354,7 @@ export function SiteNav() {
 
             {isAuthenticated ? (
               <>
-                <Link to={getDefaultDashboard(user!.userType) as "/"} onClick={() => setOpen(false)} className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
+                <Link to={user!.userType === "freelancer" ? "/dashboard/freelancer" : "/dashboard"} onClick={() => setOpen(false)} className="touch-target flex items-center rounded-lg px-3 text-sm font-medium text-foreground hover:bg-secondary">
                   Dashboard
                 </Link>
                 <button onClick={() => { logout(); setOpen(false); }} className="touch-target flex w-full items-center gap-2 rounded-lg px-3 text-sm font-medium text-muted-foreground hover:bg-secondary">

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Bell,
@@ -43,7 +43,7 @@ const actionMap: Record<string, { primary?: string; secondary?: string }> = {
   escrow: { primary: "View escrow", secondary: "Dismiss" },
 };
 
-const filters = ["All", "Payments", "Proposals", "Reviews", "System"] as const;
+const filters = ["All", "Payments", "Proposals", "Reviews", "Messages", "Escrow", "System"] as const;
 type Filter = typeof filters[number];
 
 const filterMap: Record<Filter, string | null> = {
@@ -51,12 +51,24 @@ const filterMap: Record<Filter, string | null> = {
   Payments: "payment",
   Proposals: "proposal",
   Reviews: "review",
+  Messages: "message",
+  Escrow: "escrow",
   System: "system",
+};
+
+const actionRoutes: Record<string, string> = {
+  payment: "/wallet",
+  proposal: "/applications",
+  review: "/profile",
+  system: "/settings",
+  message: "/messages",
+  escrow: "/escrow/ew1",
 };
 
 const unreadCount = notifications.filter((n) => !n.read).length;
 
 function NotificationsPage() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [allRead, setAllRead] = useState(false);
@@ -76,6 +88,7 @@ function NotificationsPage() {
     const Icon = cfg.icon;
     const actions = actionMap[n.kind] ?? {};
     const isUnread = !n.read && !allRead;
+    const primaryRoute = actionRoutes[n.kind];
 
     return (
       <div
@@ -117,13 +130,19 @@ function NotificationsPage() {
           {(actions.primary || actions.secondary) && (
             <div className="mt-3 flex items-center gap-2">
               {actions.primary && (
-                <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-default hover:border-primary/20 hover:text-primary focus-ring">
+                <button
+                  onClick={() => primaryRoute && navigate({ to: primaryRoute })}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-default hover:border-primary/20 hover:text-primary focus-ring"
+                >
                   {actions.primary}
                   <ChevronRight className="size-3" />
                 </button>
               )}
               {actions.secondary && (
-                <button className="text-xs font-medium text-muted-foreground transition-default hover:text-foreground">
+                <button
+                  onClick={() => setDismissed((s) => new Set([...s, n.id]))}
+                  className="text-xs font-medium text-muted-foreground transition-default hover:text-foreground"
+                >
                   {actions.secondary}
                 </button>
               )}

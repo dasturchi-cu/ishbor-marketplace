@@ -1,17 +1,26 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, User, Briefcase } from "lucide-react";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components/auth/auth-field";
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/password-strength";
 import { saveOnboardingState, type UserType } from "@/lib/auth-constants";
+import { loginWithCredentials } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
+type RegisterSearch = {
+  type?: UserType;
+};
+
 export const Route = createFileRoute("/register")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    type: (search.type as UserType) || undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): RegisterSearch => {
+    if (search.type === "client" || search.type === "freelancer") {
+      return { type: search.type };
+    }
+    return {};
+  },
   head: () => ({
     meta: [{ title: "Create account — Ishbor" }, { name: "description", content: "Join Ishbor as a client or freelancer" }],
   }),
@@ -31,6 +40,15 @@ function RegisterPage() {
 
   const strength = getPasswordStrength(password);
   const canSubmit = terms && strength >= 2 && name && email && password.length >= 8;
+
+  const handleGoogle = () => {
+    saveOnboardingState({ userType, email: email || "nargiza@ishbor.uz", fullName: name || "Nargiza Akhmedova" });
+    const result = loginWithCredentials("nargiza@ishbor.uz", "demo1234", true);
+    if (result.ok) {
+      toast.success("Account created with Google");
+      navigate({ to: "/onboarding" });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +97,7 @@ function RegisterPage() {
         ))}
       </div>
 
-      <GoogleButton label="Sign up with Google" />
+      <GoogleButton label="Sign up with Google" onClick={handleGoogle} />
       <AuthDivider />
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -147,13 +165,13 @@ function RegisterPage() {
           />
           <span className="text-sm leading-relaxed text-muted-foreground">
             I agree to the{" "}
-            <a href="#" className="font-medium text-primary hover:underline">
+            <Link to="/terms" className="font-medium text-primary hover:underline">
               Terms of Service
-            </a>{" "}
+            </Link>{" "}
             and{" "}
-            <a href="#" className="font-medium text-primary hover:underline">
+            <Link to="/privacy" className="font-medium text-primary hover:underline">
               Privacy Policy
-            </a>
+            </Link>
           </span>
         </label>
 

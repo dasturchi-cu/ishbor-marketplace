@@ -7,10 +7,10 @@ import { CardSkeleton, EmptyState } from "@/components/site/feedback";
 import { projects, categories } from "@/lib/mock-data";
 import { usePageReady } from "@/hooks/use-page-ready";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
-import { filterProjects, normalizeSearch } from "@/lib/marketplace";
+import { filterProjects, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 
 export const Route = createFileRoute("/projects")({
-  validateSearch: (search) => normalizeSearch(search),
+  validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
   head: () => ({
     meta: [
       { title: "Projects — Ishbor Marketplace" },
@@ -52,6 +52,7 @@ function ProjectsPage() {
             </div>
             <Link
               to="/register"
+              search={{}}
               className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:w-auto"
             >
               <Plus className="size-4" /> Post a project
