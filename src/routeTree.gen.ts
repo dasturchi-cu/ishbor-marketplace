@@ -9,24 +9,53 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as FreelancersRouteImport } from './routes/freelancers'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
+import { Route as OnboardingSkillsRouteImport } from './routes/onboarding.skills'
+import { Route as OnboardingProfileRouteImport } from './routes/onboarding.profile'
+import { Route as OnboardingPortfolioRouteImport } from './routes/onboarding.portfolio'
+import { Route as OnboardingCompanyRouteImport } from './routes/onboarding.company'
+import { Route as OnboardingCategoriesRouteImport } from './routes/onboarding.categories'
 import { Route as FreelancersUsernameRouteImport } from './routes/freelancers.$username'
 import { Route as DashboardFreelancerRouteImport } from './routes/dashboard.freelancer'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyOtpRoute = VerifyOtpRouteImport.update({
+  id: '/verify-otp',
+  path: '/verify-otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesRoute = ServicesRouteImport.update({
@@ -34,9 +63,24 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -49,9 +93,19 @@ const MessagesRoute = MessagesRouteImport.update({
   path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FreelancersRoute = FreelancersRouteImport.update({
   id: '/freelancers',
   path: '/freelancers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -74,6 +128,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OnboardingRoute,
+} as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -83,6 +142,31 @@ const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ProjectsRoute,
+} as any)
+const OnboardingSkillsRoute = OnboardingSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingProfileRoute = OnboardingProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingPortfolioRoute = OnboardingPortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingCompanyRoute = OnboardingCompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const OnboardingCategoriesRoute = OnboardingCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const FreelancersUsernameRoute = FreelancersUsernameRouteImport.update({
   id: '/$username',
@@ -100,32 +184,59 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
+  '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/projects': typeof ProjectsRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
+  '/welcome': typeof WelcomeRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/onboarding/categories': typeof OnboardingCategoriesRoute
+  '/onboarding/company': typeof OnboardingCompanyRoute
+  '/onboarding/portfolio': typeof OnboardingPortfolioRoute
+  '/onboarding/profile': typeof OnboardingProfileRoute
+  '/onboarding/skills': typeof OnboardingSkillsRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
+  '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/projects': typeof ProjectsRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
+  '/welcome': typeof WelcomeRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/onboarding/categories': typeof OnboardingCategoriesRoute
+  '/onboarding/company': typeof OnboardingCompanyRoute
+  '/onboarding/portfolio': typeof OnboardingPortfolioRoute
+  '/onboarding/profile': typeof OnboardingProfileRoute
+  '/onboarding/skills': typeof OnboardingSkillsRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/onboarding': typeof OnboardingIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -133,16 +244,30 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
+  '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/projects': typeof ProjectsRouteWithChildren
+  '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/services': typeof ServicesRouteWithChildren
+  '/verify-email': typeof VerifyEmailRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
+  '/welcome': typeof WelcomeRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
   '/freelancers/$username': typeof FreelancersUsernameRoute
+  '/onboarding/categories': typeof OnboardingCategoriesRoute
+  '/onboarding/company': typeof OnboardingCompanyRoute
+  '/onboarding/portfolio': typeof OnboardingPortfolioRoute
+  '/onboarding/profile': typeof OnboardingProfileRoute
+  '/onboarding/skills': typeof OnboardingSkillsRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/onboarding/': typeof OnboardingIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,48 +276,89 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout'
     | '/dashboard'
+    | '/forgot-password'
     | '/freelancers'
+    | '/login'
     | '/messages'
     | '/notifications'
+    | '/onboarding'
     | '/projects'
+    | '/register'
+    | '/reset-password'
     | '/services'
+    | '/verify-email'
+    | '/verify-otp'
     | '/wallet'
+    | '/welcome'
     | '/dashboard/freelancer'
     | '/freelancers/$username'
+    | '/onboarding/categories'
+    | '/onboarding/company'
+    | '/onboarding/portfolio'
+    | '/onboarding/profile'
+    | '/onboarding/skills'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/onboarding/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
     | '/checkout'
     | '/dashboard'
+    | '/forgot-password'
     | '/freelancers'
+    | '/login'
     | '/messages'
     | '/notifications'
     | '/projects'
+    | '/register'
+    | '/reset-password'
     | '/services'
+    | '/verify-email'
+    | '/verify-otp'
     | '/wallet'
+    | '/welcome'
     | '/dashboard/freelancer'
     | '/freelancers/$username'
+    | '/onboarding/categories'
+    | '/onboarding/company'
+    | '/onboarding/portfolio'
+    | '/onboarding/profile'
+    | '/onboarding/skills'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/onboarding'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/checkout'
     | '/dashboard'
+    | '/forgot-password'
     | '/freelancers'
+    | '/login'
     | '/messages'
     | '/notifications'
+    | '/onboarding'
     | '/projects'
+    | '/register'
+    | '/reset-password'
     | '/services'
+    | '/verify-email'
+    | '/verify-otp'
     | '/wallet'
+    | '/welcome'
     | '/dashboard/freelancer'
     | '/freelancers/$username'
+    | '/onboarding/categories'
+    | '/onboarding/company'
+    | '/onboarding/portfolio'
+    | '/onboarding/profile'
+    | '/onboarding/skills'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/onboarding/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -200,21 +366,50 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   FreelancersRoute: typeof FreelancersRouteWithChildren
+  LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
   NotificationsRoute: typeof NotificationsRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
   ProjectsRoute: typeof ProjectsRouteWithChildren
+  RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ServicesRoute: typeof ServicesRouteWithChildren
+  VerifyEmailRoute: typeof VerifyEmailRoute
+  VerifyOtpRoute: typeof VerifyOtpRoute
   WalletRoute: typeof WalletRoute
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallet': {
       id: '/wallet'
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-otp': {
+      id: '/verify-otp'
+      path: '/verify-otp'
+      fullPath: '/verify-otp'
+      preLoaderRoute: typeof VerifyOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services': {
@@ -224,11 +419,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects': {
       id: '/projects'
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -245,11 +461,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/freelancers': {
       id: '/freelancers'
       path: '/freelancers'
       fullPath: '/freelancers'
       preLoaderRoute: typeof FreelancersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -280,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/onboarding/': {
+      id: '/onboarding/'
+      path: '/'
+      fullPath: '/onboarding/'
+      preLoaderRoute: typeof OnboardingIndexRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
     '/services/$slug': {
       id: '/services/$slug'
       path: '/$slug'
@@ -293,6 +530,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$slug'
       preLoaderRoute: typeof ProjectsSlugRouteImport
       parentRoute: typeof ProjectsRoute
+    }
+    '/onboarding/skills': {
+      id: '/onboarding/skills'
+      path: '/skills'
+      fullPath: '/onboarding/skills'
+      preLoaderRoute: typeof OnboardingSkillsRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/profile': {
+      id: '/onboarding/profile'
+      path: '/profile'
+      fullPath: '/onboarding/profile'
+      preLoaderRoute: typeof OnboardingProfileRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/portfolio': {
+      id: '/onboarding/portfolio'
+      path: '/portfolio'
+      fullPath: '/onboarding/portfolio'
+      preLoaderRoute: typeof OnboardingPortfolioRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/company': {
+      id: '/onboarding/company'
+      path: '/company'
+      fullPath: '/onboarding/company'
+      preLoaderRoute: typeof OnboardingCompanyRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/categories': {
+      id: '/onboarding/categories'
+      path: '/categories'
+      fullPath: '/onboarding/categories'
+      preLoaderRoute: typeof OnboardingCategoriesRouteImport
+      parentRoute: typeof OnboardingRoute
     }
     '/freelancers/$username': {
       id: '/freelancers/$username'
@@ -335,6 +607,28 @@ const FreelancersRouteWithChildren = FreelancersRoute._addFileChildren(
   FreelancersRouteChildren,
 )
 
+interface OnboardingRouteChildren {
+  OnboardingCategoriesRoute: typeof OnboardingCategoriesRoute
+  OnboardingCompanyRoute: typeof OnboardingCompanyRoute
+  OnboardingPortfolioRoute: typeof OnboardingPortfolioRoute
+  OnboardingProfileRoute: typeof OnboardingProfileRoute
+  OnboardingSkillsRoute: typeof OnboardingSkillsRoute
+  OnboardingIndexRoute: typeof OnboardingIndexRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingCategoriesRoute: OnboardingCategoriesRoute,
+  OnboardingCompanyRoute: OnboardingCompanyRoute,
+  OnboardingPortfolioRoute: OnboardingPortfolioRoute,
+  OnboardingProfileRoute: OnboardingProfileRoute,
+  OnboardingSkillsRoute: OnboardingSkillsRoute,
+  OnboardingIndexRoute: OnboardingIndexRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
+
 interface ProjectsRouteChildren {
   ProjectsSlugRoute: typeof ProjectsSlugRoute
 }
@@ -364,12 +658,20 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   FreelancersRoute: FreelancersRouteWithChildren,
+  LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
   NotificationsRoute: NotificationsRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
   ProjectsRoute: ProjectsRouteWithChildren,
+  RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ServicesRoute: ServicesRouteWithChildren,
+  VerifyEmailRoute: VerifyEmailRoute,
+  VerifyOtpRoute: VerifyOtpRoute,
   WalletRoute: WalletRoute,
+  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
