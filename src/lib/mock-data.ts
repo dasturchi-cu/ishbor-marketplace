@@ -98,6 +98,10 @@ export type Service = {
   faqs?: ServiceFaq[];
 };
 
+export type ProjectStatus = "draft" | "published" | "paused" | "closed";
+
+export type ProjectAttachment = { name: string; size: string };
+
 export type Project = {
   id: string;
   slug: string;
@@ -120,6 +124,10 @@ export type Project = {
   escrowProtected: boolean;
   scope: string[];
   experienceLevel: "Entry" | "Intermediate" | "Expert";
+  status?: ProjectStatus;
+  ownerUserId?: string;
+  clientSlug?: string;
+  attachments?: ProjectAttachment[];
 };
 
 export type Order = {
@@ -153,6 +161,10 @@ export type Application = {
   coverNote: string;
   proposalAmount?: number;
   deliveryTime?: string;
+  freelancerUsername?: string;
+  freelancerName?: string;
+  freelancerHue?: number;
+  orderId?: string;
 };
 
 export type ClientCompany = {

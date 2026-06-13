@@ -7,11 +7,12 @@ import { GradientAvatar } from "@/components/site/avatar";
 import { ReleaseFundsModal, EscrowActionModal } from "@/components/site/modals";
 import { requireAuth } from "@/lib/guards";
 import { getEscrowWorkflow } from "@/lib/mock-data";
+import { getEscrowWorkflowById } from "@/lib/escrow-store";
 
 export const Route = createFileRoute("/escrow/$id")({
   beforeLoad: requireAuth,
   loader: ({ params }) => {
-    const escrow = getEscrowWorkflow(params.id);
+    const escrow = getEscrowWorkflowById(params.id) ?? getEscrowWorkflow(params.id);
     if (!escrow) throw notFound();
     return { escrow };
   },

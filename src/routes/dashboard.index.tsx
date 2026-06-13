@@ -27,7 +27,7 @@ function ClientDashboard() {
       eyebrow="Client workspace"
       title={`Good evening, ${user?.fullName.split(" ")[0] ?? "there"}.`}
       actions={
-        <Link to="/projects" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
+        <Link to="/projects/create" className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto">
           <Plus className="size-4" />
           Post a project
         </Link>

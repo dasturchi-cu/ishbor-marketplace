@@ -234,7 +234,7 @@ export function SiteNav() {
 
               <Link
 
-                to="/projects"
+                to="/projects/create"
 
                 className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:px-4"
 
@@ -268,7 +268,7 @@ export function SiteNav() {
 
               <Link
 
-                to="/projects"
+                to="/projects/create"
 
                 className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:px-4"
 
@@ -377,7 +377,7 @@ export function SiteNav() {
 
               <Link
 
-                to="/projects"
+                to="/projects/create"
 
                 onClick={() => setOpen(false)}
 

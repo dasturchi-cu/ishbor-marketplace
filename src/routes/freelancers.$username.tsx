@@ -9,8 +9,10 @@ import {
   ArrowRight,
   ChevronRight,
   Share2,
+  UserPlus,
+  X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -36,6 +38,9 @@ import {
   enrichFreelancer,
   getFreelancerReviews,
 } from "@/lib/mock-data";
+import { useAuth } from "@/hooks/use-auth";
+import { getMyProjects, subscribeProjects } from "@/lib/projects-store";
+import { createDirectHireApplication } from "@/lib/applications-store";
 
 export const Route = createFileRoute("/freelancers/$username")({
   loader: ({ params }) => {
@@ -60,9 +65,16 @@ export const Route = createFileRoute("/freelancers/$username")({
 function FreelancerProfile() {
   const { freelancer: f, freelancerReviews, freelancerServices } = Route.useLoaderData();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [saved, setSaved] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [selectedProject, setSelectedProject] = useState("");
+  const myProjects = useSyncExternalStore(
+    subscribeProjects,
+    () => (user ? getMyProjects(user.id).filter((p) => p.status === "published") : []),
+    () => [],
+  );
 
-  const handleMessage = () => navigate({ to: "/messages" });
   const handleSave = () => {
     setSaved((v) => !v);
     toast.success(saved ? "Removed from saved profiles" : "Profile saved");
@@ -75,6 +87,41 @@ function FreelancerProfile() {
     }
     await navigator.clipboard.writeText(url);
     toast.success("Profile link copied");
+  };
+
+  const handleInvite = () => {
+    if (!isAuthenticated || user?.userType !== "client") {
+      toast.info("Sign in as a client to invite freelancers");
+      navigate({ to: "/login", search: { redirect: `/freelancers/${f.username}` } });
+      return;
+    }
+    if (myProjects.length === 0) {
+      toast.info("Post a project first", { description: "Create a project before inviting freelancers." });
+      navigate({ to: "/projects/create" });
+      return;
+    }
+    setSelectedProject(myProjects[0]!.slug);
+    setShowInvite(true);
+  };
+
+  const confirmInvite = () => {
+    const project = myProjects.find((p) => p.slug === selectedProject);
+    if (!project || !user) return;
+    const { orderId } = createDirectHireApplication({
+      projectTitle: project.title,
+      projectSlug: project.slug,
+      client: user.company ?? user.fullName,
+      clientHue: user.avatarHue,
+      clientSlug: user.companySlug,
+      budget: project.budget,
+      category: project.category,
+      freelancerUsername: f.username,
+      freelancerName: f.name,
+      freelancerHue: f.hue,
+    });
+    setShowInvite(false);
+    toast.success("Invitation sent", { description: "Order created. Fund escrow to activate the hire." });
+    navigate({ to: "/checkout", search: { type: "order", order: orderId } });
   };
 
   return (
@@ -168,13 +215,12 @@ function FreelancerProfile() {
                 >
                   <Heart className={`size-4 ${saved ? "fill-primary" : ""}`} />
                 </button>
-                <button
-                  type="button"
-                  onClick={handleMessage}
+                <Link
+                  to="/messages"
                   className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
                 >
                   <MessageSquare className="size-4" /> Message
-                </button>
+                </Link>
                 <Link
                   to="/checkout"
                   search={{ type: "hire" as const, freelancer: f.username }}
@@ -182,6 +228,15 @@ function FreelancerProfile() {
                 >
                   Hire — ${f.rate}/h <ArrowRight className="size-3.5" />
                 </Link>
+                {user?.userType === "client" && (
+                  <button
+                    type="button"
+                    onClick={handleInvite}
+                    className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-5 text-sm font-semibold text-primary transition-default hover:border-primary/50 focus-ring sm:w-auto"
+                  >
+                    <UserPlus className="size-4" /> Invite to project
+                  </button>
+                )}
               </div>
             </div>
 
@@ -319,13 +374,21 @@ function FreelancerProfile() {
                 >
                   Hire freelancer <ArrowRight className="size-3.5" />
                 </Link>
-                <button
-                  type="button"
-                  onClick={handleMessage}
+                {user?.userType === "client" && (
+                  <button
+                    type="button"
+                    onClick={handleInvite}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 py-2.5 text-sm font-semibold text-primary transition-default hover:border-primary/50 focus-ring"
+                  >
+                    <UserPlus className="size-3.5" /> Invite to project
+                  </button>
+                )}
+                <Link
+                  to="/messages"
                   className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-surface py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
                 >
                   <MessageSquare className="size-3.5" /> Send message
-                </button>
+                </Link>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -401,6 +464,45 @@ function FreelancerProfile() {
           </aside>
         </div>
       </div>
+
+      {showInvite && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display text-lg font-bold">Invite to project</h3>
+              <button onClick={() => setShowInvite(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="size-5" />
+              </button>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Select a project to invite {f.name}. An order will be created for escrow funding.
+            </p>
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="mt-4 w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/30"
+            >
+              {myProjects.map((p) => (
+                <option key={p.slug} value={p.slug}>{p.title} — ${p.budget.toLocaleString()}</option>
+              ))}
+            </select>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={confirmInvite}
+                className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              >
+                Invite & create order
+              </button>
+              <button
+                onClick={() => setShowInvite(false)}
+                className="rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:border-primary/20"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <SiteFooter />
     </div>

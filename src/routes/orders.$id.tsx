@@ -5,11 +5,13 @@ import { GradientAvatar } from "@/components/site/avatar";
 import { OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 import { requireAuth } from "@/lib/guards";
 import { getOrder, getEscrowByOrderId } from "@/lib/mock-data";
+import { getOrderById } from "@/lib/orders-store";
+import { getEscrowByOrderId as getStoredEscrowByOrderId } from "@/lib/escrow-store";
 
 export const Route = createFileRoute("/orders/$id")({
   beforeLoad: requireAuth,
   loader: ({ params }) => {
-    const order = getOrder(params.id);
+    const order = getOrderById(params.id) ?? getOrder(params.id);
     if (!order) throw notFound();
     return { order };
   },
@@ -21,7 +23,7 @@ export const Route = createFileRoute("/orders/$id")({
 
 function OrderDetailPage() {
   const { order } = Route.useLoaderData();
-  const escrow = getEscrowByOrderId(order.id);
+  const escrow = getStoredEscrowByOrderId(order.id) ?? getEscrowByOrderId(order.id);
 
   return (
     <WorkspaceShell

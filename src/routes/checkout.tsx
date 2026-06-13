@@ -1,24 +1,53 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Lock, ShieldCheck, CircleCheck as CheckCircle2, ArrowRight, ChevronLeft, CreditCard, Building2, Clock, Star } from "lucide-react";
+import { Lock, ShieldCheck, CircleCheck as CheckCircle2, ArrowRight, ChevronLeft, CreditCard, Building2, Clock } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
-import { EscrowShield, LevelBadge, VerifiedIdentityBadge, CompactTrustRow } from "@/components/site/trust";
+import { EscrowShield, LevelBadge, CompactTrustRow, TrustGuaranteeCard } from "@/components/site/trust";
 import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { freelancers, services } from "@/lib/mock-data";
 import { requireAuth } from "@/lib/guards";
+import { getOrderById, fundOrderEscrow } from "@/lib/orders-store";
+import { fundEscrow, getEscrowByOrderId } from "@/lib/escrow-store";
+import { getProjectBySlug } from "@/lib/projects-store";
+import { createOrder } from "@/lib/orders-store";
+import { createEscrowFromOrder } from "@/lib/escrow-store";
+import { useAuth } from "@/hooks/use-auth";
+
+type CheckoutSearch = {
+  type?: "service" | "hire" | "order";
+  service?: string;
+  freelancer?: string;
+  project?: string;
+  order?: string;
+  package?: "essential" | "premium" | "enterprise";
+};
 
 export const Route = createFileRoute("/checkout")({
   beforeLoad: requireAuth,
+  validateSearch: (search: Record<string, unknown>): CheckoutSearch => ({
+    type:
+      search.type === "hire" ? "hire"
+      : search.type === "service" ? "service"
+      : search.type === "order" ? "order"
+      : undefined,
+    service: typeof search.service === "string" ? search.service : undefined,
+    freelancer: typeof search.freelancer === "string" ? search.freelancer : undefined,
+    project: typeof search.project === "string" ? search.project : undefined,
+    order: typeof search.order === "string" ? search.order : undefined,
+    package:
+      search.package === "essential" || search.package === "premium" || search.package === "enterprise"
+        ? search.package
+        : undefined,
+  }),
   head: () => ({ meta: [{ title: "Checkout — Ishbor" }] }),
   component: CheckoutPage,
 });
 
-type CheckoutType = "service" | "hire";
-
 function CheckoutPage() {
-  const search = Route.useSearch() as { type?: CheckoutType; service?: string; freelancer?: string; package?: string };
+  const search = Route.useSearch();
+  const { user } = useAuth();
   const type = search.type ?? "service";
 
   const service = type === "service" && search.service
@@ -27,13 +56,47 @@ function CheckoutPage() {
   const freelancer = search.freelancer
     ? freelancers.find((f) => f.username === search.freelancer)
     : null;
+  const project = search.project ? getProjectBySlug(search.project) : null;
+  const existingOrder = search.order ? getOrderById(search.order) : null;
 
   const [step, setStep] = useState<"review" | "payment" | "confirmed">("review");
   const [paymentMethod, setPaymentMethod] = useState<"humo" | "uzcard" | "swift">("humo");
+  const [confirmedOrderId, setConfirmedOrderId] = useState("o1");
+  const [confirmedEscrowId, setConfirmedEscrowId] = useState("ew1");
 
-  const total = type === "hire" && freelancer ? freelancer.rate * 20 : service?.price ?? 0;
+  const total =
+    type === "order" && existingOrder ? existingOrder.amount
+    : type === "hire" && project && freelancer ? project.budget
+    : type === "hire" && freelancer ? freelancer.rate * 20
+    : service?.price ?? 0;
   const platformFee = Math.round(total * 0.05);
   const escrowAmount = total;
+
+  const handleConfirmPayment = () => {
+    if (type === "order" && existingOrder) {
+      fundOrderEscrow(existingOrder.id);
+      const escrow = fundEscrow(existingOrder.id) ?? getEscrowByOrderId(existingOrder.id);
+      setConfirmedOrderId(existingOrder.id);
+      setConfirmedEscrowId(escrow?.id ?? "ew1");
+    } else if (type === "hire" && freelancer && user) {
+      const order = createOrder({
+        title: project ? project.title : `Hire ${freelancer.name}`,
+        client: user.company ?? user.fullName,
+        clientHue: user.avatarHue,
+        clientSlug: user.companySlug,
+        freelancer: freelancer.name,
+        freelancerHue: freelancer.hue,
+        freelancerUsername: freelancer.username,
+        amount: total,
+      });
+      const escrow = createEscrowFromOrder(order);
+      fundOrderEscrow(order.id);
+      fundEscrow(order.id);
+      setConfirmedOrderId(order.id);
+      setConfirmedEscrowId(escrow.id);
+    }
+    setStep("confirmed");
+  };
 
   if (step === "confirmed") {
     return (
@@ -56,10 +119,10 @@ function CheckoutPage() {
             </p>
           </div>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/orders/o1" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring">
+            <Link to="/orders/$id" params={{ id: confirmedOrderId }} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring">
               View order <ArrowRight className="size-3.5" />
             </Link>
-            <Link to="/escrow/ew1" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+            <Link to="/escrow/$id" params={{ id: confirmedEscrowId }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
               View escrow
             </Link>
             <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
@@ -96,7 +159,7 @@ function CheckoutPage() {
         <ConversionFlowBanner
           title="Client hiring path"
           steps={CLIENT_HIRE_FLOW}
-          currentStep={step === "confirmed" ? "order" : step === "payment" ? "checkout" : "checkout"}
+          currentStep="checkout"
           nextHint={
             step === "payment"
               ? "Complete payment to fund escrow. Your order activates once funds are secured."
@@ -141,7 +204,12 @@ function CheckoutPage() {
                     <div className="flex items-center gap-3">
                       <GradientAvatar name={service?.seller ?? freelancer?.name ?? ""} hue={service?.sellerHue ?? freelancer?.hue ?? 250} size={40} rounded="rounded-lg" />
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-display text-sm font-bold">{type === "service" ? service?.title : `Hire ${freelancer?.name}`}</h3>
+                        <h3 className="font-display text-sm font-bold">
+                          {type === "order" && existingOrder ? existingOrder.title
+                            : type === "service" ? service?.title
+                            : project ? `Hire for ${project.title}`
+                            : `Hire ${freelancer?.name}`}
+                        </h3>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-xs text-muted-foreground">{service?.seller ?? freelancer?.name}</span>
                           {service && <LevelBadge level={service.sellerLevel} className="!px-1.5 !py-0 !text-[8px]" />}
@@ -150,51 +218,73 @@ function CheckoutPage() {
                       </div>
                     </div>
                     {service && (
-                      <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
-                        <div>
-                          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Package</div>
-                          <div className="font-semibold">Premium</div>
-                        </div>
-                        <div>
-                          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Delivery</div>
-                          <div className="font-semibold">{service.delivery}</div>
-                        </div>
-                        <div>
-                          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Revisions</div>
-                          <div className="font-semibold">4</div>
-                        </div>
+                      <div className="mt-4 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-elevated/40">
+                        {[
+                          { label: "Package", value: "Premium" },
+                          { label: "Delivery", value: service.delivery },
+                          { label: "Revisions", value: "4" },
+                        ].map((item) => (
+                          <div key={item.label} className="px-4 py-3 text-center sm:text-left">
+                            <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{item.label}</div>
+                            <div className="mt-1 text-sm font-semibold">{item.value}</div>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    {freelancer && (
-                      <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
-                        <div>
-                          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Rate</div>
-                          <div className="font-semibold">${freelancer.rate}/h</div>
-                        </div>
-                        <div>
-                          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Est. hours</div>
-                          <div className="font-semibold">20h</div>
-                        </div>
-                        <div>
-                          <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Response</div>
-                          <div className="font-semibold">{freelancer.responseTime}</div>
-                        </div>
+                    {type === "order" && existingOrder && (
+                      <div className="mt-4 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-elevated/40">
+                        {[
+                          { label: "Freelancer", value: existingOrder.freelancer },
+                          { label: "Amount", value: `$${existingOrder.amount.toLocaleString()}` },
+                          { label: "Due", value: existingOrder.dueDate },
+                        ].map((item) => (
+                          <div key={item.label} className="px-4 py-3 text-center sm:text-left">
+                            <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{item.label}</div>
+                            <div className="mt-1 text-sm font-semibold">{item.value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {freelancer && type === "hire" && (
+                      <div className="mt-4 grid grid-cols-3 divide-x divide-border overflow-hidden rounded-xl border border-border bg-elevated/40">
+                        {[
+                          { label: "Rate", value: `$${freelancer.rate}/h` },
+                          { label: project ? "Project budget" : "Est. hours", value: project ? `$${project.budget.toLocaleString()}` : "20h" },
+                          { label: "Response", value: freelancer.responseTime },
+                        ].map((item) => (
+                          <div key={item.label} className="px-4 py-3 text-center sm:text-left">
+                            <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{item.label}</div>
+                            <div className="mt-1 text-sm font-semibold">{item.value}</div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Trust guarantees */}
-                <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3">
-                    <EscrowShield size="sm" />
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-success/15 bg-success/5 px-4 py-3">
-                    <VerifiedIdentityBadge />
-                  </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-border bg-primary/8 px-4 py-3 text-xs text-primary">
-                    <Clock className="size-4" /> 24h dispute resolution
-                  </div>
+                <div className="mt-6 grid grid-cols-1 gap-3 min-[520px]:grid-cols-3">
+                  <TrustGuaranteeCard
+                    icon={Lock}
+                    label="Escrow protected"
+                    detail="Payment held until approval"
+                    tone="primary"
+                    layout="stacked"
+                  />
+                  <TrustGuaranteeCard
+                    icon={ShieldCheck}
+                    label="Identity verified"
+                    detail="Seller credentials checked"
+                    tone="success"
+                    layout="stacked"
+                  />
+                  <TrustGuaranteeCard
+                    icon={Clock}
+                    label="24h resolution"
+                    detail="Dispute support guaranteed"
+                    tone="primary"
+                    layout="stacked"
+                  />
                 </div>
 
                 <div className="mt-8 flex items-center gap-3">
@@ -262,7 +352,7 @@ function CheckoutPage() {
 
                 <div className="mt-8 flex items-center gap-3">
                   <button
-                    onClick={() => setStep("confirmed")}
+                    onClick={handleConfirmPayment}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring"
                   >
                     <Lock className="size-4" /> Pay ${escrowAmount.toLocaleString()}

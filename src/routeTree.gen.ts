@@ -24,6 +24,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MyProjectsRouteImport } from './routes/my-projects'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FreelancersRouteImport } from './routes/freelancers'
@@ -44,6 +45,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as ApplicationsIndexRouteImport } from './routes/applications.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as ProjectsCreateRouteImport } from './routes/projects.create'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as OnboardingTeamSizeRouteImport } from './routes/onboarding.team-size'
@@ -152,6 +154,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyProjectsRoute = MyProjectsRouteImport.update({
+  id: '/my-projects',
+  path: '/my-projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
@@ -251,6 +258,11 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ServicesRoute,
+} as any)
+const ProjectsCreateRoute = ProjectsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => ProjectsRoute,
 } as any)
 const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
   id: '/$slug',
@@ -424,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/freelancers': typeof FreelancersRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
+  '/my-projects': typeof MyProjectsRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
@@ -469,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
+  '/projects/create': typeof ProjectsCreateRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/applications/': typeof ApplicationsIndexRoute
@@ -488,6 +502,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
+  '/my-projects': typeof MyProjectsRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -529,6 +544,7 @@ export interface FileRoutesByTo {
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
+  '/projects/create': typeof ProjectsCreateRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/admin': typeof AdminIndexRoute
   '/applications': typeof ApplicationsIndexRoute
@@ -554,6 +570,7 @@ export interface FileRoutesById {
   '/freelancers': typeof FreelancersRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
+  '/my-projects': typeof MyProjectsRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/orders': typeof OrdersRouteWithChildren
@@ -599,6 +616,7 @@ export interface FileRoutesById {
   '/onboarding/team-size': typeof OnboardingTeamSizeRoute
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
+  '/projects/create': typeof ProjectsCreateRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/applications/': typeof ApplicationsIndexRoute
@@ -625,6 +643,7 @@ export interface FileRouteTypes {
     | '/freelancers'
     | '/login'
     | '/messages'
+    | '/my-projects'
     | '/notifications'
     | '/onboarding'
     | '/orders'
@@ -670,6 +689,7 @@ export interface FileRouteTypes {
     | '/onboarding/team-size'
     | '/orders/$id'
     | '/projects/$slug'
+    | '/projects/create'
     | '/services/$slug'
     | '/admin/'
     | '/applications/'
@@ -689,6 +709,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/messages'
+    | '/my-projects'
     | '/notifications'
     | '/privacy'
     | '/profile'
@@ -730,6 +751,7 @@ export interface FileRouteTypes {
     | '/onboarding/team-size'
     | '/orders/$id'
     | '/projects/$slug'
+    | '/projects/create'
     | '/services/$slug'
     | '/admin'
     | '/applications'
@@ -754,6 +776,7 @@ export interface FileRouteTypes {
     | '/freelancers'
     | '/login'
     | '/messages'
+    | '/my-projects'
     | '/notifications'
     | '/onboarding'
     | '/orders'
@@ -799,6 +822,7 @@ export interface FileRouteTypes {
     | '/onboarding/team-size'
     | '/orders/$id'
     | '/projects/$slug'
+    | '/projects/create'
     | '/services/$slug'
     | '/admin/'
     | '/applications/'
@@ -824,6 +848,7 @@ export interface RootRouteChildren {
   FreelancersRoute: typeof FreelancersRouteWithChildren
   LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
+  MyProjectsRoute: typeof MyProjectsRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRouteWithChildren
   OrdersRoute: typeof OrdersRouteWithChildren
@@ -947,6 +972,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-projects': {
+      id: '/my-projects'
+      path: '/my-projects'
+      fullPath: '/my-projects'
+      preLoaderRoute: typeof MyProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messages': {
@@ -1088,6 +1120,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/services/$slug'
       preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof ServicesRoute
+    }
+    '/projects/create': {
+      id: '/projects/create'
+      path: '/create'
+      fullPath: '/projects/create'
+      preLoaderRoute: typeof ProjectsCreateRouteImport
+      parentRoute: typeof ProjectsRoute
     }
     '/projects/$slug': {
       id: '/projects/$slug'
@@ -1478,11 +1517,13 @@ const OrdersRouteWithChildren =
 
 interface ProjectsRouteChildren {
   ProjectsSlugRoute: typeof ProjectsSlugRoute
+  ProjectsCreateRoute: typeof ProjectsCreateRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const ProjectsRouteChildren: ProjectsRouteChildren = {
   ProjectsSlugRoute: ProjectsSlugRoute,
+  ProjectsCreateRoute: ProjectsCreateRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
@@ -1515,6 +1556,7 @@ const rootRouteChildren: RootRouteChildren = {
   FreelancersRoute: FreelancersRouteWithChildren,
   LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
+  MyProjectsRoute: MyProjectsRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRouteWithChildren,
   OrdersRoute: OrdersRouteWithChildren,

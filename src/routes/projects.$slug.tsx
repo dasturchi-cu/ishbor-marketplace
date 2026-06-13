@@ -1,24 +1,39 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, Send, Lock, ChevronRight } from "lucide-react";
+import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, Send, Lock, ChevronRight, UserCheck, X } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield, LevelBadge } from "@/components/site/trust";
 import { ConversionFlowBanner, FREELANCER_HIRE_FLOW } from "@/components/site/conversion-flow";
-import { createApplication } from "@/lib/applications-store";
-import { freelancers, projects } from "@/lib/mock-data";
+import {
+  createApplication,
+  getApplicationsByProjectSlug,
+  acceptApplication,
+  updateApplicationStatus,
+  subscribeApplications,
+} from "@/lib/applications-store";
+import { getProjectBySlug, subscribeProjects, isProjectOwner } from "@/lib/projects-store";
+import { getSession } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
+import { freelancers } from "@/lib/mock-data";
 
-type ProjectSearch = { proposal?: boolean };
+type ProjectSearch = { proposal?: boolean; published?: string };
 
 export const Route = createFileRoute("/projects/$slug")({
   validateSearch: (search: Record<string, unknown>): ProjectSearch => ({
     proposal: search.proposal === true || search.proposal === "true",
+    published: typeof search.published === "string" ? search.published : undefined,
   }),
   loader: ({ params }) => {
-    const p = projects.find((x) => x.slug === params.slug);
+    const p = getProjectBySlug(params.slug);
     if (!p) throw notFound();
+    if (p.status === "draft" || p.status === "paused" || p.status === "closed") {
+      const session = typeof window !== "undefined" ? getSession() : null;
+      const isOwner = session && p.ownerUserId === session.user.id;
+      if (!isOwner) throw notFound();
+    }
     return { project: p };
   },
   head: ({ loaderData }) => ({
@@ -34,8 +49,18 @@ export const Route = createFileRoute("/projects/$slug")({
 
 function ProjectDetail() {
   const { project: p } = Route.useLoaderData();
-  const { proposal: openProposal } = Route.useSearch();
+  const { proposal: openProposal, published } = Route.useSearch();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isOwner = user ? isProjectOwner(p.slug, user.id) : false;
+  const [showPublishedBanner, setShowPublishedBanner] = useState(!!published);
+  const applications = useSyncExternalStore(
+    subscribeApplications,
+    () => getApplicationsByProjectSlug(p.slug),
+    () => getApplicationsByProjectSlug(p.slug),
+  );
+  useSyncExternalStore(subscribeProjects, () => getProjectBySlug(p.slug), () => getProjectBySlug(p.slug));
+
   const [showProposal, setShowProposal] = useState(false);
   const [proposalText, setProposalText] = useState("");
   const [proposalRate, setProposalRate] = useState("");
@@ -47,7 +72,21 @@ function ProjectDetail() {
     if (openProposal) setShowProposal(true);
   }, [openProposal]);
 
+  const openProposalForm = () => {
+    if (!getSession()) {
+      toast.info("Sign in to submit a proposal");
+      navigate({ to: "/login", search: { redirect: `/projects/${p.slug}?proposal=true` } });
+      return;
+    }
+    setShowProposal(true);
+  };
+
   const handleSubmit = () => {
+    if (!getSession()) {
+      toast.error("Sign in required", { description: "Sign in as a freelancer to submit proposals." });
+      navigate({ to: "/login", search: { redirect: `/projects/${p.slug}?proposal=true` } });
+      return;
+    }
     const app = createApplication({
       projectTitle: p.title,
       projectSlug: p.slug,
@@ -62,18 +101,54 @@ function ProjectDetail() {
     setCreatedAppId(app.id);
     setSubmitted(true);
     toast.success("Application created", { description: "Your proposal is now under client review." });
-    setTimeout(() => {
-      navigate({ to: "/applications/$id", params: { id: app.id } });
-    }, 1800);
+    navigate({ to: "/applications/$id", params: { id: app.id } });
   };
 
   const canSubmit = proposalText.trim() && proposalRate.trim() && proposalDuration.trim();
+  const canPropose = !isOwner && (!p.status || p.status === "published");
+
+  const handleAccept = (appId: string) => {
+    const result = acceptApplication(appId);
+    if (!result) {
+      toast.error("Could not accept application");
+      return;
+    }
+    toast.success("Freelancer accepted", { description: "Order created. Fund escrow to start work." });
+    navigate({ to: "/checkout", search: { type: "order", order: result.orderId } });
+  };
+
+  const handleReject = (appId: string) => {
+    updateApplicationStatus(appId, "rejected");
+    toast.success("Proposal rejected");
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {showPublishedBanner && (
+          <div className="mb-6 flex items-center justify-between rounded-2xl border border-success/20 bg-success/5 p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="size-5 text-success" />
+              <div>
+                <div className="font-display text-sm font-bold text-success">Project published successfully</div>
+                <p className="text-xs text-muted-foreground">Freelancers can now view and submit proposals.</p>
+              </div>
+            </div>
+            <button onClick={() => setShowPublishedBanner(false)} className="text-muted-foreground hover:text-foreground">
+              <X className="size-4" />
+            </button>
+          </div>
+        )}
+
+        {isOwner && (
+          <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+            <span className="text-sm font-medium">You own this project</span>
+            <Link to="/my-projects" className="text-xs font-medium text-primary hover:underline">Manage in My Projects</Link>
+            <Link to="/projects/create" search={{ edit: p.slug }} className="text-xs font-medium text-primary hover:underline">Edit project</Link>
+          </div>
+        )}
         <nav className="font-mono mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Link to="/projects">Projects</Link>
           <span>/</span>
@@ -176,9 +251,78 @@ function ProjectDetail() {
 
             {/* Proposal form */}
             <section className="mt-10">
-              {!showProposal ? (
+              {isOwner ? (
+                <section className="rounded-2xl border border-border bg-card overflow-hidden">
+                  <div className="border-b border-border px-6 py-4">
+                    <h2 className="font-display text-lg font-bold">Proposals ({applications.length})</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Review applications, accept a freelancer, and fund escrow to start the order.
+                    </p>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {applications.length === 0 ? (
+                      <p className="p-6 text-sm text-muted-foreground">No proposals yet. Share your project to attract talent.</p>
+                    ) : (
+                      applications.map((app) => (
+                        <div key={app.id} className="p-6">
+                          <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <GradientAvatar name={app.freelancerName ?? "Freelancer"} hue={app.freelancerHue ?? 250} size={40} />
+                              <div>
+                                <div className="font-display text-sm font-semibold">{app.freelancerName ?? "Freelancer"}</div>
+                                <div className="text-xs text-muted-foreground">${(app.proposalAmount ?? app.budget).toLocaleString()} · {app.deliveryTime}</div>
+                              </div>
+                            </div>
+                            <span className={`rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest ${
+                              app.status === "accepted" ? "bg-success/10 text-success" :
+                              app.status === "rejected" ? "bg-destructive/10 text-destructive" :
+                              "bg-secondary text-muted-foreground"
+                            }`}>{app.status}</span>
+                          </div>
+                          <p className="mt-3 text-sm text-muted-foreground">{app.coverNote}</p>
+                          {app.status === "pending" || app.status === "shortlisted" ? (
+                            <div className="mt-4 flex flex-wrap gap-2">
+                              <button
+                                onClick={() => handleAccept(app.id)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                              >
+                                <UserCheck className="size-3.5" /> Accept & create order
+                              </button>
+                              <button
+                                onClick={() => handleReject(app.id)}
+                                className="rounded-lg border border-border px-4 py-2 text-xs font-medium hover:border-primary/20"
+                              >
+                                Reject
+                              </button>
+                              {app.freelancerUsername && (
+                                <Link
+                                  to="/freelancers/$username"
+                                  params={{ username: app.freelancerUsername }}
+                                  className="rounded-lg border border-border px-4 py-2 text-xs font-medium hover:border-primary/20"
+                                >
+                                  View profile
+                                </Link>
+                              )}
+                            </div>
+                          ) : app.status === "accepted" && app.orderId ? (
+                            <Link
+                              to="/checkout"
+                              search={{ type: "order", order: app.orderId }}
+                              className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                            >
+                              Fund escrow <ArrowRight className="size-3" />
+                            </Link>
+                          ) : null}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </section>
+              ) : !canPropose ? (
+                <p className="text-sm text-muted-foreground">This project is not accepting proposals.</p>
+              ) : !showProposal ? (
                 <button
-                  onClick={() => setShowProposal(true)}
+                  onClick={openProposalForm}
                   className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring"
                 >
                   <Send className="size-4" /> Submit a proposal
