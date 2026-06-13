@@ -145,7 +145,7 @@ export function UserTypeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "w-full rounded-2xl border p-5 text-left transition-default focus-ring",
+        "w-full rounded-2xl border p-5 text-left transition-default hover-lift focus-ring",
         selected
           ? "border-primary bg-primary/5 ring-2 ring-primary/20"
           : "border-border bg-card hover:border-primary/30",

@@ -157,7 +157,7 @@ function RegisterPage() {
           </span>
         </label>
 
-        <AuthButton type="submit" disabled={!canSubmit || loading}>
+        <AuthButton type="submit" disabled={!canSubmit || loading} loading={loading}>
           {loading
             ? "Creating account…"
             : userType === "client"

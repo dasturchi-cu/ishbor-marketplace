@@ -104,7 +104,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-b border-border py-16">
+      <section className="section-y border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between">
             <div>
@@ -139,7 +139,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-b border-border py-16">
+      <section className="section-y border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
@@ -224,7 +224,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-b border-border py-16">
+      <section className="section-y border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
@@ -248,7 +248,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-b border-border py-16">
+      <section className="section-y border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
@@ -272,7 +272,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="border-b border-border py-16">
+      <section className="section-y border-b border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 text-center">
             <div className="eyebrow mb-2">Trusted by builders</div>
@@ -309,7 +309,7 @@ function Landing() {
         </div>
       </section>
 
-      <section className="py-20">
+      <section className="section-y">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="font-display text-balance text-3xl font-extrabold tracking-tight sm:text-5xl">
             Start hiring <span className="text-primary">today</span>.

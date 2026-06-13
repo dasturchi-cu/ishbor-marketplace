@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
+import { EmptyState } from "@/components/site/feedback";
 import { notifications } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/notifications")({
@@ -224,15 +225,11 @@ function NotificationsPage() {
         )}
 
         {visible.length === 0 && (
-          <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-secondary">
-              <Bell className="size-6 text-muted-foreground" />
-            </div>
-            <div>
-              <div className="font-semibold">All caught up</div>
-              <div className="mt-1 text-sm text-muted-foreground">No notifications in this category.</div>
-            </div>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="All caught up"
+            description="No notifications in this category. We'll let you know when something needs your attention."
+          />
         )}
       </div>
 

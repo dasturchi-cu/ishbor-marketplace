@@ -329,6 +329,50 @@
   transition-duration: 200ms;
 }
 
+/* Phase 8 — Launch polish */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-secondary) 0%,
+    color-mix(in oklab, var(--color-secondary) 60%, var(--color-elevated)) 50%,
+    var(--color-secondary) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.hover-lift {
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: var(--ease-out-expo);
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+@utility section-y {
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+  @media (min-width: 640px) {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-shimmer,
+  .animate-pulse-subtle,
+  .skeleton,
+  .stagger-children > * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+}
+
 /* Mobile utilities — Phase 7 */
 @utility touch-target {
   min-height: 2.75rem;

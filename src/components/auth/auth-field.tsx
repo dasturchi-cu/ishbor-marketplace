@@ -1,5 +1,6 @@
 import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { LoadingSpinner } from "@/components/site/feedback";
 
 export const authInputClass =
   "w-full rounded-xl border border-input bg-card py-3 text-sm text-foreground shadow-sm transition-default placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20";
@@ -52,21 +53,24 @@ export function AuthButton({
   children,
   variant = "primary",
   className,
+  loading,
   ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost"; loading?: boolean }) {
   return (
     <button
       className={cn(
-        "inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-default focus-ring disabled:cursor-not-allowed disabled:opacity-50",
+        "touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition-default focus-ring disabled:cursor-not-allowed disabled:opacity-50",
         variant === "primary" &&
-          "bg-primary text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.25)] hover:opacity-90",
+          "bg-primary text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.25)] hover:opacity-90 active:scale-[0.99]",
         variant === "secondary" &&
           "border border-input bg-card text-foreground shadow-sm hover:border-primary/30 hover:bg-elevated/50",
         variant === "ghost" && "text-muted-foreground hover:text-foreground",
         className,
       )}
+      disabled={loading || props.disabled}
       {...props}
     >
+      {loading && <LoadingSpinner size="sm" />}
       {children}
     </button>
   );

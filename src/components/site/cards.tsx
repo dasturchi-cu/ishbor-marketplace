@@ -9,7 +9,7 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
     <Link
       to="/freelancers/$username"
       params={{ username: f.username }}
-      className="group block rounded-2xl border border-border bg-card p-5 transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]"
+      className="group block rounded-2xl border border-border bg-card p-5 transition-default hover-lift hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]"
     >
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
@@ -85,7 +85,7 @@ export function ServiceCard({ s }: { s: Service }) {
     <Link
       to="/services/$slug"
       params={{ slug: s.slug }}
-      className="group block overflow-hidden rounded-2xl border border-border bg-card transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]"
+      className="group block overflow-hidden rounded-2xl border border-border bg-card transition-default hover-lift hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]"
     >
       <div
         className="relative aspect-[5/3] w-full"
@@ -147,7 +147,7 @@ export function ServiceCard({ s }: { s: Service }) {
 
 export function ProjectCard({ p }: { p: Project }) {
   return (
-    <div className="group rounded-2xl border border-border bg-card p-5 transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]">
+    <div className="group rounded-2xl border border-border bg-card p-5 transition-default hover-lift hover:border-primary/20 hover:shadow-[0_16px_48px_-12px_oklch(0.546_0.185_257/0.12)]">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-2">

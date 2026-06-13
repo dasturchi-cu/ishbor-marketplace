@@ -8,6 +8,8 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { Toaster } from "sonner";
+import { AlertTriangle, SearchX } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -16,17 +18,20 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
+        <div className="mx-auto mb-5 inline-flex size-14 items-center justify-center rounded-2xl border border-border bg-primary/8 text-primary">
+          <SearchX className="size-6" aria-hidden />
+        </div>
         <div className="font-mono mb-3 text-[11px] uppercase tracking-[0.22em] text-primary">
           Lost on the Silk Road
         </div>
         <h1 className="font-display text-6xl font-extrabold tracking-tight">404</h1>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           This page has wandered off the trade route.
         </p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
+            className="touch-target inline-flex items-center justify-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
           >
             Return to Ishbor
           </Link>
@@ -46,11 +51,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
+        <div className="mx-auto mb-5 inline-flex size-14 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/8 text-destructive">
+          <AlertTriangle className="size-6" aria-hidden />
+        </div>
         <h1 className="font-display text-2xl font-semibold tracking-tight">
           Something broke
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          We're on it. Try again or head back home.
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          We&apos;re on it. Try again or head back home.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -58,13 +66,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
               router.invalidate();
               reset();
             }}
-            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
+            className="touch-target rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
           >
             Try again
           </button>
           <Link
             to="/"
-            className="rounded-lg border border-border bg-surface px-5 py-2.5 text-sm font-medium transition-default hover:border-foreground/20 focus-ring"
+            className="touch-target rounded-lg border border-border bg-surface px-5 text-sm font-medium transition-default hover:border-foreground/20 focus-ring"
           >
             Go home
           </Link>
@@ -134,6 +142,20 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          classNames: {
+            toast: "font-sans border border-border bg-card text-foreground shadow-lg",
+            title: "font-semibold text-sm",
+            description: "text-muted-foreground text-xs",
+            success: "border-success/20",
+            error: "border-destructive/20",
+          },
+        }}
+        closeButton
+        richColors
+      />
     </QueryClientProvider>
   );
 }

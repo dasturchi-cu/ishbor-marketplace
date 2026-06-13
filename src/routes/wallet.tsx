@@ -4,6 +4,7 @@ import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Build
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield } from "@/components/site/trust";
+import { InlineBanner } from "@/components/site/feedback";
 import { transactions, escrowItems } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/wallet")({
@@ -181,16 +182,13 @@ function WalletPage() {
       </section>
 
       {/* Security notice */}
-      <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-        <div>
-          <span className="font-semibold">Bank-grade protection.</span>{" "}
-          <span className="text-muted-foreground">
-            All funds are escrow-protected and held in segregated accounts at Ipoteka-bank.
-            Withdrawals are verified via 2FA.
-          </span>
-        </div>
-      </div>
+      <InlineBanner variant="info" icon={ShieldCheck} className="mt-4">
+        <span className="font-semibold">Bank-grade protection.</span>{" "}
+        <span className="text-muted-foreground">
+          All funds are escrow-protected and held in segregated accounts at Ipoteka-bank.
+          Withdrawals are verified via 2FA.
+        </span>
+      </InlineBanner>
 
       {/* Transactions */}
       <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">

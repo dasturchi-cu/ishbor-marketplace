@@ -25,7 +25,7 @@ function OnboardingHiringGoalsPage() {
 
   const handleContinue = () => {
     saveOnboardingState({ hiringGoals: goals });
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/welcome", search: { setup: "complete" } });
   };
 
   return (

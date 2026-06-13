@@ -3,7 +3,9 @@ import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { ServiceCard } from "@/components/site/cards";
+import { ServiceCardSkeleton } from "@/components/site/feedback";
 import { services, categories } from "@/lib/mock-data";
+import { usePageReady } from "@/hooks/use-page-ready";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -16,6 +18,8 @@ export const Route = createFileRoute("/services")({
 });
 
 function ServicesPage() {
+  const ready = usePageReady();
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
@@ -69,9 +73,9 @@ function ServicesPage() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 stagger-children">
-          {[...services, ...services].map((s, i) => (
-            <ServiceCard key={i} s={s} />
-          ))}
+          {!ready
+            ? Array.from({ length: 8 }).map((_, i) => <ServiceCardSkeleton key={i} />)
+            : [...services, ...services].map((s, i) => <ServiceCard key={i} s={s} />)}
         </div>
       </section>
 

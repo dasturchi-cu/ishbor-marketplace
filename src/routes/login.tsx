@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components/auth/auth-field";
@@ -25,6 +26,7 @@ function LoginPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
+      toast.success("Welcome back!", { description: "Redirecting to your dashboard." });
       navigate({ to: "/dashboard" });
     }, 600);
   };
@@ -106,7 +108,7 @@ function LoginPage() {
           <span className="text-sm text-muted-foreground">Remember me for 30 days</span>
         </label>
 
-        <AuthButton type="submit" disabled={loading}>
+        <AuthButton type="submit" disabled={loading} loading={loading}>
           {loading ? "Signing in…" : "Sign in"}
         </AuthButton>
       </form>

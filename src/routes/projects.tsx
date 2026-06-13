@@ -3,7 +3,9 @@ import { Search, SlidersHorizontal, Plus } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { ProjectCard } from "@/components/site/cards";
+import { CardSkeleton } from "@/components/site/feedback";
 import { projects } from "@/lib/mock-data";
+import { usePageReady } from "@/hooks/use-page-ready";
 
 export const Route = createFileRoute("/projects")({
   head: () => ({
@@ -18,6 +20,8 @@ export const Route = createFileRoute("/projects")({
 const tabs = ["All", "Design", "Development", "Strategy", "Architecture", "Legal", "Marketing"];
 
 function ProjectsPage() {
+  const ready = usePageReady();
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
@@ -71,9 +75,9 @@ function ProjectsPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="grid gap-4 lg:grid-cols-2 stagger-children">
-          {[...projects, ...projects].map((p, i) => (
-            <ProjectCard key={i} p={p} />
-          ))}
+          {!ready
+            ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
+            : [...projects, ...projects].map((p, i) => <ProjectCard key={i} p={p} />)}
         </div>
       </section>
 

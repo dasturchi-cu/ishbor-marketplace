@@ -89,9 +89,52 @@ export function EscrowShield({ size = "sm", className = "" }: { size?: "sm" | "m
   const sizes = { sm: "gap-1.5 px-2.5 py-1 text-[10px]", md: "gap-2 px-3 py-1.5 text-xs", lg: "gap-2.5 px-4 py-2 text-sm" };
   const iconSizes = { sm: "size-3", md: "size-3.5", lg: "size-4" };
   return (
-    <span className={cn("inline-flex items-center rounded-full bg-primary/8 font-semibold uppercase tracking-widest text-primary", sizes[size], className)}>
-      <Lock className={iconSizes[size]} />
+    <span className={cn("inline-flex items-center rounded-full bg-primary/8 font-semibold uppercase tracking-widest text-primary ring-1 ring-primary/10", sizes[size], className)}>
+      <Lock className={iconSizes[size]} aria-hidden />
       Escrow Protected
+    </span>
+  );
+}
+
+export function EscrowFundedBadge({ className = "" }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-widest text-success ring-1 ring-success/15", className)}>
+      <CheckCircle2 className="size-2.5" aria-hidden />
+      Funded
+    </span>
+  );
+}
+
+type OrderStatus = "in_progress" | "review" | "completed";
+
+const orderStatusConfig: Record<OrderStatus, { label: string; className: string }> = {
+  in_progress: { label: "In Progress", className: "bg-primary/10 text-primary ring-primary/15" },
+  review: { label: "In Review", className: "bg-warning/10 text-warning ring-warning/15" },
+  completed: { label: "Completed", className: "bg-success/10 text-success ring-success/15" },
+};
+
+export function OrderStatusBadge({ status, className = "" }: { status: OrderStatus; className?: string }) {
+  const cfg = orderStatusConfig[status];
+  return (
+    <span className={cn("inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1", cfg.className, className)}>
+      {cfg.label}
+    </span>
+  );
+}
+
+type ApplicationStatus = "pending" | "shortlisted" | "rejected";
+
+const applicationStatusConfig: Record<ApplicationStatus, { label: string; className: string }> = {
+  pending: { label: "Pending", className: "bg-secondary text-muted-foreground ring-border" },
+  shortlisted: { label: "Shortlisted", className: "bg-success/10 text-success ring-success/15" },
+  rejected: { label: "Rejected", className: "bg-destructive/10 text-destructive ring-destructive/15" },
+};
+
+export function ApplicationStatusBadge({ status, className = "" }: { status: ApplicationStatus; className?: string }) {
+  const cfg = applicationStatusConfig[status];
+  return (
+    <span className={cn("inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1", cfg.className, className)}>
+      {cfg.label}
     </span>
   );
 }

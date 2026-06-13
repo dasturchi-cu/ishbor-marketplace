@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Send,
   Paperclip,
@@ -331,6 +332,11 @@ function MessagesPage() {
                 </div>
                 <button
                   disabled={!input.trim()}
+                  onClick={() => {
+                    if (!input.trim()) return;
+                    toast.success("Message sent");
+                    setInput("");
+                  }}
                   className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 focus-ring"
                 >
                   Send <Send className="size-3.5" />

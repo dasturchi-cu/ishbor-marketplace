@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, Clock, MessageCircle, Plus, Shield, TrendingUp, CircleAlert as AlertCircle, ShieldCheck, Lock } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
-import { EscrowShield } from "@/components/site/trust";
+import { EscrowShield, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
+import { PipelineEmpty } from "@/components/site/feedback";
 import { orders, escrowRecords, hiringPipeline, messages } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard")({
@@ -64,15 +65,10 @@ function ClientDashboard() {
                         {order.client}
                       </div>
                     </div>
-                    <span
-                      className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        order.status === "in_progress"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-warning/10 text-warning"
-                      }`}
-                    >
-                      {order.status === "in_progress" ? "In Progress" : "In Review"}
-                    </span>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <OrderStatusBadge status={order.status} />
+                      {order.escrowFunded && <EscrowFundedBadge />}
+                    </div>
                   </div>
                   <div className="mb-4 h-1.5 rounded-full bg-secondary">
                     <div
@@ -114,9 +110,11 @@ function ClientDashboard() {
                     </span>
                   </div>
                   <div className="space-y-3">
-                    {leads.map((lead) => (
+                    {leads.length > 0 ? leads.map((lead) => (
                       <HiringCard key={lead.id} lead={lead} />
-                    ))}
+                    )) : (
+                      <PipelineEmpty label={label.toLowerCase()} />
+                    )}
                   </div>
                 </div>
               ))}

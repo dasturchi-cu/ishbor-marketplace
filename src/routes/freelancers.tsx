@@ -3,7 +3,9 @@ import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { FreelancerCard } from "@/components/site/cards";
+import { CardSkeleton } from "@/components/site/feedback";
 import { freelancers } from "@/lib/mock-data";
+import { usePageReady } from "@/hooks/use-page-ready";
 
 export const Route = createFileRoute("/freelancers")({
   head: () => ({
@@ -18,6 +20,8 @@ export const Route = createFileRoute("/freelancers")({
 const filters = ["All", "Top Rated", "Available Now", "Under $50/h", "Tashkent", "Verified Identity"];
 
 function FreelancersPage() {
+  const ready = usePageReady();
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
@@ -69,9 +73,9 @@ function FreelancersPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-          {[...freelancers, ...freelancers].map((f, i) => (
-            <FreelancerCard key={i} f={f} />
-          ))}
+          {!ready
+            ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+            : [...freelancers, ...freelancers].map((f, i) => <FreelancerCard key={i} f={f} />)}
         </div>
       </section>
 

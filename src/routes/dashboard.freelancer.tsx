@@ -12,6 +12,8 @@ import {
 import { useState } from "react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
+import { ApplicationStatusBadge, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
+import { EmptyState } from "@/components/site/feedback";
 import { orders, applications, reviews } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/dashboard/freelancer")({
@@ -124,11 +126,10 @@ function FreelancerDashboard() {
                     <div className="truncate text-sm font-semibold">{order.title}</div>
                     <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{order.client}</div>
                   </div>
-                  <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    order.status === "in_progress" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
-                  }`}>
-                    {order.status === "in_progress" ? "In Progress" : "In Review"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <OrderStatusBadge status={order.status} />
+                    {order.escrowFunded && <EscrowFundedBadge />}
+                  </div>
                 </div>
                 <div className="mb-3 flex items-center gap-3">
                   <div className="h-1.5 flex-1 rounded-full bg-secondary">
@@ -174,13 +175,7 @@ function FreelancerDashboard() {
                     <div className="truncate text-sm font-semibold">{app.projectTitle}</div>
                     <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{app.client}</div>
                   </div>
-                  <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
-                    app.status === "shortlisted" ? "bg-success/10 text-success"
-                    : app.status === "rejected" ? "bg-destructive/10 text-destructive"
-                    : "bg-secondary text-muted-foreground"
-                  }`}>
-                    {app.status === "shortlisted" ? "Shortlisted" : app.status === "rejected" ? "Rejected" : "Pending"}
-                  </span>
+                  <ApplicationStatusBadge status={app.status} />
                 </div>
                 <div className="flex justify-between font-mono text-[11px] text-muted-foreground">
                   <span>${app.budget.toLocaleString()}</span>
@@ -188,6 +183,14 @@ function FreelancerDashboard() {
                 </div>
               </div>
             ))}
+            {activeTab === "reviews" && reviews.length === 0 && (
+              <EmptyState
+                compact
+                icon={Star}
+                title="No reviews yet"
+                description="Complete your first project to start collecting client feedback."
+              />
+            )}
             {activeTab === "reviews" && reviews.map((review) => (
               <div key={review.id} className="p-4 transition-default hover:bg-secondary/20">
                 <div className="mb-2 flex items-start gap-3">

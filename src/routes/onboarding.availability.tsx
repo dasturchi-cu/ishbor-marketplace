@@ -32,7 +32,7 @@ function OnboardingAvailabilityPage() {
     saveOnboardingState({
       availability: { available, hoursPerWeek, timezone, responseTime },
     });
-    navigate({ to: "/dashboard/freelancer" });
+    navigate({ to: "/welcome", search: { setup: "complete" } });
   };
 
   return (
