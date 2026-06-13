@@ -1,5 +1,20 @@
 // Mock data for Ishbor marketplace. Replace with real APIs later.
 
+export type SkillEntry = {
+  name: string;
+  level: number;
+  endorsements: number;
+  category: string;
+};
+
+export type Language = { language: string; level: string };
+
+export type VerificationItem = {
+  label: string;
+  done: boolean;
+  verifiedAt?: string;
+};
+
 export type Freelancer = {
   id: string;
   username: string;
@@ -11,11 +26,13 @@ export type Freelancer = {
   reviews: number;
   level: "Top Rated" | "Expert" | "Rising" | "Verified";
   skills: string[];
+  skillMatrix?: SkillEntry[];
   bio: string;
   available: boolean;
   hue: number;
   earned: number;
   jobs: number;
+  memberSince?: string;
   successScore: number;
   completionRate: number;
   onTimeDelivery: number;
@@ -23,8 +40,31 @@ export type Freelancer = {
   repeatClients: number;
   identityVerified: boolean;
   businessVerified: boolean;
+  videoIntro?: { duration: string };
+  languages?: Language[];
+  verification?: VerificationItem[];
   portfolio: { title: string; category: string; hue: number; year: number }[];
   caseStudies: { title: string; client: string; clientHue: number; result: string; hue: number }[];
+};
+
+export type ServicePackage = {
+  tier: "Essential" | "Premium" | "Enterprise";
+  price: number;
+  delivery: string;
+  revisions: number | string;
+  features: string[];
+  description: string;
+  popular?: boolean;
+};
+
+export type ServiceGalleryImage = {
+  hue: number;
+  caption: string;
+};
+
+export type ServiceFaq = {
+  question: string;
+  answer: string;
 };
 
 export type Service = {
@@ -50,6 +90,12 @@ export type Service = {
   hue: number;
   inProgress: number;
   queuePosition: number;
+  gallery?: ServiceGalleryImage[];
+  description?: string;
+  descriptionExtended?: string;
+  included?: string[];
+  packages?: ServicePackage[];
+  faqs?: ServiceFaq[];
 };
 
 export type Project = {
@@ -111,6 +157,8 @@ export type Review = {
   rating: number;
   body: string;
   date: string;
+  freelancerUsername?: string;
+  serviceSlug?: string;
 };
 
 export type EscrowRecord = {
@@ -257,10 +305,14 @@ export const applications: Application[] = [
 ];
 
 export const reviews: Review[] = [
-  { id: "r1", from: "Asaka Capital", fromHue: 215, project: "Fintech App Redesign", rating: 5, body: "Nargiza delivered exceptional work. The designs are both beautiful and production-ready. Will definitely hire again.", date: "Jun 10" },
-  { id: "r2", from: "Tezda", fromHue: 250, project: "iOS App Development", rating: 5, body: "Farrukh is a rockstar. Delivered on time, communicated proactively, and the code quality is superb.", date: "Jun 05" },
-  { id: "r3", from: "Hunar Bazaar", fromHue: 290, project: "Brand Identity System", rating: 4, body: "Great work overall. Minor delays on revisions but the final output was worth it.", date: "May 28" },
-  { id: "r4", from: "Aralink Labs", fromHue: 160, project: "Growth Audit", rating: 5, body: "The playbook Madina built has already generated measurable results in just 3 weeks.", date: "May 20" },
+  { id: "r1", from: "Asaka Capital", fromHue: 215, project: "Fintech App Redesign", rating: 5, body: "Nargiza delivered exceptional work. The designs are both beautiful and production-ready. Will definitely hire again.", date: "Jun 10", freelancerUsername: "nargiza", serviceSlug: "mobile-app-design-fintech" },
+  { id: "r2", from: "Tezda", fromHue: 250, project: "iOS App Development", rating: 5, body: "Farrukh is a rockstar. Delivered on time, communicated proactively, and the code quality is superb.", date: "Jun 05", freelancerUsername: "farrukh", serviceSlug: "ios-app-development" },
+  { id: "r3", from: "Hunar Bazaar", fromHue: 290, project: "Brand Identity System", rating: 4, body: "Great work overall. Minor delays on revisions but the final output was worth it.", date: "May 28", freelancerUsername: "nargiza", serviceSlug: "brand-identity-system" },
+  { id: "r4", from: "Aralink Labs", fromHue: 160, project: "Growth Audit", rating: 5, body: "The playbook Madina built has already generated measurable results in just 3 weeks.", date: "May 20", freelancerUsername: "madina", serviceSlug: "growth-strategy-audit" },
+  { id: "r5", from: "Sardor M.", fromHue: 200, project: "Mobile App Design", rating: 5, body: "Best investment we made this quarter. Delivered ahead of schedule and the design system is something we'll use for years.", date: "2 weeks ago", freelancerUsername: "nargiza", serviceSlug: "mobile-app-design-fintech" },
+  { id: "r6", from: "Aisha K.", fromHue: 320, project: "Brand Identity", rating: 5, body: "Exceptional eye for typography. The Cyrillic pairing alone was worth the entire engagement.", date: "1 month ago", freelancerUsername: "nargiza", serviceSlug: "brand-identity-system" },
+  { id: "r7", from: "Daniyar B.", fromHue: 22, project: "Next.js Marketplace", rating: 5, body: "Communication is on a different level. Felt like working with a senior product partner, not a contractor.", date: "1 month ago", freelancerUsername: "azamat", serviceSlug: "nextjs-marketplace-build" },
+  { id: "r8", from: "UNESCO CA Bureau", fromHue: 280, project: "Pattern Suite", rating: 5, body: "Temur's ornamental work is museum-quality. Every pattern tells a story of our heritage.", date: "3 weeks ago", freelancerUsername: "temur", serviceSlug: "ornamental-pattern-suite" },
 ];
 
 export const escrowRecords: EscrowRecord[] = [
@@ -283,3 +335,174 @@ export const hiringPipeline: HiringLead[] = [
   { id: "h4", name: "Dilnoza Kim", hue: 270, title: "3D Artist", stage: "reviewing", project: "Series A Deck", rate: 38, rating: 4.92 },
   { id: "h5", name: "Madina Azimova", hue: 290, title: "Growth Consultant", stage: "reviewing", project: "Growth Audit", rate: 80, rating: 4.95 },
 ];
+
+const skillCategories: Record<string, string> = {
+  Branding: "Design", Figma: "Design", Webflow: "Design", "Design Systems": "Design",
+  "Next.js": "Development", Rust: "Development", PostgreSQL: "Development", "System Architecture": "Development",
+  Blender: "Creative", "Cinema 4D": "Creative", WebGL: "Creative", "After Effects": "Creative",
+  Procreate: "Creative", Illustrator: "Creative", "Pattern Design": "Creative",
+  "GTM Strategy": "Strategy", "Market Research": "Strategy", Notion: "Strategy", SQL: "Strategy",
+  Swift: "Development", SwiftUI: "Development", "Core Data": "Development", ARKit: "Development",
+  "IP Law": "Legal", "Cross-border": "Legal", "M&A": "Legal",
+  AutoCAD: "Architecture", Rhino: "Architecture", "V-Ray": "Architecture", "Sustainable Design": "Architecture",
+};
+
+function buildSkillMatrix(skills: string[], jobs: number): SkillEntry[] {
+  return skills.map((name, i) => ({
+    name,
+    level: Math.min(5, 3 + (i === 0 ? 2 : i === 1 ? 1 : 0)),
+    endorsements: Math.max(3, Math.round(jobs * (0.4 - i * 0.05))),
+    category: skillCategories[name] ?? "General",
+  }));
+}
+
+function buildVerification(f: Freelancer): VerificationItem[] {
+  return [
+    { label: "Passport ID", done: f.identityVerified, verifiedAt: f.identityVerified ? "Jan 2023" : undefined },
+    { label: "Business entity", done: f.businessVerified, verifiedAt: f.businessVerified ? "Mar 2024" : undefined },
+    { label: "Phone number", done: true, verifiedAt: "Jan 2023" },
+    { label: "Email address", done: true, verifiedAt: "Jan 2023" },
+    { label: "Payment method", done: true, verifiedAt: "Feb 2023" },
+  ];
+}
+
+const defaultLanguages: Language[] = [
+  { language: "Uzbek", level: "Native" },
+  { language: "Russian", level: "Fluent" },
+  { language: "English", level: "Professional" },
+];
+
+export type EnrichedFreelancer = Freelancer & {
+  skillMatrix: SkillEntry[];
+  memberSince: string;
+  languages: Language[];
+  verification: VerificationItem[];
+};
+
+export function enrichFreelancer(f: Freelancer): EnrichedFreelancer {
+  return {
+    ...f,
+    skillMatrix: f.skillMatrix ?? buildSkillMatrix(f.skills, f.jobs),
+    memberSince: f.memberSince ?? "2022",
+    languages: f.languages ?? defaultLanguages,
+    verification: f.verification ?? buildVerification(f),
+    videoIntro: f.videoIntro ?? (f.jobs >= 40 ? { duration: "2:14" } : undefined),
+  };
+}
+
+function parseDeliveryDays(delivery: string): number {
+  const match = delivery.match(/(\d+)/);
+  return match ? Number(match[1]) : 7;
+}
+
+function buildPackages(service: Service): ServicePackage[] {
+  const base = service.price;
+  const days = parseDeliveryDays(service.delivery);
+  return [
+    {
+      tier: "Essential",
+      price: base,
+      delivery: `${days} days`,
+      revisions: 2,
+      description: `Core ${service.category.toLowerCase()} deliverables for a focused scope.`,
+      features: [`Core ${service.category.toLowerCase()} scope`, "Source files included", "1 revision round", "Standard delivery"],
+    },
+    {
+      tier: "Premium",
+      price: Math.round(base * 2.04),
+      delivery: `${days + 5} days`,
+      revisions: 4,
+      description: `Full ${service.category.toLowerCase()} package with extended revisions and handoff.`,
+      features: [`Full ${service.category.toLowerCase()} scope`, "Priority support", "4 revision rounds", "Handoff session", "Design tokens / docs"],
+      popular: true,
+    },
+    {
+      tier: "Enterprise",
+      price: Math.round(base * 5),
+      delivery: `${days + 14} days`,
+      revisions: "Unlimited",
+      description: `Enterprise-grade engagement with dedicated support and extended warranty.`,
+      features: ["Unlimited scope within category", "Dedicated Slack channel", "Unlimited revisions", "30-day post-delivery support", "Team onboarding session"],
+    },
+  ];
+}
+
+function buildGallery(service: Service): ServiceGalleryImage[] {
+  return [
+    { hue: service.hue, caption: "Hero deliverable preview" },
+    { hue: (service.hue + 25) % 360, caption: "Detail view — component library" },
+    { hue: (service.hue + 50) % 360, caption: "Mobile responsive layouts" },
+    { hue: (service.hue + 75) % 360, caption: "Design system tokens" },
+    { hue: (service.hue + 100) % 360, caption: "Handoff documentation" },
+  ];
+}
+
+function buildFaqs(service: Service): ServiceFaq[] {
+  return [
+    { question: "What do you need from me to get started?", answer: "A brief describing your goals, brand assets (if any), and target audience. I'll send a kickoff questionnaire within 24 hours of order confirmation." },
+    { question: "How do revisions work?", answer: "Each package includes a set number of revision rounds. Revisions cover refinements within the agreed scope — not full redesigns. Additional rounds can be purchased if needed." },
+    { question: "Is my payment protected?", answer: "Yes. All payments are held in Ishbor escrow and released only when you approve the delivered work. Full refund if the seller fails to deliver on time." },
+    { question: "Can we communicate outside the platform?", answer: "All project communication should stay on Ishbor for escrow protection and dispute resolution. Video calls can be scheduled through the platform." },
+    { question: `What makes this ${service.category.toLowerCase()} service different?`, answer: `${service.seller} has a ${service.sellerSuccessScore}/100 success score, ${service.sellerCompletionRate}% completion rate, and ${service.sellerRepeatClients}% repeat client rate — backed by $${(service.sellerTotalEarned / 1000).toFixed(0)}k in verified earnings on Ishbor.` },
+  ];
+}
+
+const serviceDescriptions: Record<string, { description: string; extended: string; included: string[] }> = {
+  "mobile-app-design-fintech": {
+    description: "You'll receive a production-grade design system tailored for a regulated financial product. Every deliverable comes with motion specs, accessibility annotations, and a handoff session for your engineering team.",
+    extended: "I've shipped retail banking apps for two regional neobanks and consulted on a digital payments rollout for the national post. I work in 2-week sprints with weekly Loom updates and a dedicated Slack channel. Localization-first — Cyrillic, Latin, Arabic scripts handled with proper kerning and weight pairings.",
+    included: ["Brand-aligned mobile UI", "Component library in Figma", "Design tokens (CSS / JSON)", "Motion specifications", "Accessibility audit (AA)", "Engineering handoff session"],
+  },
+  "nextjs-marketplace-build": {
+    description: "A production-ready Next.js marketplace with authentication, payments, and admin tooling — built for scale from day one.",
+    extended: "Ex-Uzcard engineer with experience shipping payment systems at 99.97% uptime. Stack: Next.js 15, PostgreSQL, Stripe Connect, and Rust microservices for high-throughput operations.",
+    included: ["Next.js 15 app router setup", "Stripe Connect integration", "PostgreSQL schema + migrations", "Admin dashboard", "CI/CD pipeline", "30-day bug-fix warranty"],
+  },
+  "brand-identity-system": {
+    description: "A complete brand identity system — logo, typography, color, and guidelines — built for brands that need to scale across markets.",
+    extended: "From bazaar to boardroom: identities that work in Tashkent street signage and London investor decks. Includes stakeholder workshop and competitive audit.",
+    included: ["Logo & wordmark suite", "Color & typography system", "Brand guidelines PDF", "Social media templates", "Stationery mockups", "Figma source files"],
+  },
+};
+
+export type EnrichedService = Service & {
+  gallery: ServiceGalleryImage[];
+  description: string;
+  descriptionExtended: string;
+  included: string[];
+  packages: ServicePackage[];
+  faqs: ServiceFaq[];
+};
+
+export function enrichService(s: Service): EnrichedService {
+  const custom = serviceDescriptions[s.slug];
+  return {
+    ...s,
+    gallery: s.gallery ?? buildGallery(s),
+    description: s.description ?? custom?.description ?? `Professional ${s.category.toLowerCase()} service delivered by ${s.seller}, a ${s.sellerLevel} seller on Ishbor with ${s.reviews} verified reviews.`,
+    descriptionExtended: s.descriptionExtended ?? custom?.extended ?? `I bring ${s.sellerSuccessScore}/100 success score and ${s.sellerCompletionRate}% on-time delivery to every engagement. Communication stays on-platform with escrow-protected milestones.`,
+    included: s.included ?? custom?.included ?? [`${s.category} deliverables`, "Source files", "Revision rounds per package", "Platform messaging support", "Escrow-protected payment"],
+    packages: s.packages ?? buildPackages(s),
+    faqs: s.faqs ?? buildFaqs(s),
+  };
+}
+
+export function getFreelancerReviews(username: string): Review[] {
+  return reviews.filter((r) => r.freelancerUsername === username);
+}
+
+export function getServiceReviews(slug: string): Review[] {
+  const direct = reviews.filter((r) => r.serviceSlug === slug);
+  if (direct.length > 0) return direct;
+  const service = services.find((s) => s.slug === slug);
+  if (!service) return [];
+  return reviews.filter((r) => r.freelancerUsername === service.sellerUsername).slice(0, 3);
+}
+
+export function getSimilarServices(slug: string, limit = 4): Service[] {
+  const current = services.find((s) => s.slug === slug);
+  if (!current) return services.slice(0, limit);
+  const sameCategory = services.filter((s) => s.slug !== slug && s.category === current.category);
+  const rest = services.filter((s) => s.slug !== slug && s.category !== current.category);
+  return [...sameCategory, ...rest].slice(0, limit);
+}
