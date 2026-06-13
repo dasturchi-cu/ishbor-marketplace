@@ -5,6 +5,7 @@ import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield, LevelBadge, VerifiedIdentityBadge, CompactTrustRow } from "@/components/site/trust";
+import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { freelancers, services } from "@/lib/mock-data";
 import { requireAuth } from "@/lib/guards";
 
@@ -54,14 +55,27 @@ function CheckoutPage() {
               Funds will be released to the seller only after you approve the milestone delivery. Full refund if delivery terms are not met.
             </p>
           </div>
-          <div className="mt-8 flex items-center gap-3">
-            <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring">
-              Go to dashboard <ArrowRight className="size-3.5" />
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link to="/orders/o1" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring">
+              View order <ArrowRight className="size-3.5" />
+            </Link>
+            <Link to="/escrow/ew1" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+              View escrow
+            </Link>
+            <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+              Dashboard
             </Link>
             <Link to="/messages" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
               Message seller
             </Link>
           </div>
+          <ConversionFlowBanner
+            title="Hiring complete"
+            steps={CLIENT_HIRE_FLOW}
+            currentStep="order"
+            nextHint="Track milestone delivery in Orders and release escrow when work is approved."
+            className="mt-8 text-left"
+          />
         </div>
         <SiteFooter />
       </div>
@@ -78,6 +92,18 @@ function CheckoutPage() {
             <ChevronLeft className="size-3" /> Back
           </button>
         </nav>
+
+        <ConversionFlowBanner
+          title="Client hiring path"
+          steps={CLIENT_HIRE_FLOW}
+          currentStep={step === "confirmed" ? "order" : step === "payment" ? "checkout" : "checkout"}
+          nextHint={
+            step === "payment"
+              ? "Complete payment to fund escrow. Your order activates once funds are secured."
+              : "Review order details, then proceed to escrow-protected payment."
+          }
+          className="mb-8"
+        />
 
         {/* Progress */}
         <div className="mb-8 flex items-center gap-3">

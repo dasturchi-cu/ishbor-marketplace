@@ -1,14 +1,21 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, MapPin, Briefcase, Send, Lock, ChevronRight } from "lucide-react";
+import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, Send, Lock, ChevronRight } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
-import { EscrowShield, LevelBadge, VerifiedIdentityBadge } from "@/components/site/trust";
+import { EscrowShield, LevelBadge } from "@/components/site/trust";
+import { ConversionFlowBanner, FREELANCER_HIRE_FLOW } from "@/components/site/conversion-flow";
+import { createApplication } from "@/lib/applications-store";
 import { freelancers, projects } from "@/lib/mock-data";
 
+type ProjectSearch = { proposal?: boolean };
+
 export const Route = createFileRoute("/projects/$slug")({
+  validateSearch: (search: Record<string, unknown>): ProjectSearch => ({
+    proposal: search.proposal === true || search.proposal === "true",
+  }),
   loader: ({ params }) => {
     const p = projects.find((x) => x.slug === params.slug);
     if (!p) throw notFound();
@@ -27,11 +34,40 @@ export const Route = createFileRoute("/projects/$slug")({
 
 function ProjectDetail() {
   const { project: p } = Route.useLoaderData();
+  const { proposal: openProposal } = Route.useSearch();
+  const navigate = useNavigate();
   const [showProposal, setShowProposal] = useState(false);
   const [proposalText, setProposalText] = useState("");
   const [proposalRate, setProposalRate] = useState("");
   const [proposalDuration, setProposalDuration] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [createdAppId, setCreatedAppId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (openProposal) setShowProposal(true);
+  }, [openProposal]);
+
+  const handleSubmit = () => {
+    const app = createApplication({
+      projectTitle: p.title,
+      projectSlug: p.slug,
+      client: p.client,
+      clientHue: p.clientHue,
+      budget: p.budget,
+      proposalAmount: Number(proposalRate) || p.budget,
+      deliveryTime: proposalDuration || p.duration,
+      category: p.category,
+      coverNote: proposalText.trim(),
+    });
+    setCreatedAppId(app.id);
+    setSubmitted(true);
+    toast.success("Application created", { description: "Your proposal is now under client review." });
+    setTimeout(() => {
+      navigate({ to: "/applications/$id", params: { id: app.id } });
+    }, 1800);
+  };
+
+  const canSubmit = proposalText.trim() && proposalRate.trim() && proposalDuration.trim();
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,6 +79,20 @@ function ProjectDetail() {
           <span>/</span>
           <span>{p.category}</span>
         </nav>
+
+        <ConversionFlowBanner
+          title="Freelancer hiring path"
+          steps={FREELANCER_HIRE_FLOW}
+          currentStep={submitted ? "application" : showProposal ? "proposal" : "project"}
+          nextHint={
+            submitted
+              ? "Track your application while the client reviews your proposal."
+              : showProposal
+                ? "Submit your proposal to create an application the client can review."
+                : "Read the brief, then submit a tailored proposal to get hired."
+          }
+          className="mb-8"
+        />
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           <div>
@@ -140,10 +190,19 @@ function ProjectDetail() {
                     <div>
                       <div className="font-display text-lg font-bold text-success">Proposal submitted</div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {p.client} will review your proposal. You'll be notified when they respond.
+                        Application created. {p.client} will review your proposal. Redirecting to Applications…
                       </p>
                     </div>
                   </div>
+                  {createdAppId && (
+                    <Link
+                      to="/applications/$id"
+                      params={{ id: createdAppId }}
+                      className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                    >
+                      View application now <ArrowRight className="size-3.5" />
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -156,7 +215,7 @@ function ProjectDetail() {
                   <div className="p-6 space-y-5">
                     <div>
                       <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Cover note
+                        Cover letter
                       </label>
                       <textarea
                         value={proposalText}
@@ -169,7 +228,7 @@ function ProjectDetail() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          Your rate ({p.budgetType})
+                          Proposal amount ({p.budgetType})
                         </label>
                         <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5">
                           <DollarSign className="size-4 text-muted-foreground" />
@@ -185,7 +244,7 @@ function ProjectDetail() {
                       </div>
                       <div>
                         <label className="mb-1.5 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          Estimated duration
+                          Delivery time
                         </label>
                         <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2.5">
                           <Calendar className="size-4 text-muted-foreground" />
@@ -204,11 +263,8 @@ function ProjectDetail() {
                     </div>
                     <div className="flex items-center gap-3">
                       <button
-                        onClick={() => {
-                          setSubmitted(true);
-                          toast.success("Proposal submitted", { description: `${p.client} will review your application.` });
-                        }}
-                        disabled={!proposalText.trim()}
+                        onClick={handleSubmit}
+                        disabled={!canSubmit}
                         className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed focus-ring"
                       >
                         <Send className="size-3.5" /> Submit proposal

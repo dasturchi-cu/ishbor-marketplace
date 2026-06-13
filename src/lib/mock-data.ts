@@ -152,6 +152,7 @@ export type Application = {
   status: "pending" | "shortlisted" | "rejected" | "accepted";
   coverNote: string;
   proposalAmount?: number;
+  deliveryTime?: string;
 };
 
 export type ClientCompany = {

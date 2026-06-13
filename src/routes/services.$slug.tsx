@@ -1,10 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { Star, Clock, Check, ChevronRight, Users, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Star, Clock, Check, ChevronRight, Users, ShieldCheck, MessageSquare, Heart, Share2, ShoppingCart } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ServiceCard } from "@/components/site/cards";
 import { SellerTrustBar, EscrowShield, VerifiedIdentityBadge } from "@/components/site/trust";
+import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { ServiceGallery } from "@/components/site/service-detail/gallery";
 import { PackageCard, PackageComparison } from "@/components/site/service-detail/package-card";
 import { FaqSection } from "@/components/site/service-detail/faq-section";
@@ -38,6 +41,18 @@ export const Route = createFileRoute("/services/$slug")({
 
 function ServiceDetail() {
   const { service, serviceReviews, similarServices } = Route.useLoaderData();
+  const [saved, setSaved] = useState(false);
+  const defaultPkg = service.packages.find((p) => p.popular)?.tier.toLowerCase() ?? "premium";
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/services/${service.slug}`;
+    if (navigator.share) {
+      await navigator.share({ title: service.title, url });
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Service link copied");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,6 +66,14 @@ function ServiceDetail() {
           <ChevronRight className="size-3" />
           <span className="line-clamp-1 text-foreground">{service.title}</span>
         </nav>
+
+        <ConversionFlowBanner
+          title="Client hiring path"
+          steps={CLIENT_HIRE_FLOW}
+          currentStep="service"
+          nextHint="Order this service to fund escrow-protected work. Payment is released only when you approve delivery."
+          className="mb-8"
+        />
 
         <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
           <div>
@@ -81,6 +104,45 @@ function ServiceDetail() {
                   {service.inProgress} in progress
                 </div>
               )}
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link
+                to="/checkout"
+                search={{
+                  type: "service" as const,
+                  service: service.slug,
+                  package: defaultPkg as "essential" | "premium" | "enterprise",
+                }}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] transition-default hover:opacity-90 focus-ring"
+              >
+                <ShoppingCart className="size-4" /> Order now
+              </Link>
+              <Link
+                to="/messages"
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+              >
+                <MessageSquare className="size-4" /> Contact freelancer
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setSaved((v) => !v);
+                  toast.success(saved ? "Removed from saved" : "Service saved");
+                }}
+                className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-default focus-ring ${
+                  saved ? "border-primary/30 bg-primary/5 text-primary" : "border-border hover:border-primary/20"
+                }`}
+              >
+                <Heart className={`size-4 ${saved ? "fill-primary" : ""}`} /> Save service
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+              >
+                <Share2 className="size-4" /> Share service
+              </button>
             </div>
 
             <div className="mt-5">
@@ -193,6 +255,26 @@ function ServiceDetail() {
       </div>
 
       <SiteFooter />
+
+      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-card/95 p-3 backdrop-blur lg:hidden">
+        <Link
+          to="/checkout"
+          search={{
+            type: "service" as const,
+            service: service.slug,
+            package: defaultPkg as "essential" | "premium" | "enterprise",
+          }}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground focus-ring"
+        >
+          <ShoppingCart className="size-4" /> Order now
+        </Link>
+        <Link
+          to="/messages"
+          className="inline-flex items-center justify-center rounded-lg border border-border px-4 py-2.5 text-sm font-medium focus-ring"
+        >
+          <MessageSquare className="size-4" />
+        </Link>
+      </div>
     </div>
   );
 }

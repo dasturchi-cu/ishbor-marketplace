@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronRight, Briefcase } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge } from "@/components/site/trust";
 import { EmptyState } from "@/components/site/feedback";
+import { ConversionFlowBanner, FREELANCER_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { requireAuth } from "@/lib/guards";
-import { applications } from "@/lib/mock-data";
+import { getAllApplications } from "@/lib/applications-store";
 
 export const Route = createFileRoute("/applications")({
   beforeLoad: requireAuth,
@@ -23,11 +24,24 @@ const tabs = [
 
 function ApplicationsPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]["key"]>("pending");
+  const [applications, setApplications] = useState(() => getAllApplications());
+
+  useEffect(() => {
+    setApplications(getAllApplications());
+  }, [tab]);
+
   const current = tabs.find((t) => t.key === tab)!;
   const filtered = applications.filter((a) => a.status === current.status);
 
   return (
     <WorkspaceShell eyebrow="Freelancer workspace" title="Applications">
+      <ConversionFlowBanner
+        title="Getting hired"
+        steps={FREELANCER_HIRE_FLOW}
+        currentStep="application"
+        nextHint="Track proposal status here. When accepted, the client funds escrow and your order begins."
+        className="mb-6"
+      />
       <div className="mobile-scroll-x flex gap-2 border-b border-border pb-3">
         {tabs.map((t) => (
           <button

@@ -8,6 +8,7 @@ import {
   Heart,
   ArrowRight,
   ChevronRight,
+  Share2,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ import { VideoIntro } from "@/components/site/profile/video-intro";
 import { VerificationCenter } from "@/components/site/profile/verification-center";
 import { SuccessMetrics } from "@/components/site/profile/success-metrics";
 import { ProfileReviews } from "@/components/site/profile/profile-reviews";
+import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
 import {
   freelancers,
   services,
@@ -65,6 +67,15 @@ function FreelancerProfile() {
     setSaved((v) => !v);
     toast.success(saved ? "Removed from saved profiles" : "Profile saved");
   };
+  const handleShare = async () => {
+    const url = `${window.location.origin}/freelancers/${f.username}`;
+    if (navigator.share) {
+      await navigator.share({ title: f.name, url });
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    toast.success("Profile link copied");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,6 +89,17 @@ function FreelancerProfile() {
           <ChevronRight className="size-3" />
           <span className="text-foreground">{f.name}</span>
         </nav>
+
+        <ConversionFlowBanner
+          title="Hire this freelancer"
+          steps={[
+            { key: "service", label: "Profile" },
+            ...CLIENT_HIRE_FLOW.slice(1),
+          ]}
+          currentStep="service"
+          nextHint="Start with a hire deposit or message to discuss scope before checkout."
+          className="mb-8"
+        />
 
         {/* Premium hero */}
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_16px_48px_-16px_oklch(0.546_0.185_257/0.08)]">
@@ -258,9 +280,11 @@ function FreelancerProfile() {
           </div>
 
           <aside className="space-y-4 lg:sticky lg:top-24 lg:h-fit">
-            {/* Quick hire CTA */}
-            <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
-              <div className="flex items-center justify-between">
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)]">
+              <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-primary">
+                Hire {f.name.split(" ")[0]}
+              </div>
+              <div className="mt-3 flex items-center justify-between">
                 <div>
                   <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                     Hourly rate
@@ -293,7 +317,7 @@ function FreelancerProfile() {
                   search={{ type: "hire" as const, freelancer: f.username }}
                   className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
                 >
-                  Hire now <ArrowRight className="size-3.5" />
+                  Hire freelancer <ArrowRight className="size-3.5" />
                 </Link>
                 <button
                   type="button"
@@ -302,7 +326,28 @@ function FreelancerProfile() {
                 >
                   <MessageSquare className="size-3.5" /> Send message
                 </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className={`inline-flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-default focus-ring ${
+                      saved ? "border-primary/30 bg-primary/5 text-primary" : "border-border hover:border-primary/20"
+                    }`}
+                  >
+                    <Heart className={`size-3.5 ${saved ? "fill-primary" : ""}`} /> Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border py-2 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
+                  >
+                    <Share2 className="size-3.5" /> Share
+                  </button>
+                </div>
               </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                Next: Checkout → Escrow funded → Active order. Funds release on milestone approval.
+              </p>
             </div>
 
             {/* Stats sidebar */}
