@@ -34,8 +34,15 @@ import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ApplicationsRouteImport } from './routes/applications'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
+import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OnboardingIndexRouteImport } from './routes/onboarding.index'
+import { Route as FreelancersIndexRouteImport } from './routes/freelancers.index'
+import { Route as EscrowIndexRouteImport } from './routes/escrow.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as ApplicationsIndexRouteImport } from './routes/applications.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
@@ -53,6 +60,22 @@ import { Route as EscrowIdRouteImport } from './routes/escrow.$id'
 import { Route as DashboardFreelancerRouteImport } from './routes/dashboard.freelancer'
 import { Route as ClientsCompanyRouteImport } from './routes/clients.$company'
 import { Route as ApplicationsIdRouteImport } from './routes/applications.$id'
+import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSystemRouteImport } from './routes/admin.system'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
+import { Route as AdminServicesRouteImport } from './routes/admin.services'
+import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
+import { Route as AdminPaymentsRouteImport } from './routes/admin.payments'
+import { Route as AdminOrdersRouteImport } from './routes/admin.orders'
+import { Route as AdminModerationRouteImport } from './routes/admin.moderation'
+import { Route as AdminEscrowRouteImport } from './routes/admin.escrow'
+import { Route as AdminDisputesRouteImport } from './routes/admin.disputes'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminApplicationsRouteImport } from './routes/admin.applications'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
+import { Route as AdminEscrowIdRouteImport } from './routes/admin.escrow.$id'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -179,15 +202,50 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ServicesRoute,
+} as any)
+const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProjectsRoute,
+} as any)
+const OrdersIndexRoute = OrdersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OrdersRoute,
+} as any)
 const OnboardingIndexRoute = OnboardingIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => OnboardingRoute,
 } as any)
+const FreelancersIndexRoute = FreelancersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FreelancersRoute,
+} as any)
+const EscrowIndexRoute = EscrowIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => EscrowRoute,
+} as any)
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ApplicationsIndexRoute = ApplicationsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ApplicationsRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
@@ -274,10 +332,90 @@ const ApplicationsIdRoute = ApplicationsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApplicationsRoute,
 } as any)
+const AdminVerificationsRoute = AdminVerificationsRouteImport.update({
+  id: '/verifications',
+  path: '/verifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemRoute = AdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminServicesRoute = AdminServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProjectsRoute = AdminProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModerationRoute = AdminModerationRouteImport.update({
+  id: '/moderation',
+  path: '/moderation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEscrowRoute = AdminEscrowRouteImport.update({
+  id: '/escrow',
+  path: '/escrow',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminDisputesRoute = AdminDisputesRouteImport.update({
+  id: '/disputes',
+  path: '/disputes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminApplicationsRoute = AdminApplicationsRouteImport.update({
+  id: '/applications',
+  path: '/applications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminUsersRoute,
+} as any)
+const AdminEscrowIdRoute = AdminEscrowIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminEscrowRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -301,6 +439,20 @@ export interface FileRoutesByFullPath {
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/applications': typeof AdminApplicationsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/escrow': typeof AdminEscrowRouteWithChildren
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/projects': typeof AdminProjectsRoute
+  '/admin/services': typeof AdminServicesRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/system': typeof AdminSystemRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/clients/$company': typeof ClientsCompanyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
@@ -318,33 +470,49 @@ export interface FileRoutesByFullPath {
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/applications/': typeof ApplicationsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/escrow/': typeof EscrowIndexRoute
+  '/freelancers/': typeof FreelancersIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
+  '/orders/': typeof OrdersIndexRoute
+  '/projects/': typeof ProjectsIndexRoute
+  '/services/': typeof ServicesIndexRoute
+  '/admin/escrow/$id': typeof AdminEscrowIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
-  '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
-  '/freelancers': typeof FreelancersRouteWithChildren
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
-  '/orders': typeof OrdersRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
-  '/projects': typeof ProjectsRouteWithChildren
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/applications': typeof AdminApplicationsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/escrow': typeof AdminEscrowRouteWithChildren
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/projects': typeof AdminProjectsRoute
+  '/admin/services': typeof AdminServicesRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/system': typeof AdminSystemRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/clients/$company': typeof ClientsCompanyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
@@ -362,13 +530,22 @@ export interface FileRoutesByTo {
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/admin': typeof AdminIndexRoute
+  '/applications': typeof ApplicationsIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/escrow': typeof EscrowIndexRoute
+  '/freelancers': typeof FreelancersIndexRoute
   '/onboarding': typeof OnboardingIndexRoute
+  '/orders': typeof OrdersIndexRoute
+  '/projects': typeof ProjectsIndexRoute
+  '/services': typeof ServicesIndexRoute
+  '/admin/escrow/$id': typeof AdminEscrowIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/applications': typeof ApplicationsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -392,6 +569,20 @@ export interface FileRoutesById {
   '/verify-otp': typeof VerifyOtpRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/applications': typeof AdminApplicationsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/disputes': typeof AdminDisputesRoute
+  '/admin/escrow': typeof AdminEscrowRouteWithChildren
+  '/admin/moderation': typeof AdminModerationRoute
+  '/admin/orders': typeof AdminOrdersRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/projects': typeof AdminProjectsRoute
+  '/admin/services': typeof AdminServicesRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/system': typeof AdminSystemRoute
+  '/admin/users': typeof AdminUsersRouteWithChildren
+  '/admin/verifications': typeof AdminVerificationsRoute
   '/applications/$id': typeof ApplicationsIdRoute
   '/clients/$company': typeof ClientsCompanyRoute
   '/dashboard/freelancer': typeof DashboardFreelancerRoute
@@ -409,8 +600,17 @@ export interface FileRoutesById {
   '/orders/$id': typeof OrdersIdRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/services/$slug': typeof ServicesSlugRoute
+  '/admin/': typeof AdminIndexRoute
+  '/applications/': typeof ApplicationsIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/escrow/': typeof EscrowIndexRoute
+  '/freelancers/': typeof FreelancersIndexRoute
   '/onboarding/': typeof OnboardingIndexRoute
+  '/orders/': typeof OrdersIndexRoute
+  '/projects/': typeof ProjectsIndexRoute
+  '/services/': typeof ServicesIndexRoute
+  '/admin/escrow/$id': typeof AdminEscrowIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -440,6 +640,20 @@ export interface FileRouteTypes {
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/admin/analytics'
+    | '/admin/applications'
+    | '/admin/audit'
+    | '/admin/disputes'
+    | '/admin/escrow'
+    | '/admin/moderation'
+    | '/admin/orders'
+    | '/admin/payments'
+    | '/admin/projects'
+    | '/admin/services'
+    | '/admin/support'
+    | '/admin/system'
+    | '/admin/users'
+    | '/admin/verifications'
     | '/applications/$id'
     | '/clients/$company'
     | '/dashboard/freelancer'
@@ -457,33 +671,49 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/admin/'
+    | '/applications/'
     | '/dashboard/'
+    | '/escrow/'
+    | '/freelancers/'
     | '/onboarding/'
+    | '/orders/'
+    | '/projects/'
+    | '/services/'
+    | '/admin/escrow/$id'
+    | '/admin/users/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
-    | '/applications'
     | '/checkout'
-    | '/escrow'
     | '/forgot-password'
-    | '/freelancers'
     | '/login'
     | '/messages'
     | '/notifications'
-    | '/orders'
     | '/privacy'
     | '/profile'
-    | '/projects'
     | '/register'
     | '/reset-password'
-    | '/services'
     | '/settings'
     | '/terms'
     | '/verify-email'
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/admin/analytics'
+    | '/admin/applications'
+    | '/admin/audit'
+    | '/admin/disputes'
+    | '/admin/escrow'
+    | '/admin/moderation'
+    | '/admin/orders'
+    | '/admin/payments'
+    | '/admin/projects'
+    | '/admin/services'
+    | '/admin/support'
+    | '/admin/system'
+    | '/admin/users'
+    | '/admin/verifications'
     | '/applications/$id'
     | '/clients/$company'
     | '/dashboard/freelancer'
@@ -501,8 +731,17 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/admin'
+    | '/applications'
     | '/dashboard'
+    | '/escrow'
+    | '/freelancers'
     | '/onboarding'
+    | '/orders'
+    | '/projects'
+    | '/services'
+    | '/admin/escrow/$id'
+    | '/admin/users/$id'
   id:
     | '__root__'
     | '/'
@@ -530,6 +769,20 @@ export interface FileRouteTypes {
     | '/verify-otp'
     | '/wallet'
     | '/welcome'
+    | '/admin/analytics'
+    | '/admin/applications'
+    | '/admin/audit'
+    | '/admin/disputes'
+    | '/admin/escrow'
+    | '/admin/moderation'
+    | '/admin/orders'
+    | '/admin/payments'
+    | '/admin/projects'
+    | '/admin/services'
+    | '/admin/support'
+    | '/admin/system'
+    | '/admin/users'
+    | '/admin/verifications'
     | '/applications/$id'
     | '/clients/$company'
     | '/dashboard/freelancer'
@@ -547,13 +800,22 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/projects/$slug'
     | '/services/$slug'
+    | '/admin/'
+    | '/applications/'
     | '/dashboard/'
+    | '/escrow/'
+    | '/freelancers/'
     | '/onboarding/'
+    | '/orders/'
+    | '/projects/'
+    | '/services/'
+    | '/admin/escrow/$id'
+    | '/admin/users/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   ApplicationsRoute: typeof ApplicationsRouteWithChildren
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRouteWithChildren
@@ -757,6 +1019,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/': {
+      id: '/services/'
+      path: '/'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof ServicesRoute
+    }
+    '/projects/': {
+      id: '/projects/'
+      path: '/'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof ProjectsIndexRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
+    '/orders/': {
+      id: '/orders/'
+      path: '/'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof OrdersIndexRouteImport
+      parentRoute: typeof OrdersRoute
+    }
     '/onboarding/': {
       id: '/onboarding/'
       path: '/'
@@ -764,12 +1047,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OnboardingIndexRouteImport
       parentRoute: typeof OnboardingRoute
     }
+    '/freelancers/': {
+      id: '/freelancers/'
+      path: '/'
+      fullPath: '/freelancers/'
+      preLoaderRoute: typeof FreelancersIndexRouteImport
+      parentRoute: typeof FreelancersRoute
+    }
+    '/escrow/': {
+      id: '/escrow/'
+      path: '/'
+      fullPath: '/escrow/'
+      preLoaderRoute: typeof EscrowIndexRouteImport
+      parentRoute: typeof EscrowRoute
+    }
     '/dashboard/': {
       id: '/dashboard/'
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/applications/': {
+      id: '/applications/'
+      path: '/'
+      fullPath: '/applications/'
+      preLoaderRoute: typeof ApplicationsIndexRouteImport
+      parentRoute: typeof ApplicationsRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/services/$slug': {
       id: '/services/$slug'
@@ -890,15 +1201,191 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApplicationsIdRouteImport
       parentRoute: typeof ApplicationsRoute
     }
+    '/admin/verifications': {
+      id: '/admin/verifications'
+      path: '/verifications'
+      fullPath: '/admin/verifications'
+      preLoaderRoute: typeof AdminVerificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/system': {
+      id: '/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/services': {
+      id: '/admin/services'
+      path: '/services'
+      fullPath: '/admin/services'
+      preLoaderRoute: typeof AdminServicesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/projects': {
+      id: '/admin/projects'
+      path: '/projects'
+      fullPath: '/admin/projects'
+      preLoaderRoute: typeof AdminProjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/moderation': {
+      id: '/admin/moderation'
+      path: '/moderation'
+      fullPath: '/admin/moderation'
+      preLoaderRoute: typeof AdminModerationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/escrow': {
+      id: '/admin/escrow'
+      path: '/escrow'
+      fullPath: '/admin/escrow'
+      preLoaderRoute: typeof AdminEscrowRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/disputes': {
+      id: '/admin/disputes'
+      path: '/disputes'
+      fullPath: '/admin/disputes'
+      preLoaderRoute: typeof AdminDisputesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/applications': {
+      id: '/admin/applications'
+      path: '/applications'
+      fullPath: '/admin/applications'
+      preLoaderRoute: typeof AdminApplicationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users/$id': {
+      id: '/admin/users/$id'
+      path: '/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AdminUsersIdRouteImport
+      parentRoute: typeof AdminUsersRoute
+    }
+    '/admin/escrow/$id': {
+      id: '/admin/escrow/$id'
+      path: '/$id'
+      fullPath: '/admin/escrow/$id'
+      preLoaderRoute: typeof AdminEscrowIdRouteImport
+      parentRoute: typeof AdminEscrowRoute
+    }
   }
 }
 
+interface AdminEscrowRouteChildren {
+  AdminEscrowIdRoute: typeof AdminEscrowIdRoute
+}
+
+const AdminEscrowRouteChildren: AdminEscrowRouteChildren = {
+  AdminEscrowIdRoute: AdminEscrowIdRoute,
+}
+
+const AdminEscrowRouteWithChildren = AdminEscrowRoute._addFileChildren(
+  AdminEscrowRouteChildren,
+)
+
+interface AdminUsersRouteChildren {
+  AdminUsersIdRoute: typeof AdminUsersIdRoute
+}
+
+const AdminUsersRouteChildren: AdminUsersRouteChildren = {
+  AdminUsersIdRoute: AdminUsersIdRoute,
+}
+
+const AdminUsersRouteWithChildren = AdminUsersRoute._addFileChildren(
+  AdminUsersRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminApplicationsRoute: typeof AdminApplicationsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminDisputesRoute: typeof AdminDisputesRoute
+  AdminEscrowRoute: typeof AdminEscrowRouteWithChildren
+  AdminModerationRoute: typeof AdminModerationRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminProjectsRoute: typeof AdminProjectsRoute
+  AdminServicesRoute: typeof AdminServicesRoute
+  AdminSupportRoute: typeof AdminSupportRoute
+  AdminSystemRoute: typeof AdminSystemRoute
+  AdminUsersRoute: typeof AdminUsersRouteWithChildren
+  AdminVerificationsRoute: typeof AdminVerificationsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminApplicationsRoute: AdminApplicationsRoute,
+  AdminAuditRoute: AdminAuditRoute,
+  AdminDisputesRoute: AdminDisputesRoute,
+  AdminEscrowRoute: AdminEscrowRouteWithChildren,
+  AdminModerationRoute: AdminModerationRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminProjectsRoute: AdminProjectsRoute,
+  AdminServicesRoute: AdminServicesRoute,
+  AdminSupportRoute: AdminSupportRoute,
+  AdminSystemRoute: AdminSystemRoute,
+  AdminUsersRoute: AdminUsersRouteWithChildren,
+  AdminVerificationsRoute: AdminVerificationsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface ApplicationsRouteChildren {
   ApplicationsIdRoute: typeof ApplicationsIdRoute
+  ApplicationsIndexRoute: typeof ApplicationsIndexRoute
 }
 
 const ApplicationsRouteChildren: ApplicationsRouteChildren = {
   ApplicationsIdRoute: ApplicationsIdRoute,
+  ApplicationsIndexRoute: ApplicationsIndexRoute,
 }
 
 const ApplicationsRouteWithChildren = ApplicationsRoute._addFileChildren(
@@ -921,10 +1408,12 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 interface EscrowRouteChildren {
   EscrowIdRoute: typeof EscrowIdRoute
+  EscrowIndexRoute: typeof EscrowIndexRoute
 }
 
 const EscrowRouteChildren: EscrowRouteChildren = {
   EscrowIdRoute: EscrowIdRoute,
+  EscrowIndexRoute: EscrowIndexRoute,
 }
 
 const EscrowRouteWithChildren =
@@ -932,10 +1421,12 @@ const EscrowRouteWithChildren =
 
 interface FreelancersRouteChildren {
   FreelancersUsernameRoute: typeof FreelancersUsernameRoute
+  FreelancersIndexRoute: typeof FreelancersIndexRoute
 }
 
 const FreelancersRouteChildren: FreelancersRouteChildren = {
   FreelancersUsernameRoute: FreelancersUsernameRoute,
+  FreelancersIndexRoute: FreelancersIndexRoute,
 }
 
 const FreelancersRouteWithChildren = FreelancersRoute._addFileChildren(
@@ -974,10 +1465,12 @@ const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
 
 interface OrdersRouteChildren {
   OrdersIdRoute: typeof OrdersIdRoute
+  OrdersIndexRoute: typeof OrdersIndexRoute
 }
 
 const OrdersRouteChildren: OrdersRouteChildren = {
   OrdersIdRoute: OrdersIdRoute,
+  OrdersIndexRoute: OrdersIndexRoute,
 }
 
 const OrdersRouteWithChildren =
@@ -985,10 +1478,12 @@ const OrdersRouteWithChildren =
 
 interface ProjectsRouteChildren {
   ProjectsSlugRoute: typeof ProjectsSlugRoute
+  ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const ProjectsRouteChildren: ProjectsRouteChildren = {
   ProjectsSlugRoute: ProjectsSlugRoute,
+  ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
 const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
@@ -997,10 +1492,12 @@ const ProjectsRouteWithChildren = ProjectsRoute._addFileChildren(
 
 interface ServicesRouteChildren {
   ServicesSlugRoute: typeof ServicesSlugRoute
+  ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 const ServicesRouteChildren: ServicesRouteChildren = {
   ServicesSlugRoute: ServicesSlugRoute,
+  ServicesIndexRoute: ServicesIndexRoute,
 }
 
 const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
@@ -1009,7 +1506,7 @@ const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   ApplicationsRoute: ApplicationsRouteWithChildren,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRouteWithChildren,
