@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useSyncExternalStore } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { LoadingSpinner } from "@/components/site/feedback";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
@@ -11,7 +12,7 @@ import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { getSession } from "@/lib/auth";
 import { getOrder, getEscrowByOrderId } from "@/lib/mock-data";
-import { getOrderById, subscribeOrders } from "@/lib/orders-store";
+import { getOrderById, subscribeOrders, approveOrderDelivery } from "@/lib/orders-store";
 import { getEscrowByOrderId as getStoredEscrowByOrderId } from "@/lib/escrow-store";
 import { hasUserReviewedOrder, getReviewsForOrder, getOrderReviewDirection } from "@/lib/reviews-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
@@ -77,15 +78,41 @@ function OrderDetailPage() {
     !reviewed;
 
   const orderReviews = getReviewsForOrder(order.id);
+  const isClient =
+    session.user.id === order.ownerUserId ||
+    order.clientSlug === session.user.companySlug ||
+    order.client === session.user.fullName ||
+    order.client === session.user.company;
+  const canApproveDelivery = isClient && (order.status === "in_progress" || order.status === "review");
+
+  const handleApproveDelivery = () => {
+    const result = approveOrderDelivery(order.id);
+    if (result) {
+      toast.success("Yetkazib berish tasdiqlandi. Eskrou mablag' chiqarildi.");
+    } else {
+      toast.error("Tasdiqlash amalga oshmadi.");
+    }
+  };
 
   return (
     <WorkspaceShell
       eyebrow="Buyurtma tafsilotlari"
       title={order.title}
       actions={
-        <Link to="/messages" className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-4 text-sm font-medium hover:border-primary/20">
-          <MessageCircle className="size-4" /> Xabar yozish
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          {canApproveDelivery && (
+            <button
+              type="button"
+              onClick={handleApproveDelivery}
+              className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <CheckCircle2 className="size-4" /> Yetkazib berishni tasdiqlash
+            </button>
+          )}
+          <Link to="/messages" className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-4 text-sm font-medium hover:border-primary/20">
+            <MessageCircle className="size-4" /> Xabar yozish
+          </Link>
+        </div>
       }
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">

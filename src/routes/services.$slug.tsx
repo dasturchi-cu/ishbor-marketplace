@@ -10,7 +10,7 @@ import { GradientAvatar } from "@/components/site/avatar";
 import { ServiceCard } from "@/components/site/cards";
 import { SellerTrustBar, TrustGuaranteeCard } from "@/components/site/trust";
 import { SaveButtonInline } from "@/components/site/save-button";
-import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
+import { ConversionFlowBanner, SERVICE_ORDER_FLOW } from "@/components/site/conversion-flow";
 import { ServiceGallery } from "@/components/site/service-detail/gallery";
 import { PackageCard, PackageComparison } from "@/components/site/service-detail/package-card";
 import { FaqSection } from "@/components/site/service-detail/faq-section";
@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { isFeaturedActive } from "@/lib/featured-store";
 import { getSession } from "@/lib/auth";
 import { EntityNotFound } from "@/components/site/entity-not-found";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 
 export const Route = createFileRoute("/services/$slug")({
   head: () => ({ meta: [{ title: "Xizmat — Ishbor" }] }),
@@ -166,17 +167,25 @@ function ServiceDetailContent({
                 </div>
 
                 <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                  <Link
-                    to="/checkout"
-                    search={{
-                      type: "service" as const,
-                      service: service.slug,
-                      package: defaultPkg as "essential" | "premium" | "enterprise",
-                    }}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
-                  >
-                    <ShoppingCart className="size-4" /> Hozir buyurtma berish
-                  </Link>
+                  {!isOwner ? (
+                    <ClientCheckoutLink
+                      search={{
+                        type: "service" as const,
+                        service: service.slug,
+                        package: defaultPkg as "essential" | "premium" | "enterprise",
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
+                    >
+                      <ShoppingCart className="size-4" /> Hozir buyurtma berish
+                    </ClientCheckoutLink>
+                  ) : (
+                    <Link
+                      to="/my-services"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-6 py-3 text-sm font-semibold transition-default hover:border-primary/25"
+                    >
+                      Xizmatni boshqarish
+                    </Link>
+                  )}
                   <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-1 sm:max-w-md">
                     <Link
                       to="/messages"
@@ -299,10 +308,10 @@ function ServiceDetailContent({
             />
 
             <ConversionFlowBanner
-              title="Mijoz yollash yo'li"
-              steps={CLIENT_HIRE_FLOW}
+              title="Xizmat buyurtmasi"
+              steps={SERVICE_ORDER_FLOW}
               currentStep="service"
-              nextHint="Eskrou himoyalangan ish uchun bu xizmatni buyurtma qiling."
+              nextHint="Paketni tanlang va eskrou himoyasi bilan buyurtma bering."
               variant="sidebar"
             />
 
@@ -356,25 +365,26 @@ function ServiceDetailContent({
 
       <SiteFooter />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-card/95 p-3 backdrop-blur-md lg:hidden">
-        <Link
-          to="/checkout"
-          search={{
-            type: "service" as const,
-            service: service.slug,
-            package: defaultPkg as "essential" | "premium" | "enterprise",
-          }}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.4)] focus-ring"
-        >
-          <ShoppingCart className="size-4" /> Hozir buyurtma berish
-        </Link>
-        <Link
-          to="/messages"
-          className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-3 text-sm font-medium focus-ring"
-        >
-          <MessageSquare className="size-4" />
-        </Link>
-      </div>
+      {!isOwner && (
+        <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-card/95 p-3 backdrop-blur-md lg:hidden">
+          <ClientCheckoutLink
+            search={{
+              type: "service" as const,
+              service: service.slug,
+              package: defaultPkg as "essential" | "premium" | "enterprise",
+            }}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.4)] focus-ring"
+          >
+            <ShoppingCart className="size-4" /> Hozir buyurtma berish
+          </ClientCheckoutLink>
+          <Link
+            to="/messages"
+            className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-3 text-sm font-medium focus-ring"
+          >
+            <MessageSquare className="size-4" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,9 +5,9 @@ import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield, LevelBadge, CompactTrustRow, TrustGuaranteeCard } from "@/components/site/trust";
-import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
+import { ConversionFlowBanner, SERVICE_ORDER_FLOW, FREELANCER_HIRE_CHECKOUT_FLOW, ORDER_ESCROW_FLOW } from "@/components/site/conversion-flow";
 import { enrichService, freelancers, services, type Service, type Freelancer } from "@/lib/mock-data";
-import { requireRole } from "@/lib/guards";
+import { requireAuth } from "@/lib/guards";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { getOrderById, fundOrderEscrow } from "@/lib/orders-store";
 import { fundEscrow, getEscrowByOrderId } from "@/lib/escrow-store";
@@ -22,6 +22,8 @@ import { recordConversionEvent } from "@/lib/conversion-store";
 import { recordServiceOrder } from "@/lib/analytics-utils";
 import { recordAnalyticsEvent } from "@/lib/analytics-events-store";
 import { getAllServices } from "@/lib/services-store";
+import { computeSuccessScore } from "@/lib/growth-metrics";
+import { ensureClientRoleForCheckout } from "@/lib/client-checkout";
 
 type CheckoutSearch = {
   type?: "service" | "hire" | "order";
@@ -32,8 +34,53 @@ type CheckoutSearch = {
   package?: "essential" | "premium" | "enterprise";
 };
 
+type CheckoutKind = CheckoutSearch["type"];
+
+function checkoutPresentation(type: CheckoutKind, step: "review" | "payment") {
+  if (type === "hire") {
+    return {
+      flowTitle: "Mutaxassis yollash",
+      flowSteps: FREELANCER_HIRE_CHECKOUT_FLOW,
+      flowStep: "checkout" as const,
+      reviewTitle: step === "payment" ? "Yollash to'lovini yakunlang" : "Yollash shartlarini ko'rib chiqing",
+      reviewHint:
+        step === "payment"
+          ? "Frilanser depoziti eskrouda saqlanadi — ish tasdiqlanguncha mablag' chiqarilmaydi."
+          : "Soatlik stavka va taxminiy hajmni tasdiqlang, keyin to'lovga o'ting.",
+      confirmedBannerTitle: "Mutaxassis yollash yakunlandi",
+      confirmedHint: "Buyurtmalarda ish bosqichlarini kuzating va tasdiqlanganda eskrouni chiqaring.",
+    };
+  }
+  if (type === "order") {
+    return {
+      flowTitle: "Eskrou moliyalashtirish",
+      flowSteps: ORDER_ESCROW_FLOW,
+      flowStep: "checkout" as const,
+      reviewTitle: step === "payment" ? "Eskrou to'lovini yakunlang" : "Buyurtmani moliyalashtiring",
+      reviewHint:
+        step === "payment"
+          ? "Qabul qilingan taklif uchun mablag' eskrouga o'tkaziladi."
+          : "Frilanser ishni boshlashi uchun eskrouni moliyalashtiring.",
+      confirmedBannerTitle: "Eskrou moliyalashtirildi",
+      confirmedHint: "Buyurtma faol — yetkazilish bosqichlarini kuzating.",
+    };
+  }
+  return {
+    flowTitle: "Xizmat buyurtmasi",
+    flowSteps: SERVICE_ORDER_FLOW,
+    flowStep: "checkout" as const,
+    reviewTitle: step === "payment" ? "Xizmat to'lovini yakunlang" : "Xizmat buyurtmangizni ko'rib chiqing",
+    reviewHint:
+      step === "payment"
+        ? "Xizmat narxi eskrouda saqlanadi — faqat tasdiqlangan ish uchun chiqariladi."
+        : "Paket, yetkazish va tuzatishlar to'g'ri ekanini tekshiring, keyin to'lovga o'ting.",
+    confirmedBannerTitle: "Xizmat buyurtmasi tasdiqlandi",
+    confirmedHint: "Buyurtmalar bo'limida yetkazilish va tasdiqlashni kuzating.",
+  };
+}
+
 export const Route = createFileRoute("/checkout")({
-  beforeLoad: requireRole(["client"]),
+  beforeLoad: requireAuth,
   validateSearch: (search: Record<string, unknown>): CheckoutSearch => ({
     type:
       search.type === "hire" ? "hire"
@@ -51,7 +98,7 @@ export const Route = createFileRoute("/checkout")({
   }),
   head: () => ({ meta: [{ title: "To'lov — Ishbor" }] }),
   component: () => (
-    <ProtectedGate roles={["client"]}>
+    <ProtectedGate>
       <CheckoutPage />
     </ProtectedGate>
   ),
@@ -76,6 +123,8 @@ function CheckoutPage() {
   const [confirmedOrderId, setConfirmedOrderId] = useState("o1");
   const [confirmedEscrowId, setConfirmedEscrowId] = useState("ew1");
 
+  const presentation = checkoutPresentation(type, step === "payment" ? "payment" : "review");
+
   const selectedPaket =
     type === "service" && service
       ? enrichService(service).packages.find(
@@ -91,6 +140,10 @@ function CheckoutPage() {
     : service?.price ?? 0;
   const platformFee = Math.round(total * 0.05);
   const escrowSumma = total;
+
+  useEffect(() => {
+    ensureClientRoleForCheckout();
+  }, []);
 
   useEffect(() => {
     recordConversionEvent("checkout_start", search.service ?? search.freelancer ?? search.order);
@@ -191,7 +244,7 @@ function CheckoutPage() {
             <CheckCircle2 className="size-8" />
           </div>
           <div className="eyebrow text-success">To'lov tasdiqlandi</div>
-          <h1 className="font-display mt-2 text-3xl font-extrabold tracking-tight">Buyurtma tasdiqlandi</h1>
+          <h1 className="font-display mt-2 text-3xl font-extrabold tracking-tight">{presentation.confirmedBannerTitle}</h1>
           <p className="mt-3 text-sm text-muted-foreground">
             To'lovingiz ${escrowSumma.toLocaleString()} endi eskrouda saqlanmoqda. Sotuvchiga darhol xabar beriladi.
           </p>
@@ -216,10 +269,10 @@ function CheckoutPage() {
             </Link>
           </div>
           <ConversionFlowBanner
-            title="Yollash yakunlandi"
-            steps={CLIENT_HIRE_FLOW}
+            title={presentation.confirmedBannerTitle}
+            steps={presentation.flowSteps}
             currentStep="order"
-            nextHint="Buyurtmalarda bosqich yetkazilishini kuzating va ish tasdiqlanganda eskrouni chiqaring."
+            nextHint={presentation.confirmedHint}
             className="mt-8 w-full text-left shadow-[0_8px_32px_-16px_oklch(0.546_0.185_257/0.12)]"
           />
         </div>
@@ -270,14 +323,10 @@ function CheckoutPage() {
 
         <div className="mb-8 overflow-hidden rounded-2xl border border-border bg-card shadow-[0_8px_32px_-16px_oklch(0.546_0.185_257/0.12)]">
           <ConversionFlowBanner
-            title="Mijoz yollash yo'li"
-            steps={CLIENT_HIRE_FLOW}
-            currentStep="checkout"
-            nextHint={
-              step === "payment"
-                ? "Eskrouni moliyalashtirish uchun to'lovni yakunlang."
-                : "Buyurtma tafsilotlarini ko'rib chiqing, keyin to'lovga o'ting."
-            }
+            title={presentation.flowTitle}
+            steps={presentation.flowSteps}
+            currentStep={presentation.flowStep}
+            nextHint={presentation.reviewHint}
             className="mb-0 rounded-none border-0 bg-transparent shadow-none"
           />
           <div className="border-t border-border px-3 py-3 sm:px-4">
@@ -286,15 +335,11 @@ function CheckoutPage() {
         </div>
 
         <header className="mb-6">
-          <div className="eyebrow">{step === "payment" ? "Xavfsiz to'lov" : "To'lov oldidan"}</div>
+          <div className="eyebrow">{step === "payment" ? "Xavfsiz to'lov" : presentation.flowTitle}</div>
           <h1 className="font-display mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-            {step === "payment" ? "To'lovni yakunlang" : "Buyurtmangizni ko'rib chiqing"}
+            {presentation.reviewTitle}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {step === "payment"
-              ? "To'lovingiz bosqich tasdiqlanguncha eskrouda saqlanadi."
-              : "To'lovga o'tishdan oldin tafsilotlarni tasdiqlang."}
-          </p>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{presentation.reviewHint}</p>
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
@@ -302,6 +347,7 @@ function CheckoutPage() {
             {step === "review" && (
               <>
                 <SellerReviewCard
+                  checkoutType={type}
                   orderTitle={orderTitle || "Buyurtma"}
                   sellerName={sellerName || "Frilanser"}
                   sellerHue={sellerHue}
@@ -458,6 +504,7 @@ function CheckoutStepper({ step, className = "" }: { step: "review" | "payment";
 }
 
 function SellerReviewCard({
+  checkoutType,
   orderTitle,
   sellerName,
   sellerHue,
@@ -465,6 +512,7 @@ function SellerReviewCard({
   freelancer,
   statItems,
 }: {
+  checkoutType: CheckoutKind;
   orderTitle: string;
   sellerName: string;
   sellerHue: number;
@@ -472,15 +520,20 @@ function SellerReviewCard({
   freelancer: Freelancer | undefined;
   statItems: { label: string; value: string }[];
 }) {
+  const isServiceOrder = checkoutType === "service" && service;
+  const cardTitle = isServiceOrder ? orderTitle : sellerName;
+  const cardSubtitle = isServiceOrder ? `${sellerName} · xizmat sotuvchisi` : orderTitle;
+  const eyebrow = isServiceOrder ? "Xizmat buyurtmasi" : checkoutType === "hire" ? "Mutaxassis yollash" : "Buyurtma";
+
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card transition-default hover:border-primary/20">
       <div className="border-b border-border bg-elevated/40 px-5 py-5 sm:px-6">
         <div className="flex items-start gap-4">
           <GradientAvatar name={sellerName} hue={sellerHue} size={56} rounded="rounded-2xl" className="shrink-0 ring-2 ring-border/60" />
           <div className="min-w-0 flex-1">
-            <div className="eyebrow">Frilanser</div>
-            <h3 className="font-display text-lg font-bold leading-tight">{sellerName}</h3>
-            <p className="mt-1 text-sm leading-snug text-muted-foreground">{orderTitle}</p>
+            <div className="eyebrow">{eyebrow}</div>
+            <h3 className="font-display text-lg font-bold leading-tight">{cardTitle}</h3>
+            <p className="mt-1 text-sm leading-snug text-muted-foreground">{cardSubtitle}</p>
           </div>
         </div>
       </div>
@@ -492,7 +545,11 @@ function SellerReviewCard({
               level={freelancer.level}
               identityVerified={freelancer.identityVerified}
               businessVerified={freelancer.businessVerified}
-              successScore={freelancer.successScore}
+              successScore={
+                freelancer
+                  ? computeSuccessScore(freelancer.username).score
+                  : 0
+              }
             />
           )}
         </div>
@@ -525,7 +582,16 @@ function OrderSummary({
         <h3 className="font-display text-base font-semibold">Buyurtma xulosasi</h3>
       </div>
       <div className="space-y-3 p-5 text-sm">
-        <SummaryRow label={type === "service" ? "Xizmat to'lovi" : "Frilanser depoziti"} value={`$${total.toLocaleString()}`} />
+        <SummaryRow
+          label={
+            type === "service"
+              ? "Xizmat to'lovi"
+              : type === "hire"
+                ? "Frilanser depoziti"
+                : "Buyurtma summasi"
+          }
+          value={`$${total.toLocaleString()}`}
+        />
         <SummaryRow label="Platforma to'lovi" value={`$${platformFee.toLocaleString()}`} />
         <div className="flex items-center justify-between gap-3">
           <span className="text-muted-foreground">Eskrou himoyasi</span>

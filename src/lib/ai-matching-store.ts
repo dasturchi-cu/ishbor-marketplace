@@ -1,12 +1,11 @@
 import { recommendProjects, recommendServices, recommendFreelancers } from "./recommendations";
 import { getPublishedAgencies } from "./agency-store";
 import { rankAgencies } from "./agency-ranking-store";
-import { getStoredProjects } from "./projects-store";
-import { getStoredServices } from "./services-store";
+import { getPublishedProjects } from "./projects-store";
+import { getPublishedServices } from "./services-store";
 import { freelancers } from "./mock-data";
 import { getSession } from "./auth";
 import { getActiveRole } from "./active-role-store";
-import { getUserProfile } from "./profile-store";
 import type { Project } from "./mock-data";
 import type { Freelancer } from "./mock-data";
 import type { StoredService } from "./services-store";
@@ -26,7 +25,7 @@ function skillOverlap(a: string[], b: string[]): number {
 /** Projects for freelancer — extends recommendProjects with trust/success weighting */
 export function matchProjectsForFreelancer(userId?: string, limit = 5): SmartMatch<Project>[] {
   const uid = userId ?? getSession()?.user.id;
-  const published = getStoredProjects().filter((p) => p.status === "published" || !p.status);
+  const published = getPublishedProjects();
   const scored = recommendProjects(published, uid);
   return scored.slice(0, limit).map((p) => ({
     ...p,
@@ -49,7 +48,7 @@ export function matchFreelancersForClient(userId?: string, limit = 5): SmartMatc
 /** Services for client */
 export function matchServicesForClient(userId?: string, limit = 5): SmartMatch<StoredService>[] {
   const uid = userId ?? getSession()?.user.id;
-  const services = getStoredServices().filter((s) => s.status === "published" || !s.status);
+  const services = getPublishedServices();
   const scored = recommendServices(services, uid);
   return scored.slice(0, limit).map((s) => ({
     ...s,
@@ -84,7 +83,6 @@ export function matchAgenciesForProject(project: Project, limit = 3): SmartMatch
 export function getSmartMatchesForUser(userId?: string) {
   const session = getSession();
   const uid = userId ?? session?.user.id;
-  const profile = uid ? getUserProfile(uid) : null;
   const userType = getActiveRole();
 
   if (userType === "client") {

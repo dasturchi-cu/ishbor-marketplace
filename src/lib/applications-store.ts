@@ -223,7 +223,15 @@ export function createApplication(input: NewApplicationInput): Application | { e
   writeStored([app, ...stored]);
   notify();
   recordProposalSubmitted(session.user.id);
-  recordAnalyticsEvent({ type: "proposal_received", entityId: input.projectSlug });
+  recordAnalyticsEvent({
+    type: "proposal_received",
+    entityId: input.projectSlug,
+    meta: {
+      projectTitle: input.projectTitle,
+      freelancerName: session.user.fullName,
+      userName: input.client,
+    },
+  });
 
   const project = getProjectBySlug(input.projectSlug);
   if (project?.ownerUserId) {

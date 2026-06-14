@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, X, Sparkles } from "lucide-react";
 import type { AuthUser } from "@/lib/auth";
 import { enrichOnboardingPlan, type OnboardingWizardStep } from "@/lib/ai-onboarding-wizard";
+import { useActiveRole } from "@/hooks/use-active-role";
 import {
   dismissGettingStarted,
   getUnlockedStepCount,
@@ -12,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export function GettingStartedCard({ user }: { user: AuthUser }) {
+  const { activeRole } = useActiveRole();
   const plan = enrichOnboardingPlan(user);
   const completedCount = plan.steps.filter((s) => s.done).length;
   const allDone = completedCount === plan.steps.length;
@@ -34,7 +36,7 @@ export function GettingStartedCard({ user }: { user: AuthUser }) {
   };
 
   const roleLabel =
-    plan.userType === "client" ? "Mijoz" : plan.userType === "agency" ? "Agentlik" : "Frilanser";
+    activeRole === "client" ? "Mijoz" : plan.userType === "agency" ? "Agentlik" : "Frilanser";
 
   return (
     <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 shadow-sm">

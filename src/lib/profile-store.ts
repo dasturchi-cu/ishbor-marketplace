@@ -1,8 +1,11 @@
 import type { LanguageEntry, AvailabilitySettings } from "./auth-constants";
 import { loadOnboardingState } from "./auth-constants";
+import type { WorkspaceRole } from "./active-role-store";
+import { toProfileUserType } from "./active-role-store";
 import { getSession, updateSessionUser } from "./auth";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
 import { getMyPublishedProjects } from "./projects-store";
+import { publishPortfolio, createEmptyFormInput } from "./portfolio-store";
 
 const SERVICES_STORAGE_KEY = "ishbor-user-services";
 
@@ -128,6 +131,73 @@ export function persistOnboardingToProfile(userId: string): UserProfile {
   return profile;
 }
 
+const DEMO_PROFILE_SEEDS: Record<string, Partial<UserProfile>> = {
+  "u-client-1": {
+    company: "Asaka Capital",
+    industry: "Fintex",
+    teamSize: "51–200",
+    hiringGoals: ["design", "engineering", "one-off"],
+    categories: ["Branding", "Development", "Design"],
+  },
+  "u-freelancer-1": {
+    username: "nargiza",
+    title: "Brend strategi va UI dizayner",
+    skills: ["Figma", "Brendlash", "UI/UX dizayn", "Next.js"],
+    categories: ["Branding", "Design", "UI/UX dizayn"],
+    languages: [{ language: "O'zbek", level: "Ona tili" }, { language: "Ingliz", level: "Professional" }],
+    availability: { available: true, hoursPerWeek: "30–40 soat", timezone: "Asia/Tashkent (UTC+5)", responseTime: "< 1 soat" },
+  },
+  "u-admin-1": {
+    company: "Ishbor Platform",
+    industry: "SaaS",
+    teamSize: "11–50",
+    hiringGoals: ["engineering", "agency"],
+    categories: ["Development", "Strategy"],
+  },
+};
+
+/** Ensure known demo accounts have interest data when onboarding session is empty. */
+export function seedDemoProfileIfNeeded(userId: string): UserProfile | null {
+  const seed = DEMO_PROFILE_SEEDS[userId];
+  if (!seed) return null;
+  const existing = getUserProfile(userId);
+  const hasInterestData =
+    (existing?.skills.length ?? 0) > 0 ||
+    (existing?.hiringGoals.length ?? 0) > 0 ||
+    (existing?.categories.length ?? 0) > 0;
+  if (hasInterestData) return existing;
+  return saveUserProfile(userId, { ...seed, onboardingComplete: true });
+}
+
+/** Create draft portfolios from onboarding sessionStorage items. */
+export function persistOnboardingPortfolios(userId: string): number {
+  const onboarding = loadOnboardingState();
+  const session = getSession();
+  if (!session || onboarding.userType !== "freelancer" || onboarding.portfolio.length === 0) return 0;
+
+  const username = session.user.username ?? `user-${userId.slice(-6)}`;
+  const existing = getPublishedPortfoliosByUsername(username);
+  const existingTitles = new Set(existing.map((p) => p.title.toLowerCase()));
+  let created = 0;
+
+  for (const [i, item] of onboarding.portfolio.entries()) {
+    if (!item.title.trim() || existingTitles.has(item.title.toLowerCase())) continue;
+    const input = createEmptyFormInput(250 + i * 20);
+    input.title = item.title.trim();
+    input.category = item.category.trim() || input.category;
+    input.description = `${item.title} — onboarding orqali yaratilgan portfolio namunasi.`;
+    input.objectives = "Mijoz ehtiyojlarini qondirish va natijani ko'rsatish.";
+    publishPortfolio(input, {
+      ownerUserId: userId,
+      freelancerUsername: username,
+      freelancerName: session.user.fullName,
+      freelancerHue: session.user.avatarHue,
+    });
+    created++;
+  }
+  return created;
+}
+
 export type ProfileCompletionItem = {
   id: string;
   label: string;
@@ -136,7 +206,8 @@ export type ProfileCompletionItem = {
   weight: number;
 };
 
-export function getProfileCompletionItems(userId: string, userType: "client" | "freelancer"): ProfileCompletionItem[] {
+export function getProfileCompletionItems(userId: string, role: WorkspaceRole): ProfileCompletionItem[] {
+  const userType = toProfileUserType(role);
   const session = getSession();
   const user = session?.user;
   const profile = getUserProfile(userId);
@@ -169,8 +240,8 @@ export function getProfileCompletionItems(userId: string, userType: "client" | "
   ];
 }
 
-export function computeProfileCompletionPercent(userId: string, userType: "client" | "freelancer"): number {
-  const items = getProfileCompletionItems(userId, userType);
+export function computeProfileCompletionPercent(userId: string, role: WorkspaceRole): number {
+  const items = getProfileCompletionItems(userId, role);
   const total = items.reduce((s, i) => s + i.weight, 0);
   const done = items.filter((i) => i.done).reduce((s, i) => s + i.weight, 0);
   return total > 0 ? Math.round((done / total) * 100) : 0;

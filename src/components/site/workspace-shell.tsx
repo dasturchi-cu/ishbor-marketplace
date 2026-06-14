@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { SiteNav } from "./nav";
+import { RoleSwitcher } from "./role-switcher";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { getUnreadCount, subscribeNotifications } from "@/lib/notifications-store";
@@ -37,14 +38,14 @@ import {
   subscribeAgencies,
   type AgencyPermission,
 } from "@/lib/agency-store";
-import type { UserType } from "@/lib/auth-constants";
+import type { WorkspaceRole } from "@/lib/active-role-store";
 
 type NavItem = {
   to: string;
   label: string;
   icon: typeof LayoutDashboard;
   exact: boolean;
-  roles: UserType[];
+  roles: WorkspaceRole[];
   tier: "core" | "more";
   badgeKey?: "messages" | "notifications";
   adminOnly?: boolean;
@@ -54,6 +55,12 @@ type NavItem = {
 };
 
 const allNav: NavItem[] = [
+  // —— Agency core ——
+  { to: "/dashboard/agency", label: "Panel", icon: LayoutDashboard, exact: true, roles: ["agency"], tier: "core", group: "agency" },
+  { to: "/agency/clients", label: "Agentlik CRM", icon: Users, exact: false, roles: ["agency"], tier: "core", group: "agency", agencyPermission: "view_crm" },
+  { to: "/messages", label: "Xabarlar", icon: MessageSquare, exact: false, roles: ["agency"], tier: "core", badgeKey: "messages" },
+  { to: "/wallet", label: "Hamyon", icon: Wallet, exact: false, roles: ["agency"], tier: "core" },
+
   // —— Client core (5) ——
   { to: "/dashboard", label: "Panel", icon: LayoutDashboard, exact: true, roles: ["client"], tier: "core" },
   { to: "/my-projects", label: "Loyihalarim", icon: FolderOpen, exact: false, roles: ["client"], tier: "core" },
@@ -71,9 +78,9 @@ const allNav: NavItem[] = [
   // —— Shared secondary ——
   { to: "/analytics/client", label: "Analitika", icon: BarChart3, exact: false, roles: ["client"], tier: "more" },
   { to: "/clients/manage", label: "Frilanserlar CRM", icon: Users, exact: false, roles: ["client"], tier: "more" },
-  { to: "/saved", label: "Saqlangan", icon: Heart, exact: false, roles: ["client", "freelancer"], tier: "more" },
-  { to: "/escrow", label: "Eskrou", icon: Lock, exact: false, roles: ["client", "freelancer"], tier: "more" },
-  { to: "/notifications", label: "Bildirishnomalar", icon: Bell, exact: false, roles: ["client", "freelancer"], tier: "more", badgeKey: "notifications" },
+  { to: "/saved", label: "Saqlangan", icon: Heart, exact: false, roles: ["client", "freelancer", "agency"], tier: "more" },
+  { to: "/escrow", label: "Eskrou", icon: Lock, exact: false, roles: ["client", "freelancer", "agency"], tier: "more" },
+  { to: "/notifications", label: "Bildirishnomalar", icon: Bell, exact: false, roles: ["client", "freelancer", "agency"], tier: "more", badgeKey: "notifications" },
 
   { to: "/analytics/freelancer", label: "Analitika", icon: BarChart3, exact: false, roles: ["freelancer"], tier: "more" },
   { to: "/freelancers/manage", label: "Mijozlar CRM", icon: Users, exact: false, roles: ["freelancer"], tier: "more" },
@@ -89,8 +96,8 @@ const allNav: NavItem[] = [
   { to: "/subscription", label: "Obuna", icon: Crown, exact: false, roles: ["client", "freelancer"], tier: "more", group: "monetization" },
   { to: "/promotions", label: "Rivojlantirish", icon: Sparkles, exact: false, roles: ["client", "freelancer"], tier: "more", group: "monetization" },
 
-  { to: "/profile", label: "Profil", icon: User, exact: false, roles: ["client", "freelancer"], tier: "more" },
-  { to: "/settings", label: "Sozlamalar", icon: Settings, exact: false, roles: ["client", "freelancer"], tier: "more" },
+  { to: "/profile", label: "Profil", icon: User, exact: false, roles: ["client", "freelancer", "agency"], tier: "more" },
+  { to: "/settings", label: "Sozlamalar", icon: Settings, exact: false, roles: ["client", "freelancer", "agency"], tier: "more" },
   { to: "/admin", label: "Boshqaruv", icon: Shield, exact: false, roles: ["client", "freelancer"], tier: "more", adminOnly: true },
   { to: "/revenue", label: "Daromad", icon: BarChart3, exact: false, roles: ["client", "freelancer"], tier: "more", adminOnly: true },
 ];
@@ -101,14 +108,14 @@ const GROUP_HEADERS: Record<NonNullable<NavItem["group"]>, string> = {
   monetization: "Obuna va kreditlar",
 };
 
-function navForUser(role: UserType, isAdmin: boolean, userId?: string) {
+function navForUser(role: WorkspaceRole, isAdmin: boolean, userId?: string) {
   const agencies = userId ? getAgenciesForUser(userId) : [];
   const hasAgency = agencies.length > 0;
 
   return allNav.filter((n) => {
     if (!n.roles.includes(role)) return false;
     if (n.adminOnly && !isAdmin) return false;
-    if (n.agencyOnly && !hasAgency) return false;
+    if (role !== "agency" && n.agencyOnly && !hasAgency) return false;
     if (n.agencyPermission && userId) {
       const can = agencies.some((a) => hasAgencyPermission(a, userId, n.agencyPermission!));
       if (!can) return false;
@@ -178,7 +185,7 @@ export function WorkspaceShell({
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
-  const { activeRole: role } = useActiveRole();
+  const { activeRole: role, availableRoles } = useActiveRole();
   const [moreOpen, setMoreOpen] = useState(false);
 
   useSyncExternalStore(subscribeAgencies, () => user?.id ?? "", () => "");
@@ -213,6 +220,10 @@ export function WorkspaceShell({
             <div className="mb-2 px-3 font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/60">
               Ish maydoni
             </div>
+
+            {availableRoles.length > 1 && (
+              <RoleSwitcher variant="compact" className="mb-3 mx-1" />
+            )}
 
             {coreNav.map((n) => (
               <NavLink key={`${n.to}-${n.label}`} n={n} pathname={pathname} badge={badgeFor(n)} />

@@ -233,7 +233,14 @@ export function publishProject(
   });
   const session = getSession();
   if (session) completeReferral(session.user.id);
-  recordAnalyticsEvent({ type: "project_created", entityId: project.slug });
+  recordAnalyticsEvent({
+    type: "project_created",
+    entityId: project.slug,
+    meta: {
+      projectTitle: project.title,
+      userName: session?.user.fullName ?? project.client,
+    },
+  });
   return project;
 }
 

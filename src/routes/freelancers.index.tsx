@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useSyncExternalStore } from "react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { FreelancerCard } from "@/components/site/cards";
@@ -8,6 +9,14 @@ import { usePageReady } from "@/hooks/use-page-ready";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
 import { filterFreelancers, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { Users } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
+import {
+  applyPersonalizedFreelancerOrder,
+  getRecommendationsVersion,
+  shouldPersonalizeList,
+  subscribeRecommendations,
+} from "@/lib/recommendations";
 
 export const Route = createFileRoute("/freelancers/")({
   validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
@@ -31,9 +40,18 @@ const filterChips = [
 
 function FreelancersPage() {
   const ready = usePageReady();
+  const { user } = useAuth();
+  const { activeRole } = useActiveRole();
   const search = Route.useSearch();
   const setSearch = useMarketplaceSearch(search, "/freelancers");
-  const filtered = filterFreelancers(freelancers, search);
+  const recVersion = useSyncExternalStore(subscribeRecommendations, getRecommendationsVersion, () => 0);
+  const filtered = useMemo(() => {
+    const base = filterFreelancers(freelancers, search);
+    if (user && activeRole === "client" && shouldPersonalizeList(search)) {
+      return applyPersonalizedFreelancerOrder(base, user.id);
+    }
+    return base;
+  }, [search, user?.id, activeRole, recVersion]);
 
   return (
     <div className="min-h-screen bg-background">

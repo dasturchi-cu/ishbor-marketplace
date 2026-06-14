@@ -13,25 +13,24 @@ import { EscrowShield, OrderStatusBadge, EscrowFundedBadge } from "@/components/
 
 import { PipelineEmpty } from "@/components/site/feedback";
 
-import { orders, hiringPipeline, messages } from "@/lib/mock-data";
-
+import { hiringPipeline, messages } from "@/lib/mock-data";
+import type { EscrowWorkflow, Order, HiringLead } from "@/lib/mock-data";
 import type { AuthUser } from "@/lib/auth";
-
-import type { EscrowWorkflow } from "@/lib/mock-data";
-
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
-
 import { getMyProjects, subscribeProjects } from "@/lib/projects-store";
-
-import { getSaved, subscribeSaved } from "@/lib/saved-store";
-
+import { getSaved, subscribeSaved, EMPTY_SAVED } from "@/lib/saved-store";
 import { getAllEscrowWorkflows, subscribeEscrow } from "@/lib/escrow-store";
-
 import { getWallet, subscribeWallet } from "@/lib/wallet-store";
+import { getAllOrders, subscribeOrders } from "@/lib/orders-store";
+import { ClientRecommendations } from "@/components/site/personalized-recommendations";
 import { NextActionCard } from "@/components/ftue/next-action-card";
-
-
+import {
+  buildHiringPipelineForClient,
+  getClientLifetimeSpend,
+  getPendingProposalsForClient,
+} from "@/lib/client-dashboard-utils";
+import { subscribeApplications } from "@/lib/applications-store";
 
 export const Route = createFileRoute("/dashboard/")({
 
@@ -44,6 +43,7 @@ export const Route = createFileRoute("/dashboard/")({
 
 
 const EMPTY_PROJECTS: ReturnType<typeof getMyProjects> = [];
+const EMPTY_ORDERS: Order[] = [];
 
 
 
@@ -82,6 +82,8 @@ function ClientDashboard() {
   useEffect(() => {
     if (activeRole === "freelancer") {
       navigate({ to: "/dashboard/freelancer", replace: true });
+    } else if (activeRole === "agency") {
+      navigate({ to: "/dashboard/agency", replace: true });
     }
   }, [activeRole, navigate]);
 
@@ -109,7 +111,7 @@ function ClientDashboard() {
 
     () => getSaved(userId),
 
-    () => ({ services: [], freelancers: [], projects: [], portfolios: [] }),
+    () => EMPTY_SAVED,
 
   );
 
@@ -134,17 +136,36 @@ function ClientDashboard() {
 
   );
 
+  const allOrders = useSyncExternalStore(subscribeOrders, getAllOrders, () => EMPTY_ORDERS);
+  useSyncExternalStore(subscribeApplications, () => 0, () => 0);
 
+  const userOrders = useMemo(() => {
+    if (!user) return EMPTY_ORDERS;
+    const { id, username, companySlug, fullName, company } = user;
+    return allOrders.filter(
+      (o) =>
+        o.ownerUserId === id ||
+        (username && o.freelancerUsername === username) ||
+        (companySlug && o.clientSlug === companySlug) ||
+        o.client === fullName ||
+        (company && o.client === company),
+    );
+  }, [allOrders, user]);
 
-  const activeOrders = orders.filter((o) => o.status === "in_progress" || o.status === "review");
+  const activeOrders = userOrders.filter((o) => o.status === "in_progress" || o.status === "review");
 
-  const reviewingLeads = hiringPipeline.filter((h) => h.stage === "reviewing");
+  const hiringLeads = useMemo(() => {
+    if (!user) return [] as HiringLead[];
+    const real = buildHiringPipelineForClient(user);
+    return real.length > 0 ? real : hiringPipeline;
+  }, [user]);
 
-  const shortlistedLeads = hiringPipeline.filter((h) => h.stage === "shortlisted");
+  const pendingProposals = useMemo(() => (user ? getPendingProposalsForClient(user) : []), [user, allOrders]);
 
-  const interviewLeads = hiringPipeline.filter((h) => h.stage === "interview");
-
-  const offerLeads = hiringPipeline.filter((h) => h.stage === "offer");
+  const reviewingLeads = hiringLeads.filter((h) => h.stage === "reviewing");
+  const shortlistedLeads = hiringLeads.filter((h) => h.stage === "shortlisted");
+  const interviewLeads = hiringLeads.filter((h) => h.stage === "interview");
+  const offerLeads = hiringLeads.filter((h) => h.stage === "offer");
 
   const activeEscrows = clientEscrows.filter((e) => e.status !== "completed" && e.status !== "released");
 
@@ -164,7 +185,7 @@ function ClientDashboard() {
 
   const savedFreelancers = saved.freelancers.length;
 
-  const lifetimeSpent = wallet?.lifetimeEarned ?? 0;
+  const lifetimeSpent = user ? getClientLifetimeSpend(user) : 0;
 
   const availableBalance = wallet?.available ?? 0;
 
@@ -191,6 +212,8 @@ function ClientDashboard() {
     >
 
       {user && <NextActionCard user={user} />}
+
+      {user && <ClientRecommendations />}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
 
@@ -308,12 +331,40 @@ function ClientDashboard() {
 
           </section>
 
-
+          {pendingProposals.length > 0 && (
+            <section className="rounded-2xl border border-border bg-card">
+              <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
+                <h2 className="font-display text-base font-semibold">Yangi takliflar</h2>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-primary">
+                  {pendingProposals.length}
+                </span>
+              </div>
+              <div className="divide-y divide-border">
+                {pendingProposals.slice(0, 5).map((app) => (
+                  <Link
+                    key={app.id}
+                    to="/projects/$slug"
+                    params={{ slug: app.projectSlug ?? "" }}
+                    className="flex items-center gap-3 p-4 transition-default hover:bg-secondary/20 sm:p-6"
+                  >
+                    <GradientAvatar name={app.freelancerName ?? "F"} hue={app.freelancerHue ?? 250} size={40} rounded="rounded-lg" />
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold">{app.freelancerName ?? "Frilanser"}</div>
+                      <div className="font-mono mt-0.5 truncate text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {app.projectTitle} · ${app.proposalAmount ?? app.budget}
+                      </div>
+                    </div>
+                    <span className="shrink-0 rounded-lg border border-border px-2 py-1 text-[10px] font-medium uppercase">
+                      {app.status === "shortlisted" ? "Tanlovda" : "Yangi"}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-border bg-card">
-
             <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
-
               <h2 className="font-display text-base font-semibold">Faol buyurtmalar</h2>
 
               <Link to="/orders" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
@@ -802,7 +853,7 @@ function StatCard({ label, value, trend, accent }: { label: string; value: strin
 
 
 
-function HiringCard({ lead }: { lead: (typeof hiringPipeline)[number] }) {
+function HiringCard({ lead }: { lead: HiringLead }) {
 
   return (
 

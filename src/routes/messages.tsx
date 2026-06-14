@@ -29,6 +29,7 @@ import { downloadDemoFile } from "@/lib/export-utils";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { ensureClientRoleForCheckout, buildCheckoutRedirectPath } from "@/lib/client-checkout";
 import { createOrder } from "@/lib/orders-store";
 import { createEscrowFromOrder } from "@/lib/escrow-store";
 import { addNotification } from "@/lib/notifications-store";
@@ -350,6 +351,7 @@ function MessagesPage() {
     });
 
     toast.success("Taklif qabul qilindi — to'lov sahifasiga yo'naltirilmoqda");
+    ensureClientRoleForCheckout();
     navigate({ to: "/checkout", search: { type: "order", order: order.id } });
   };
 

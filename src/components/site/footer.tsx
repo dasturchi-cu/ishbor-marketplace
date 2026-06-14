@@ -5,16 +5,20 @@ type FooterLink = {
   to: string;
   label: string;
   search?: Record<string, string>;
+  params?: Record<string, string>;
 };
 
 const cols: { title: string; links: FooterLink[] }[] = [
   {
     title: "Bozor",
     links: [
-      { to: "/services", label: "Xizmatlarni ko'rish" },
+      { to: "/services", label: "Barcha xizmatlar" },
+      { to: "/services/category/$slug", params: { slug: "design" }, label: "Dizayn va brend" },
+      { to: "/services/category/$slug", params: { slug: "development" }, label: "Dasturlash" },
+      { to: "/services/category/$slug", params: { slug: "marketing" }, label: "Marketing" },
       { to: "/freelancers", label: "Mutaxassislarni ko'rish" },
       { to: "/projects", label: "Loyihalarni ko'rish" },
-      { to: "/agencies", label: "Agentliklarni ko'rish" },
+      { to: "/projects/preview", label: "Loyiha rejasini tuzish" },
     ],
   },
   {
@@ -65,6 +69,7 @@ export function SiteFooter() {
                     <li key={l.label}>
                       <Link
                         to={l.to}
+                        params={l.params}
                         search={l.search}
                         className="text-muted-foreground transition-default hover:text-foreground"
                       >

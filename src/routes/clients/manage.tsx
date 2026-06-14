@@ -13,6 +13,7 @@ import { getClientCrmData } from "@/lib/crm-store";
 import { computeFreelancerReputation } from "@/lib/reputation-store";
 import { subscribeOrders } from "@/lib/orders-store";
 import { subscribeSaved } from "@/lib/saved-store";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 
 export const Route = createFileRoute("/clients/manage")({
   beforeLoad: requireRole(["client"]),
@@ -137,13 +138,12 @@ function FreelancerRow({
       </div>
       <div className="flex gap-2">
         {showHireAgain && (
-          <Link
-            to="/checkout"
+          <ClientCheckoutLink
             search={{ type: "hire", freelancer: f.username }}
             className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
           >
             <RotateCcw className="size-3.5" /> Qayta yollash
-          </Link>
+          </ClientCheckoutLink>
         )}
         {showInvite && (
           <Link
@@ -153,13 +153,12 @@ function FreelancerRow({
             <UserPlus className="size-3.5" /> Taklif
           </Link>
         )}
-        <Link
-          to="/checkout"
+        <ClientCheckoutLink
           search={{ type: "hire", freelancer: f.username }}
           className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary"
         >
           Yollash
-        </Link>
+        </ClientCheckoutLink>
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { readStoredReviews } from "./reviews-store";
 import { computeProfileCompletionPercent } from "./profile-store";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
 import type { AuthUser } from "./auth";
-import { getActiveRole } from "./active-role-store";
+import { getActiveRole, toProfileUserType } from "./active-role-store";
 
 const SERVICES_STORAGE_KEY = "ishbor-user-services";
 const RESPONSE_METRICS_KEY = "ishbor-response-metrics";
@@ -210,7 +210,7 @@ export function formatResponseTime(medianMinutes: number | null): string {
 export function computeTrustScore(user: AuthUser, username?: string): TrustScoreResult {
   const uname = username ?? user.username;
   const userId = user.id;
-  const userType: "client" | "freelancer" = uname ? "freelancer" : getActiveRole();
+  const userType = uname ? ("freelancer" as const) : toProfileUserType(getActiveRole());
 
   const profileCompletion = computeProfileCompletionPercent(userId, userType);
 

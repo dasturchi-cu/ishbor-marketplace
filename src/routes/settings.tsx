@@ -16,6 +16,7 @@ import { PaymentMethodsTab } from "@/components/settings/tabs/payment-tab";
 import { VerificationTab } from "@/components/settings/tabs/verification-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { RoleSwitcher } from "@/components/site/role-switcher";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import { updateSessionUser } from "@/lib/auth";
@@ -222,6 +223,7 @@ function SettingsPage() {
 
   return (
     <WorkspaceShell eyebrow="Hisob" title="Sozlamalar">
+      <RoleSwitcher variant="compact" className="mb-4 w-fit" />
       <div className={`grid gap-6 lg:grid-cols-[220px_1fr] ${showSaveBar ? "pb-20" : ""}`}>
         <div className="space-y-3">
           <div className="relative">

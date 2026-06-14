@@ -1,13 +1,18 @@
 import type { UserType } from "./auth-constants";
 import type { AuthUser } from "./auth";
 import { getSession, subscribe as subscribeAuth } from "./auth";
+import { getAgenciesForUser } from "./agency-store";
+import { syncSmartNotifications } from "./ai-smart-notifications";
+
+/** Active workspace mode — includes agency when user belongs to an agency. */
+export type WorkspaceRole = UserType | "agency";
 
 const STORAGE_PREFIX = "ishbor-active-role";
 
 const listeners = new Set<() => void>();
 
 let cachedUserId: string | null = null;
-let cachedRole: UserType | null = null;
+let cachedRole: WorkspaceRole | null = null;
 let storageListenerAttached = false;
 let authBridgeAttached = false;
 
@@ -15,11 +20,18 @@ function storageKey(userId: string) {
   return `${STORAGE_PREFIX}-${userId}`;
 }
 
-function readStoredRole(userId: string, fallback: UserType): UserType {
+function userHasAgency(userId: string): boolean {
+  return getAgenciesForUser(userId).length > 0;
+}
+
+function readStoredRole(userId: string, fallback: WorkspaceRole): WorkspaceRole {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem(storageKey(userId));
-    if (raw === "client" || raw === "freelancer") return raw;
+    if (raw === "client" || raw === "freelancer" || raw === "agency") {
+      if (raw === "agency" && !userHasAgency(userId)) return fallback;
+      return raw;
+    }
   } catch {
     /* ignore */
   }
@@ -71,7 +83,7 @@ export function subscribeActiveRole(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-export function getActiveRole(): UserType {
+export function getActiveRole(): WorkspaceRole {
   const session = getSession();
   if (!session) return "client";
 
@@ -83,9 +95,20 @@ export function getActiveRole(): UserType {
   return cachedRole;
 }
 
-export function setActiveRole(role: UserType) {
+export function getAvailableWorkspaceRoles(userId?: string): WorkspaceRole[] {
+  const session = getSession();
+  const uid = userId ?? session?.user.id;
+  if (!uid) return ["client", "freelancer"];
+  const roles: WorkspaceRole[] = ["client", "freelancer"];
+  if (userHasAgency(uid)) roles.push("agency");
+  return roles;
+}
+
+export function setActiveRole(role: WorkspaceRole) {
   const session = getSession();
   if (!session) return;
+
+  if (role === "agency" && !userHasAgency(session.user.id)) return;
 
   if (typeof window !== "undefined") {
     localStorage.setItem(storageKey(session.user.id), role);
@@ -93,16 +116,28 @@ export function setActiveRole(role: UserType) {
   cachedUserId = session.user.id;
   cachedRole = role;
   notifyListeners();
+
+  if (typeof window !== "undefined") {
+    queueMicrotask(() => syncSmartNotifications(session.user.id));
+  }
 }
 
-export function getActiveDashboardPath(role?: UserType): string {
+export function getActiveDashboardPath(role?: WorkspaceRole): string {
   const active = role ?? getActiveRole();
-  return active === "freelancer" ? "/dashboard/freelancer" : "/dashboard";
+  if (active === "freelancer") return "/dashboard/freelancer";
+  if (active === "agency") return "/dashboard/agency";
+  return "/dashboard";
+}
+
+function pathMatchesPrefix(path: string, prefix: string, exactOnly?: boolean): boolean {
+  if (exactOnly) return path === prefix;
+  return path === prefix || path.startsWith(`${prefix}/`);
 }
 
 /** Role-specific routes that must redirect when active role changes. */
-const ROLE_SPECIFIC_PREFIXES: { prefix: string; role: UserType }[] = [
+const ROLE_SPECIFIC_PREFIXES: { prefix: string; role: WorkspaceRole; exactOnly?: boolean }[] = [
   { prefix: "/dashboard/freelancer", role: "freelancer" },
+  { prefix: "/dashboard/agency", role: "agency" },
   { prefix: "/dashboard", role: "client" },
   { prefix: "/analytics/client", role: "client" },
   { prefix: "/analytics/freelancer", role: "freelancer" },
@@ -113,15 +148,18 @@ const ROLE_SPECIFIC_PREFIXES: { prefix: string; role: UserType }[] = [
   { prefix: "/my-services", role: "freelancer" },
   { prefix: "/services/create", role: "freelancer" },
   { prefix: "/applications", role: "freelancer" },
-  { prefix: "/promotions", role: "freelancer" },
+  { prefix: "/portfolio", role: "freelancer", exactOnly: true },
   { prefix: "/portfolio/create", role: "freelancer" },
   { prefix: "/portfolio/edit", role: "freelancer" },
+  { prefix: "/agency/clients", role: "agency" },
+  { prefix: "/agencies/create", role: "agency" },
+  { prefix: "/agencies/edit", role: "agency" },
 ];
 
-export function pathRequiresRole(pathname: string, role: UserType): boolean {
+export function pathRequiresRole(pathname: string, role: WorkspaceRole): boolean {
   const path = pathname.replace(/\/$/, "") || "/";
-  for (const { prefix, role: required } of ROLE_SPECIFIC_PREFIXES) {
-    if (path === prefix || path.startsWith(`${prefix}/`)) {
+  for (const { prefix, role: required, exactOnly } of ROLE_SPECIFIC_PREFIXES) {
+    if (pathMatchesPrefix(path, prefix, exactOnly)) {
       return required === role;
     }
   }
@@ -129,12 +167,12 @@ export function pathRequiresRole(pathname: string, role: UserType): boolean {
   return true;
 }
 
-export function getRedirectAfterRoleSwitch(newRole: UserType, pathname: string): string | null {
+export function getRedirectAfterRoleSwitch(newRole: WorkspaceRole, pathname: string): string | null {
   if (pathRequiresRole(pathname, newRole)) return null;
   return getActiveDashboardPath(newRole);
 }
 
-export function getProfilePath(user: AuthUser, role?: UserType): string {
+export function getProfilePath(user: AuthUser, role?: WorkspaceRole): string {
   const active = role ?? getActiveRole();
   if (active === "freelancer" && user.username) {
     return `/freelancers/${user.username}`;
@@ -143,4 +181,9 @@ export function getProfilePath(user: AuthUser, role?: UserType): string {
     return `/clients/${user.companySlug}`;
   }
   return "/profile";
+}
+
+/** Map workspace role to profile completion / onboarding user type. */
+export function toProfileUserType(role: WorkspaceRole): UserType {
+  return role === "freelancer" ? "freelancer" : "client";
 }

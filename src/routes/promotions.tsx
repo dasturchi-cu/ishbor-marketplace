@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { Sparkles, TrendingUp, Eye, Zap } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { ProtectedGate } from "@/components/auth/protected-gate";
-import { requireRole } from "@/lib/guards";
+import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
 import {
   getFeaturedCost,
   getFeaturedDurationDays,
@@ -23,10 +24,10 @@ import { getFeaturedDiscount, getPlan } from "@/lib/subscription-store";
 import { UpsellBanner } from "@/components/monetization/upsell-banner";
 
 export const Route = createFileRoute("/promotions")({
-  beforeLoad: requireRole(["freelancer"]),
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Promotsiya markazi — Ishbor" }] }),
   component: () => (
-    <ProtectedGate roles={["freelancer"]}>
+    <ProtectedGate>
       <PromotionsPage />
     </ProtectedGate>
   ),
@@ -40,6 +41,8 @@ const CREDIT_PACKS = [
 
 function PromotionsPage() {
   const { user } = useAuth();
+  const { activeRole } = useActiveRole();
+  const isFreelancer = activeRole === "freelancer";
   const [refresh, setRefresh] = useState(0);
 
   useSyncExternalStore(subscribeCredits, () => (user ? getCreditBalance(user.id) : 0) + refresh, () => 0);
@@ -125,47 +128,51 @@ function PromotionsPage() {
           Narxi: {baseCost.toLocaleString()} UZS · {days} kun · taxminiy +{estimatedViews("service")}% ko'rinish
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <BoostCard
-            title="Profil boost"
-            description="Profil qidiruvda ustun turadi"
-            active={profileFeatured}
-            cost={baseCost}
-            days={days}
-            visibility={`+${estimatedViews("profile")}%`}
-            onBoost={() => handleBoost({ type: "profile", slug: user.username ?? user.id, title: user.fullName })}
-          />
+          {isFreelancer && (
+            <BoostCard
+              title="Profil boost"
+              description="Profil"
+              active={profileFeatured}
+              cost={baseCost}
+              days={days}
+              visibility={`+${estimatedViews("profile")}%`}
+              onBoost={() => handleBoost({ type: "profile", slug: user.username ?? user.id, title: user.fullName })}
+            />
+          )}
 
-          {services.map((s) => {
-            const funnel = getVisibilityFunnel("service", s.slug, 30);
-            return (
-              <BoostCard
-                key={s.slug}
-                title={s.title}
-                description="Xizmat"
-                active={isFeaturedActive(s.featured, s.featuredUntil)}
-                cost={baseCost}
-                days={days}
-                visibility={`${funnel.views} ko'rish · +${estimatedViews("service")}%`}
-                onBoost={() => handleBoost({ type: "service", slug: s.slug, title: s.title })}
-              />
-            );
-          })}
+          {isFreelancer &&
+            services.map((s) => {
+              const funnel = getVisibilityFunnel("service", s.slug, 30);
+              return (
+                <BoostCard
+                  key={s.slug}
+                  title={s.title}
+                  description="Xizmat"
+                  active={isFeaturedActive(s.featured, s.featuredUntil)}
+                  cost={baseCost}
+                  days={days}
+                  visibility={`${funnel.views} ko'rish · +${estimatedViews("service")}%`}
+                  onBoost={() => handleBoost({ type: "service", slug: s.slug, title: s.title })}
+                />
+              );
+            })}
 
-          {portfolios.map((p) => {
-            const funnel = getVisibilityFunnel("portfolio", p.slug, 30);
-            return (
-              <BoostCard
-                key={p.slug}
-                title={p.title}
-                description="Portfolio"
-                active={isFeaturedActive(p.featured, p.featuredUntil)}
-                cost={baseCost}
-                days={days}
-                visibility={`${funnel.views} ko'rish · +${estimatedViews("portfolio")}%`}
-                onBoost={() => handleBoost({ type: "portfolio", slug: p.slug, title: p.title })}
-              />
-            );
-          })}
+          {isFreelancer &&
+            portfolios.map((p) => {
+              const funnel = getVisibilityFunnel("portfolio", p.slug, 30);
+              return (
+                <BoostCard
+                  key={p.slug}
+                  title={p.title}
+                  description="Portfolio"
+                  active={isFeaturedActive(p.featured, p.featuredUntil)}
+                  cost={baseCost}
+                  days={days}
+                  visibility={`${funnel.views} ko'rish · +${estimatedViews("portfolio")}%`}
+                  onBoost={() => handleBoost({ type: "portfolio", slug: p.slug, title: p.title })}
+                />
+              );
+            })}
 
           {projects.map((p) => (
             <BoostCard
@@ -181,9 +188,16 @@ function PromotionsPage() {
           ))}
         </div>
 
-        {services.length === 0 && portfolios.length === 0 && projects.length === 0 && (
+        {(isFreelancer ? services.length === 0 && portfolios.length === 0 : true) && projects.length === 0 && (
           <p className="mt-4 text-sm text-muted-foreground">
-            Boost qilish uchun avval xizmat, portfolio yoki loyiha yarating.
+            {isFreelancer
+              ? "Boost qilish uchun avval xizmat, portfolio yoki loyiha yarating."
+              : "Boost qilish uchun avval loyiha joylang."}{" "}
+            {!isFreelancer && (
+              <Link to="/projects/create" className="font-medium text-primary hover:underline">
+                Loyiha yaratish
+              </Link>
+            )}
           </p>
         )}
       </section>

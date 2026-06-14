@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Check, ArrowRight, Heart, Share2, MessageSquare } from "lucide-react";
 import { EscrowShield } from "@/components/site/trust";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import type { ServicePackage } from "@/lib/mock-data";
 import { formatPackageTier } from "@/lib/project-validation";
 import { useSaved } from "@/hooks/use-saved";
@@ -95,8 +96,7 @@ export function PackageCard({
           </div>
         </div>
 
-        <Link
-          to="/checkout"
+        <ClientCheckoutLink
           search={{
             type: "service" as const,
             service: serviceSlug,
@@ -105,7 +105,7 @@ export function PackageCard({
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
         >
           Davom etish (${pkg.price.toLocaleString()}) <ArrowRight className="size-4" />
-        </Link>
+        </ClientCheckoutLink>
 
         <button
           type="button"
@@ -170,8 +170,7 @@ export function PackageComparison({
                     Mashhur
                   </span>
                 )}
-                <Link
-                  to="/checkout"
+                <ClientCheckoutLink
                   search={{
                     type: "service" as const,
                     service: serviceSlug,
@@ -184,7 +183,7 @@ export function PackageComparison({
                   }`}
                 >
                   Tanlash
-                </Link>
+                </ClientCheckoutLink>
               </th>
             ))}
           </tr>

@@ -1,7 +1,10 @@
 import type { UserType } from "./auth-constants";
 import { loadOnboardingState } from "./auth-constants";
-import { persistOnboardingToProfile } from "./profile-store";
+import { invalidateActiveRoleCache } from "./active-role-store";
+import { persistOnboardingToProfile, seedDemoProfileIfNeeded } from "./profile-store";
+import { seedDemoAgencyIfNeeded } from "./agency-store";
 import { applyReferralCode } from "./referral-store";
+import { isUserVerified, setUserVerified } from "./verified-users-store";
 import { freelancers } from "./mock-data";
 
 export const SESSION_STORAGE_KEY = "ishbor-session";
@@ -172,21 +175,26 @@ export function loginWithCredentials(
   const normalized = email.trim().toLowerCase();
   const demo = demoUsers[normalized];
   if (demo && demo.password === password) {
+    const verified = isUserVerified(demo.user.id, demo.user.verified);
     const session: AuthSession = {
-      user: demo.user,
+      user: { ...demo.user, verified },
       remember,
       loggedInAt: new Date().toISOString(),
     };
     writeStorage(session);
     persistOnboardingToProfile(session.user.id);
+    seedDemoProfileIfNeeded(session.user.id);
+    seedDemoAgencyIfNeeded(session.user.id);
+    invalidateActiveRoleCache();
     notify();
     return { ok: true, session };
   }
   if (password.length >= 6 && normalized.includes("@")) {
     const onboarding = loadOnboardingState();
+    const userId = `u-${Date.now()}`;
     const session: AuthSession = {
       user: {
-        id: `u-${Date.now()}`,
+        id: userId,
         email: normalized,
         fullName: onboarding.fullName || normalized.split("@")[0]!,
         userType: onboarding.userType,
@@ -196,7 +204,7 @@ export function loginWithCredentials(
           ? onboarding.company.toLowerCase().replace(/\s+/g, "-")
           : undefined,
         avatarHue: onboarding.userType === "freelancer" ? 250 : 215,
-        verified: false,
+        verified: isUserVerified(userId, false),
         location: "Tashkent, Uzbekistan",
       },
       remember,
@@ -204,6 +212,8 @@ export function loginWithCredentials(
     };
     writeStorage(session);
     persistOnboardingToProfile(session.user.id);
+    seedDemoProfileIfNeeded(session.user.id);
+    seedDemoAgencyIfNeeded(session.user.id);
     if (typeof window !== "undefined") {
       const ref = new URLSearchParams(window.location.search).get("ref") ?? sessionStorage.getItem("ishbor-pending-ref");
       if (ref) {
@@ -211,6 +221,7 @@ export function loginWithCredentials(
         sessionStorage.removeItem("ishbor-pending-ref");
       }
     }
+    invalidateActiveRoleCache();
     notify();
     return { ok: true, session };
   }
@@ -225,12 +236,14 @@ export function loginDemo(userType: UserType, remember = false): AuthSession {
 
 export function logout() {
   writeStorage(null);
+  invalidateActiveRoleCache();
   notify();
 }
 
 export function updateSessionUser(patch: Partial<AuthUser>) {
   const session = getSession();
   if (!session) return;
+  if (patch.verified) setUserVerified(session.user.id);
   const next: AuthSession = {
     ...session,
     user: { ...session.user, ...patch },

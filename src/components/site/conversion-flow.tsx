@@ -171,6 +171,30 @@ export const CLIENT_HIRE_FLOW: FlowStep[] = [
   { key: "order", label: "Buyurtma", to: "/orders" },
 ];
 
+/** Xizmat kartochkasi / paket orqali buyurtma — frilanser yollashdan alohida. */
+export const SERVICE_ORDER_FLOW: FlowStep[] = [
+  { key: "service", label: "Xizmat tanlash", to: "/services" },
+  { key: "checkout", label: "To'lov" },
+  { key: "escrow", label: "Eskrou", to: "/escrow" },
+  { key: "order", label: "Buyurtma", to: "/orders" },
+];
+
+/** Mutaxassis profilidan to'g'ridan-to'g'ri yollash. */
+export const FREELANCER_HIRE_CHECKOUT_FLOW: FlowStep[] = [
+  { key: "profile", label: "Mutaxassis", to: "/freelancers" },
+  { key: "checkout", label: "To'lov" },
+  { key: "escrow", label: "Eskrou", to: "/escrow" },
+  { key: "order", label: "Buyurtma", to: "/orders" },
+];
+
+/** Qabul qilingan taklif / buyurtma uchun eskrou moliyalashtirish. */
+export const ORDER_ESCROW_FLOW: FlowStep[] = [
+  { key: "accepted", label: "Taklif qabul" },
+  { key: "checkout", label: "To'lov" },
+  { key: "escrow", label: "Eskrou", to: "/escrow" },
+  { key: "order", label: "Buyurtma", to: "/orders" },
+];
+
 export const FREELANCER_HIRE_FLOW: FlowStep[] = [
   { key: "project", label: "Loyiha", to: "/projects" },
   { key: "proposal", label: "Taklif" },

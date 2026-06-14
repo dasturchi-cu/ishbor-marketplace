@@ -2,6 +2,7 @@ import type { Order } from "./mock-data";
 import { orders as mockOrders } from "./mock-data";
 import { recordConversionEvent } from "./conversion-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
+import { getEscrowByOrderId, releaseEscrowMilestone } from "./escrow-store";
 import { notifyOrderCreated } from "./notification-events";
 import { getSession } from "./auth";
 
@@ -71,10 +72,12 @@ export type NewOrderInput = {
   freelancerUsername?: string;
   amount: number;
   dueDate?: string;
+  ownerUserId?: string;
 };
 
 export function createOrder(input: NewOrderInput): Order {
   const milestoneAmount = Math.round(input.amount / 2);
+  const session = getSession();
   const order: Order = {
     id: `o-${Date.now()}`,
     title: input.title,
@@ -89,6 +92,7 @@ export function createOrder(input: NewOrderInput): Order {
     dueDate: input.dueDate ?? "TBD",
     amount: input.amount,
     escrowFunded: false,
+    ownerUserId: input.ownerUserId ?? session?.user.id,
     milestones: [
       { label: "Kickoff & discovery", done: false, amount: milestoneAmount },
       { label: "Final delivery", done: false, amount: input.amount - milestoneAmount },
@@ -97,7 +101,6 @@ export function createOrder(input: NewOrderInput): Order {
   const stored = readStored();
   writeStored([order, ...stored]);
   notify();
-  const session = getSession();
   if (session) {
     notifyOrderCreated(session.user.id, order.title, order.id);
   }
@@ -170,4 +173,52 @@ export function fundOrderEscrow(orderId: string): Order | undefined {
   writeStored(next);
   notify();
   return updated;
+}
+
+/** Client approves delivery — completes order and releases funded escrow milestones. */
+export function approveOrderDelivery(orderId: string): Order | undefined {
+  const stored = readStored();
+  const idx = stored.findIndex((o) => o.id === orderId);
+  if (idx === -1) return undefined;
+  const order = stored[idx]!;
+  if (order.status === "completed" || order.status === "cancelled") return undefined;
+
+  const milestones = order.milestones.map((m) => ({ ...m, done: true }));
+  const updated: Order = {
+    ...order,
+    milestones,
+    status: "completed",
+    progress: 100,
+    completedAt: new Date().toISOString(),
+  };
+  const next = [...stored];
+  next[idx] = updated;
+  writeStored(next);
+  notify();
+
+  const escrow = getEscrowByOrderId(orderId);
+  if (escrow) {
+    for (const m of escrow.milestones) {
+      if (m.status === "funded") {
+        releaseEscrowMilestone(escrow.id, m.label);
+      }
+    }
+  }
+
+  recordConversionEvent("order_completed", orderId, updated.amount);
+  const session = getSession();
+  recordAnalyticsEvent({
+    type: "order_completed",
+    entityId: orderId,
+    value: updated.amount,
+    meta: {
+      projectTitle: order.title,
+      userName: session?.user.fullName ?? order.client,
+    },
+  });
+  return updated;
+}
+
+export function markOrderInReview(orderId: string): Order | undefined {
+  return updateOrderStatus(orderId, "review", Math.max(80, getOrderById(orderId)?.progress ?? 80));
 }

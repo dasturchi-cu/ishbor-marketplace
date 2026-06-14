@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useSyncExternalStore } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useSyncExternalStore, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Users,
@@ -16,6 +16,8 @@ import { AgencyVerificationBadge } from "@/components/agency/agency-verification
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
+import { getActiveDashboardPath } from "@/lib/active-role-store";
 import {
   getAgenciesForUser,
   subscribeAgencies,
@@ -45,7 +47,15 @@ export const Route = createFileRoute("/dashboard/agency")({
 
 function AgencyDashboardPage() {
   const { user } = useAuth();
+  const { activeRole } = useActiveRole();
+  const navigate = useNavigate();
   const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    if (activeRole !== "agency") {
+      navigate({ to: getActiveDashboardPath(activeRole), replace: true });
+    }
+  }, [activeRole, navigate]);
 
   useSyncExternalStore(subscribeAgencies, () => refresh, () => 0);
   useSyncExternalStore(subscribeAgencyPortfolio, () => refresh, () => 0);

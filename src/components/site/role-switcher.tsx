@@ -1,40 +1,40 @@
 import { Briefcase, Building2, CheckCircle2, LayoutDashboard } from "lucide-react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import type { UserType } from "@/lib/auth-constants";
+import type { WorkspaceRole } from "@/lib/active-role-store";
+import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { getActiveDashboardPath, getRedirectAfterRoleSwitch } from "@/lib/active-role-store";
 
-const options: {
-  key: UserType;
-  label: string;
-  description: string;
-  icon: typeof Briefcase;
-}[] = [
-  {
-    key: "freelancer",
+const ROLE_META: Record<
+  WorkspaceRole,
+  { label: string; description: string; icon: typeof Briefcase }
+> = {
+  freelancer: {
     label: "Frilanser",
     description: "Portfolio, ko'nikmalar, xizmatlar va daromad",
     icon: Briefcase,
   },
-  {
-    key: "client",
+  client: {
     label: "Mijoz",
     description: "Loyihalar, buyurtmalar, eskrou va xarajatlar",
     icon: Building2,
   },
-];
+  agency: {
+    label: "Agentlik",
+    description: "Jamoa, CRM, portfolio va agentlik analitikasi",
+    icon: Building2,
+  },
+};
 
 function useRoleSwitchHandler() {
   const { switchRole } = useActiveRole();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  return (role: UserType) => {
+  return (role: WorkspaceRole) => {
     switchRole(role);
     const redirect = getRedirectAfterRoleSwitch(role, pathname);
-    if (redirect) {
-      navigate({ to: redirect, replace: true });
-    }
+    navigate({ to: redirect ?? getActiveDashboardPath(role), replace: !!redirect });
   };
 }
 
@@ -45,13 +45,18 @@ export function RoleSwitcher({
   variant?: "card" | "compact";
   className?: string;
 }) {
-  const { activeRole } = useActiveRole();
+  const { user } = useAuth();
+  const { activeRole, availableRoles } = useActiveRole();
   const handleSwitch = useRoleSwitchHandler();
+  const options = availableRoles.map((key) => ({ key, ...ROLE_META[key] }));
+
+  const activeLabel =
+    activeRole === "freelancer" ? "Frilanser" : activeRole === "agency" ? "Agentlik" : "Mijoz";
 
   if (variant === "compact") {
     return (
       <div
-        className={`flex items-center gap-1 rounded-xl border border-border bg-surface p-1 ${className}`}
+        className={`flex flex-wrap items-center gap-1 rounded-xl border border-border bg-surface p-1 ${className}`}
         role="group"
         aria-label="Rol tanlash"
       >
@@ -88,19 +93,19 @@ export function RoleSwitcher({
           <div>
             <div className="eyebrow">Ish rejimi</div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Frilanser yoki mijoz sifatida profil, panel va navigatsiyani ko'ring
+              Frilanser, mijoz yoki agentlik sifatida panel va tavsiyalarni ko'ring
             </p>
           </div>
           <div className="hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 sm:flex">
             <LayoutDashboard className="size-3.5 text-primary" />
             <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Faol: <span className="font-semibold text-foreground">{activeRole === "freelancer" ? "Frilanser" : "Mijoz"}</span>
+              Faol: <span className="font-semibold text-foreground">{activeLabel}</span>
             </span>
           </div>
         </div>
       </div>
 
-      <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5" role="group">
+      <div className={`grid gap-3 p-4 sm:p-5 ${options.length >= 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`} role="group">
         {options.map((opt) => {
           const active = activeRole === opt.key;
           return (

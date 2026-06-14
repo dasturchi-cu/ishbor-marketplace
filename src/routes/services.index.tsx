@@ -4,8 +4,7 @@ import { SiteFooter } from "@/components/site/footer";
 import { ServiceCard } from "@/components/site/cards";
 import { ServiceCardSkeleton, EmptyState } from "@/components/site/feedback";
 import { getPublishedServices, subscribeServices } from "@/lib/services-store";
-import { recommendServices } from "@/lib/recommendations";
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, useMemo } from "react";
 import { usePageReady } from "@/hooks/use-page-ready";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
@@ -14,7 +13,14 @@ import { filterServices, normalizeSearch, type MarketplaceSearch } from "@/lib/m
 import { categories } from "@/lib/mock-data";
 import { Link } from "@tanstack/react-router";
 import { Package } from "lucide-react";
-
+import { CategoryBrowseRow } from "@/components/site/category-browse-row";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  applyPersonalizedServiceOrder,
+  getRecommendationsVersion,
+  shouldPersonalizeList,
+  subscribeRecommendations,
+} from "@/lib/recommendations";
 export const Route = createFileRoute("/services/")({
   validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
   head: () => ({
@@ -28,15 +34,18 @@ export const Route = createFileRoute("/services/")({
 
 function ServicesPage() {
   const ready = usePageReady();
+  const { user } = useAuth();
   const search = Route.useSearch();
   const setSearch = useMarketplaceSearch(search, "/services");
   const allServices = useSyncExternalStore(subscribeServices, getPublishedServices, getPublishedServices);
-  const recommended = recommendServices(allServices);
-  const filtered = filterServices(
-    search.sort === "newest" && !search.q && !search.category ? recommended : allServices,
-    search,
-  );
-  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+  const recVersion = useSyncExternalStore(subscribeRecommendations, getRecommendationsVersion, () => 0);
+  const filtered = useMemo(() => {
+    const base = filterServices(allServices, search);
+    if (user && shouldPersonalizeList(search)) {
+      return applyPersonalizedServiceOrder(base, user.id);
+    }
+    return base;
+  }, [allServices, search, user?.id, recVersion]);  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
     filtered,
     MARKETPLACE_PAGE_SIZE,
     `${search.q ?? ""}-${search.category ?? ""}-${search.sort ?? ""}-${search.filter ?? ""}`,
@@ -61,6 +70,8 @@ function ServicesPage() {
           >
             Xizmat yaratish
           </Link>
+
+          <CategoryBrowseRow activeSlug={search.category} className="mt-6" />
 
           <MarketplaceToolbar
             placeholder="Xizmatlarni qidirish…"

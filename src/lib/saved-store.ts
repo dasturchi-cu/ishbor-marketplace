@@ -22,6 +22,8 @@ export type SavedState = {
 const empty: SavedState = { services: [], freelancers: [], projects: [], portfolios: [] };
 const EMPTY_SAVED: SavedState = empty;
 
+export { EMPTY_SAVED };
+
 function notify() {
   cache = null;
   listeners.forEach((l) => l());

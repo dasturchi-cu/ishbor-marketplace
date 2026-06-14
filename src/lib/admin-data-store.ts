@@ -19,6 +19,7 @@ import {
 import { applications as seedApplications } from "./mock-data";
 import type { Application } from "./mock-data";
 import { getAllEscrowWorkflows, releaseEscrowMilestone, openEscrowDispute, refundEscrowToClient, getEscrowByOrderId } from "./escrow-store";
+import { setUserVerified } from "./verified-users-store";
 
 const STORAGE_KEY = "ishbor-admin-data";
 const listeners = new Set<() => void>();
@@ -116,6 +117,7 @@ export function banAdminUser(id: string) {
 }
 
 export function verifyAdminUser(id: string) {
+  setUserVerified(id);
   return updateAdminUser(id, { verified: true, status: "active" });
 }
 

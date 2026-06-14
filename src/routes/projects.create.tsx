@@ -23,8 +23,9 @@ import {
 } from "@/lib/projects-store";
 import { validateProjectInput } from "@/lib/project-validation";
 import { consumeAiProjectDraft, mapAiCategoryToForm } from "@/lib/ai-project-generator";
+import { consumeGuestProjectDraft } from "@/lib/guest-project-draft";
 
-type CreateSearch = { edit?: string; published?: string; ai?: string };
+type CreateSearch = { edit?: string; published?: string; ai?: string; restore?: string };
 
 const projectCategoryOptions = [
   "Product Design",
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/projects/create")({
     edit: typeof search.edit === "string" ? search.edit : undefined,
     published: typeof search.published === "string" ? search.published : undefined,
     ai: typeof search.ai === "string" ? search.ai : undefined,
+    restore: typeof search.restore === "string" ? search.restore : undefined,
   }),
   head: () => ({
     meta: [
@@ -61,7 +63,7 @@ function CreateProjectPage() {
   const { user } = useAuth();
   const { activeRole } = useActiveRole();
   const navigate = useNavigate();
-  const { edit, ai } = Route.useSearch();
+  const { edit, ai, restore } = Route.useSearch();
 
   if (activeRole !== "client") {
     return (
@@ -133,6 +135,19 @@ function CreateProjectPage() {
     setSkillsText(draft.skills.join(", "));
     toast.success("AI loyiha ma'lumotlari yuklandi");
   }, [edit, ai]);
+
+  useEffect(() => {
+    if (edit || restore !== "draft") return;
+    const draft = consumeGuestProjectDraft();
+    if (!draft) return;
+    setTitle(draft.title);
+    setCategory(draft.category);
+    setBudget(draft.budget);
+    setDuration(draft.duration);
+    setDescription(draft.description);
+    setSkillsText(draft.skills);
+    toast.success("Loyiha rejasi yuklandi — e'lon qilish uchun davom eting");
+  }, [edit, restore]);
 
   const buildInput = (): ProjectFormInput => ({
     title,

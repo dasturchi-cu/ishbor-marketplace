@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 
-import { Search, Bell, MessageSquare, Menu, X, LogOut, Briefcase, Plus, LayoutDashboard, FolderOpen, FileText } from "lucide-react";
+import { Search, Bell, MessageSquare, Menu, X, LogOut, Briefcase, Plus, LayoutDashboard, FolderOpen, FileText, Building2 } from "lucide-react";
 
 import { useState, useSyncExternalStore } from "react";
 
@@ -88,6 +88,21 @@ function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; 
           <Plus className="size-3.5" />
           <span className="hidden sm:inline">Loyiha joylash</span>
           <span className="sm:hidden">Joylash</span>
+        </Link>
+      </>
+    );
+  }
+
+  if (activeRole === "agency") {
+    return (
+      <>
+        <Link to="/agency/clients" className={secondary}>
+          <Building2 className="size-3.5" /> Agentlik CRM
+        </Link>
+        <Link to="/dashboard/agency" className={primary}>
+          <Briefcase className="size-3.5" />
+          <span className="hidden sm:inline">Agentlik paneli</span>
+          <span className="sm:hidden">Panel</span>
         </Link>
       </>
     );

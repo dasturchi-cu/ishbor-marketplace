@@ -25,6 +25,7 @@ import { PortfolioCover } from "@/components/portfolio/portfolio-preview-card";
 import { SaveButtonInline } from "@/components/site/save-button";
 import { useSaved } from "@/hooks/use-saved";
 import { useAuth } from "@/hooks/use-auth";
+import { useClientCheckout } from "@/hooks/use-client-checkout";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 import { getPortfolioBySlug, getPublicPortfolioBySlug, subscribePortfolios } from "@/lib/portfolio-store";
@@ -118,6 +119,7 @@ function PortfolioDetailContent({
   slug: string;
 }) {
   const navigate = useNavigate();
+  const goCheckout = useClientCheckout();
   const { user, isAuthenticated } = useAuth();
   const { activeRole } = useActiveRole();
   const isClientViewer = activeRole === "client";
@@ -184,7 +186,7 @@ function PortfolioDetailContent({
   const handleHire = () => {
     recordPortfolioContactClick(slug);
     recordPortfolioHireConversion(slug);
-    navigate({ to: "/checkout", search: { type: "hire", freelancer: item.freelancerUsername } });
+    goCheckout({ type: "hire", freelancer: item.freelancerUsername });
   };
 
   const linkEntries = [

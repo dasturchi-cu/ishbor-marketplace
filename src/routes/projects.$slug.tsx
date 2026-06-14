@@ -27,7 +27,8 @@ import {
 import { getSession } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { freelancers } from "@/lib/mock-data";
-import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
+import { useClientCheckout } from "@/hooks/use-client-checkout";
 import { isFeaturedActive } from "@/lib/featured-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 
@@ -107,6 +108,7 @@ function ProjectDetailContent({
   isOwner: boolean;
 }) {
   const navigate = useNavigate();
+  const goCheckout = useClientCheckout();
   const { user } = useAuth();
   const [showPublishedBanner, setShowPublishedBanner] = useState(!!published);
   const applications = useSyncExternalStore(
@@ -183,7 +185,7 @@ function ProjectDetailContent({
       return;
     }
     toast.success("Frilanser qabul qilindi", { description: "Buyurtma yaratildi. Ishni boshlash uchun eskrouni moliyalashtiring." });
-    navigate({ to: "/checkout", search: { type: "order", order: result.orderId } });
+    goCheckout({ type: "order", order: result.orderId });
   };
 
   const handleReject = (appId: string) => {
@@ -439,13 +441,12 @@ function ProjectDetailContent({
                               )}
                             </div>
                           ) : app.status === "accepted" && app.orderId ? (
-                            <Link
-                              to="/checkout"
+                            <ClientCheckoutLink
                               search={{ type: "order", order: app.orderId }}
                               className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition-default hover:text-primary/80"
                             >
                               Eskrouni moliyalashtirish <ArrowRight className="size-3" />
-                            </Link>
+                            </ClientCheckoutLink>
                           ) : null}
                         </div>
                       ))

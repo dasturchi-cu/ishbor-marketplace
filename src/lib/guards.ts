@@ -7,6 +7,16 @@ type GuardContext = {
   location: { href: string; pathname: string; search?: string | Record<string, unknown> };
 };
 
+/** Preserve query string so checkout/service/hire params survive login redirect. */
+function loginRedirectPath(ctx: GuardContext): string {
+  try {
+    const url = new URL(ctx.location.href, "http://localhost");
+    return `${url.pathname}${url.search}`;
+  } catch {
+    return ctx.location.pathname;
+  }
+}
+
 function resolvePostLoginPath(ctx: GuardContext): string {
   try {
     const href = ctx.location.href;
@@ -36,7 +46,7 @@ export function requireAuth(ctx: GuardContext) {
   if (!session) {
     throw redirect({
       to: "/login",
-      search: { redirect: ctx.location.pathname },
+      search: { redirect: loginRedirectPath(ctx) },
     });
   }
 }
@@ -56,7 +66,7 @@ export function requireRole(roles: UserType[]) {
     if (!session) {
       throw redirect({
         to: "/login",
-        search: { redirect: ctx.location.pathname },
+        search: { redirect: loginRedirectPath(ctx) },
       });
     }
     const activeRole = getActiveRole();
@@ -72,7 +82,7 @@ export function requireAdmin(ctx: GuardContext) {
   if (!session) {
     throw redirect({
       to: "/login",
-      search: { redirect: ctx.location.pathname },
+      search: { redirect: loginRedirectPath(ctx) },
     });
   }
   if (!isAdminUser(session.user)) {

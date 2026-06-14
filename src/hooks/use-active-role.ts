@@ -1,15 +1,16 @@
 import { useSyncExternalStore } from "react";
-import type { UserType } from "@/lib/auth-constants";
+import type { WorkspaceRole } from "@/lib/active-role-store";
 import {
   getActiveRole,
   setActiveRole,
   subscribeActiveRole,
+  getAvailableWorkspaceRoles,
 } from "@/lib/active-role-store";
 import { useAuth } from "@/hooks/use-auth";
 
 export function useActiveRole() {
   const { user } = useAuth();
-  const fallback = user?.userType ?? "client";
+  const fallback: WorkspaceRole = user?.userType ?? "client";
 
   const activeRole = useSyncExternalStore(
     subscribeActiveRole,
@@ -17,7 +18,9 @@ export function useActiveRole() {
     () => fallback,
   );
 
-  const switchRole = (role: UserType) => setActiveRole(role);
+  const availableRoles = user ? getAvailableWorkspaceRoles(user.id) : (["client", "freelancer"] as WorkspaceRole[]);
 
-  return { activeRole, switchRole };
+  const switchRole = (role: WorkspaceRole) => setActiveRole(role);
+
+  return { activeRole, switchRole, availableRoles };
 }

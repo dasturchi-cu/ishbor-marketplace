@@ -478,3 +478,47 @@ export function getPendingInvitesForUser(email: string) {
       .map((m) => ({ agency, member: m })),
   );
 }
+
+const DEMO_AGENCY_OWNER_ID = "u-admin-1";
+
+/** Ensure admin demo account can switch to agency workspace. */
+export function seedDemoAgencyIfNeeded(userId: string): Agency | null {
+  if (userId !== DEMO_AGENCY_OWNER_ID) return null;
+  const existing = getAgenciesForUser(userId);
+  if (existing.length > 0) return existing[0]!;
+
+  const session = getSession();
+  if (!session || session.user.id !== userId) return null;
+
+  const now = new Date().toISOString();
+  const agency: Agency = {
+    id: "agency-demo-ishbor",
+    slug: "ishbor-studio",
+    name: "Ishbor Studio",
+    description: "Platform demo agentligi — jamoa, CRM va portfolio boshqaruvi.",
+    foundedYear: 2024,
+    teamSize: "6-10",
+    specializations: ["Branding", "Development", "Strategy"],
+    languages: ["O'zbek", "Rus", "Ingliz"],
+    location: "Tashkent, Uzbekistan",
+    ownerUserId: userId,
+    members: [
+      {
+        userId,
+        email: session.user.email,
+        fullName: session.user.fullName,
+        avatarHue: session.user.avatarHue,
+        role: "owner",
+        status: "active",
+        joinedAt: now,
+      },
+    ],
+    verificationLevel: "verified",
+    status: "published",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  writeAll([agency, ...readAll()]);
+  return agency;
+}

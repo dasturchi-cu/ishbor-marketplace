@@ -1,5 +1,5 @@
 import type { AuthUser } from "./auth";
-import { getActiveRole } from "./active-role-store";
+import { getActiveRole, toProfileUserType } from "./active-role-store";
 import { computeTrustScore } from "./growth-metrics";
 import { computeProfileCompletionPercent, getProfileCompletionItems } from "./profile-store";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
@@ -23,19 +23,20 @@ export type TrustCoachInsight = {
 
 export function getTrustCoachInsights(user: AuthUser): TrustCoachInsight {
   const username = user.username ?? "";
-  const userType = getActiveRole();
+  const workspaceRole = getActiveRole();
+  const userType = toProfileUserType(workspaceRole);
   const trust = computeTrustScore(user, username);
   const completion = computeProfileCompletionPercent(user.id, userType);
   const items = getProfileCompletionItems(user.id, userType);
   const missingProfileSections = items.filter((i) => !i.done).map((i) => i.label);
   const portfolios = username ? getPublishedPortfoliosByUsername(username) : [];
-  const services = userType === "freelancer" ? getMyPublishedServices(user.id) : [];
+  const services = workspaceRole === "freelancer" ? getMyPublishedServices(user.id) : [];
   const { count: reviewCount } = username ? getAverageRating(username) : { count: 0 };
 
   const whyLow: string[] = [];
   if (trust.trustScore < 70) {
     if (completion < 80) whyLow.push(`Profil ${completion}% to'ldirilgan — to'liq profil ishonchni oshiradi`);
-    if (portfolios.length === 0 && userType === "freelancer") whyLow.push("Portfolio yo'q — mijozlar natijalarni ko'ra olmaydi");
+    if (portfolios.length === 0 && workspaceRole === "freelancer") whyLow.push("Portfolio yo'q — mijozlar natijalarni ko'ra olmaydi");
     if (reviewCount === 0) whyLow.push("Hali sharhlar yo'q — ijtimoiy isbot yetishmaydi");
     if (trust.responseRate < 60) whyLow.push(`Javob foizi ${trust.responseRate}% — tezroq javob bering`);
     if (trust.successScore < 50) whyLow.push(`Muvaffaqiyat balli ${trust.successScore} — buyurtmalarni yakunlang`);
@@ -55,7 +56,7 @@ export function getTrustCoachInsights(user: AuthUser): TrustCoachInsight {
     });
   }
 
-  if (portfolios.length === 0 && userType === "freelancer") {
+  if (portfolios.length === 0 && workspaceRole === "freelancer") {
     howToImprove.push({
       action: "Portfolio e'lon qiling",
       impact: "Ishonch balli +15–20",
@@ -64,7 +65,7 @@ export function getTrustCoachInsights(user: AuthUser): TrustCoachInsight {
     });
   }
 
-  if (services.length === 0 && userType === "freelancer") {
+  if (services.length === 0 && workspaceRole === "freelancer") {
     howToImprove.push({
       action: "Xizmat yarating",
       impact: "Ishonch balli +8",

@@ -21,6 +21,7 @@ import {
   formatPostedAgo,
   formatProjectBudget,
 } from "@/lib/project-validation";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 
 const actionBase =
   "touch-target relative z-10 inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-default focus-ring";
@@ -120,13 +121,12 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
         <Link to="/messages" className={`${actionBase} ${actionSecondary}`}>
           <MessageSquare className="size-3.5" /> Xabar
         </Link>
-        <Link
-          to="/checkout"
+        <ClientCheckoutLink
           search={{ type: "hire" as const, freelancer: f.username }}
           className={`${actionBase} ${actionPrimary}`}
         >
           <ArrowRight className="size-3.5" /> Yollash
-        </Link>
+        </ClientCheckoutLink>
       </div>
     </div>
   );
@@ -226,8 +226,7 @@ export function ServiceCard({ s, compact = false }: { s: Service; compact?: bool
             <span className="truncate">Bog'lanish</span>
           </Link>
         )}
-        <Link
-          to="/checkout"
+        <ClientCheckoutLink
           search={{
             type: "service" as const,
             service: s.slug,
@@ -237,7 +236,7 @@ export function ServiceCard({ s, compact = false }: { s: Service; compact?: bool
         >
           <ShoppingCart className="size-3.5 shrink-0" />
           <span className="truncate">Buyurtma</span>
-        </Link>
+        </ClientCheckoutLink>
       </div>
     </div>
   );

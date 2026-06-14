@@ -30,7 +30,7 @@ import { VideoIntro } from "@/components/site/profile/video-intro";
 import { VerificationCenter } from "@/components/site/profile/verification-center";
 import { SuccessMetrics } from "@/components/site/profile/success-metrics";
 import { ProfileReviews } from "@/components/site/profile/profile-reviews";
-import { ConversionFlowBanner, CLIENT_HIRE_FLOW } from "@/components/site/conversion-flow";
+import { ConversionFlowBanner, FREELANCER_HIRE_CHECKOUT_FLOW } from "@/components/site/conversion-flow";
 import { SaveButtonInline } from "@/components/site/save-button";
 import {
   freelancers,
@@ -40,7 +40,6 @@ import {
 } from "@/lib/mock-data";
 import { getReviewsForFreelancer } from "@/lib/reviews-store";
 import { useAuth } from "@/hooks/use-auth";
-import { useActiveRole } from "@/hooks/use-active-role";
 import { getMyPublishedProjects, subscribeProjects } from "@/lib/projects-store";
 import { createDirectHireApplication } from "@/lib/applications-store";
 import { getPublishedPortfoliosByUsername, subscribePortfolios } from "@/lib/portfolio-store";
@@ -48,6 +47,9 @@ import type { PortfolioItem } from "@/lib/portfolio-types";
 import { computeSuccessScore, computeResponseRate, formatResponseTime } from "@/lib/growth-metrics";
 import { ReputationBadge } from "@/components/reputation/reputation-badge";
 import { computeFreelancerReputation } from "@/lib/reputation-store";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
+import { useClientCheckout } from "@/hooks/use-client-checkout";
+import { ensureClientRoleForCheckout } from "@/lib/client-checkout";
 import { getOrdersForFreelancer } from "@/lib/orders-store";
 import { recordProfileView, recordContactClick, getEntityEventCount } from "@/lib/analytics-utils";
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
@@ -98,9 +100,8 @@ export const Route = createFileRoute("/freelancers/$username")({
 function FreelancerProfile() {
   const { freelancer: f, freelancerReviews, freelancerServices } = Route.useLoaderData();
   const navigate = useNavigate();
+  const goCheckout = useClientCheckout();
   const { user, isAuthenticated } = useAuth();
-  const { activeRole } = useActiveRole();
-  const isClientViewer = activeRole === "client";
   const [showInvite, setShowInvite] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
   const [activeTab, setActiveTab] = useState<ProfileTab>("about");
@@ -149,11 +150,11 @@ function FreelancerProfile() {
   };
 
   const handleInvite = () => {
-    if (!isAuthenticated || !isClientViewer) {
-      toast.info("Frilanserlarni taklif qilish uchun mijoz sifatida kiring");
+    if (!isAuthenticated) {
       navigate({ to: "/login", search: { redirect: `/freelancers/${f.username}` } });
       return;
     }
+    ensureClientRoleForCheckout();
     if (myProjects.length === 0) {
       toast.info("Avval loyiha joylang", { description: "Frilanserlarni taklif qilishdan oldin loyiha yarating." });
       navigate({ to: "/projects/create" });
@@ -180,7 +181,7 @@ function FreelancerProfile() {
     });
     setShowInvite(false);
     toast.success("Taklif yuborildi", { description: "Buyurtma yaratildi. Yollashni faollashtirish uchun eskrouni moliyalashtiring." });
-    navigate({ to: "/checkout", search: { type: "order", order: orderId } });
+    goCheckout({ type: "order", order: orderId });
   };
 
   return (
@@ -273,15 +274,15 @@ function FreelancerProfile() {
                 </div>
               </div>
 
+              {!isOwnProfile && (
               <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto lg:min-w-[280px]">
-                <Link
-                  to="/checkout"
+                <ClientCheckoutLink
                   search={{ type: "hire" as const, freelancer: f.username }}
                   onClick={() => recordContactClick(f.username)}
                   className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
                 >
                   Yollash ${f.rate}/h <ArrowRight className="size-4" />
-                </Link>
+                </ClientCheckoutLink>
                 <div className="grid grid-cols-2 gap-2">
                   <Link
                     to="/messages"
@@ -290,7 +291,7 @@ function FreelancerProfile() {
                   >
                     <MessageSquare className="size-4" /> Xabar
                   </Link>
-                  {isClientViewer ? (
+                  {isAuthenticated && !isOwnProfile ? (
                     <>
                       <button
                         type="button"
@@ -306,6 +307,7 @@ function FreelancerProfile() {
                   )}
                 </div>
               </div>
+              )}
             </div>
 
             <div className="mt-8">
@@ -481,15 +483,16 @@ function FreelancerProfile() {
                   <span className="text-muted-foreground/60">|</span>
                   <span>Javob beradi {f.responseTime}</span>
                 </div>
+                {!isOwnProfile && (
+                <>
                 <div className="mt-4 flex flex-col gap-2">
-                  <Link
-                    to="/checkout"
+                  <ClientCheckoutLink
                     search={{ type: "hire" as const, freelancer: f.username }}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.4)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
                   >
                     Frilanserni yollash <ArrowRight className="size-4" />
-                  </Link>
-                  {isClientViewer && (
+                  </ClientCheckoutLink>
+                  {isAuthenticated && (
                     <button
                       type="button"
                       onClick={handleInvite}
@@ -518,17 +521,16 @@ function FreelancerProfile() {
                 <p className="mt-4 rounded-lg bg-secondary/50 px-3 py-2.5 text-[11px] leading-relaxed text-muted-foreground">
                   To'lov, eskrou moliyalashtirish, keyin faol buyurtma. Har bir bosqichni tasdiqlaganingizda mablag' chiqariladi.
                 </p>
+                </>
+                )}
               </div>
             </div>
 
             <ConversionFlowBanner
-              title="Yollash jarayoni"
-              steps={[
-                { key: "service", label: "Profil" },
-                ...CLIENT_HIRE_FLOW.slice(1),
-              ]}
-              currentStep="service"
-              nextHint="Avval xabar yozing yoki eskrou himoyasi bilan to'g'ridan-to'g'ri yollang."
+              title="Mutaxassis yollash"
+              steps={FREELANCER_HIRE_CHECKOUT_FLOW}
+              currentStep="profile"
+              nextHint="To'g'ridan-to'g'ri yollang yoki avval loyiha orqali taklif yuboring."
               className="rounded-2xl"
             />
 

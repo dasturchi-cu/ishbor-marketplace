@@ -35,6 +35,7 @@ import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
 import { computeSuccessScore, computeResponseRate, formatResponseTime, getMonthlyEarnings, getEarningsLast30Days } from "@/lib/growth-metrics";
 import { getOrdersForFreelancer, subscribeOrders, readStoredOrders } from "@/lib/orders-store";
 import { getReviewsForFreelancer, subscribeReviews } from "@/lib/reviews-store";
+import { FreelancerRecommendations } from "@/components/site/personalized-recommendations";
 import { NextActionCard } from "@/components/ftue/next-action-card";
 
 import { getAllApplications, subscribeApplications } from "@/lib/applications-store";
@@ -73,6 +74,8 @@ function FreelancerDashboard() {
   useEffect(() => {
     if (activeRole === "client") {
       navigate({ to: "/dashboard", replace: true });
+    } else if (activeRole === "agency") {
+      navigate({ to: "/dashboard/agency", replace: true });
     }
   }, [activeRole, navigate]);
 
@@ -138,6 +141,8 @@ function FreelancerDashboard() {
     >
 
       {user && <NextActionCard user={user} />}
+
+      {user && <FreelancerRecommendations />}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <StatCard label="Daromad (30 kun)" value={earnings30 > 0 ? `$${earnings30.toLocaleString()}` : "$0"} trend={successMetrics ? `${successMetrics.completedJobs} ta yakunlangan` : "Hali buyurtma yo'q"} icon={DollarSign} />

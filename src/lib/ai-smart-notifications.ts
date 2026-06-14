@@ -39,9 +39,10 @@ export function syncSmartNotifications(userId?: string): number {
   const sent = getSentIds(uid);
   let created = 0;
   const userType = getActiveRole();
+  const rolePrefix = userType;
 
   const completion = computeProfileCompletionPercent(uid, userType);
-  if (completion >= 80 && completion < 100 && !sent.has("profile-80")) {
+  if (completion >= 80 && completion < 100 && !sent.has(`${rolePrefix}-profile-80`)) {
     addNotification({
       userId: uid,
       kind: "system",
@@ -50,12 +51,12 @@ export function syncSmartNotifications(userId?: string): number {
       priority: "normal",
       href: "/settings",
     });
-    markSent(uid, "profile-80");
+    markSent(uid, `${rolePrefix}-profile-80`);
     created++;
   }
 
   const opportunity = computeOpportunityScore(session.user);
-  if (opportunity.total < 50 && !sent.has("opportunity-low")) {
+  if (opportunity.total < 50 && !sent.has(`${rolePrefix}-opportunity-low`)) {
     addNotification({
       userId: uid,
       kind: "system",
@@ -64,13 +65,13 @@ export function syncSmartNotifications(userId?: string): number {
       priority: "normal",
       href: "/ai/trust-coach",
     });
-    markSent(uid, "opportunity-low");
+    markSent(uid, `${rolePrefix}-opportunity-low`);
     created++;
   }
 
   if (userType === "freelancer") {
     const matches = matchProjectsForFreelancer(uid, 5);
-    if (matches.length >= 3 && !sent.has("project-matches")) {
+    if (matches.length >= 3 && !sent.has(`${rolePrefix}-project-matches`)) {
       addNotification({
         userId: uid,
         kind: "proposal",
@@ -79,12 +80,12 @@ export function syncSmartNotifications(userId?: string): number {
         priority: "high",
         href: "/projects",
       });
-      markSent(uid, "project-matches");
+      markSent(uid, `${rolePrefix}-project-matches`);
       created++;
     }
 
     const portfolio = analyzePortfolio(session.user);
-    if (portfolio.portfolioCount === 0 && !sent.has("portfolio-trust")) {
+    if (portfolio.portfolioCount === 0 && !sent.has(`${rolePrefix}-portfolio-trust`)) {
       addNotification({
         userId: uid,
         kind: "portfolio",
@@ -93,14 +94,14 @@ export function syncSmartNotifications(userId?: string): number {
         priority: "high",
         href: "/portfolio/create",
       });
-      markSent(uid, "portfolio-trust");
+      markSent(uid, `${rolePrefix}-portfolio-trust`);
       created++;
     }
   }
 
   if (userType === "client") {
     const matches = matchFreelancersForClient(uid, 5);
-    if (matches.length >= 2 && !sent.has("freelancer-matches")) {
+    if (matches.length >= 2 && !sent.has(`${rolePrefix}-freelancer-matches`)) {
       addNotification({
         userId: uid,
         kind: "system",
@@ -109,7 +110,7 @@ export function syncSmartNotifications(userId?: string): number {
         priority: "normal",
         href: "/freelancers",
       });
-      markSent(uid, "freelancer-matches");
+      markSent(uid, `${rolePrefix}-freelancer-matches`);
       created++;
     }
   }

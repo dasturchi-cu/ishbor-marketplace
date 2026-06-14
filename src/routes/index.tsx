@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   ShieldCheck,
   Sparkles,
@@ -28,6 +28,17 @@ import { freelancers, services, projects, categories } from "@/lib/mock-data";
 import { getPublishedAgencies } from "@/lib/agency-store";
 import { computeAgencyMetrics } from "@/lib/agency-metrics-store";
 import { recordConversionEvent } from "@/lib/conversion-store";
+import { LiveActivityFeed } from "@/components/site/live-activity-feed";
+import { FeeTransparencySection } from "@/components/site/fee-transparency-section";
+import { getLandingStats } from "@/lib/landing-stats";
+import { getPublishedProjects, subscribeProjects } from "@/lib/projects-store";
+import { useAuth } from "@/hooks/use-auth";
+import { useActiveRole } from "@/hooks/use-active-role";
+import {
+  getPersonalizedHomeContent,
+  getRecommendationsVersion,
+  subscribeRecommendations,
+} from "@/lib/recommendations";
 
 export const Route = createFileRoute("/")({ head: () => ({ meta: [{ title: "Ishbor — Markaziy Osiyoning eng yaxshi talentlari bozori" }, { name: "description", content: "Markaziy Osiyo bo'ylab tekshirilgan dizaynerlar, muhandislar va strateglarni yollang. Eskrou himoyasi bilan." }] }), component: Landing });
 
@@ -92,11 +103,11 @@ const trustBadges = [
   { icon: Star, label: "Sharh tizimi", sub: "Ikki tomonlama baho" },
 ];
 
-const stats = [
-  { label: "Ochiq loyihalar", value: `${projects.length}+` },
-  { label: "Tekshirilgan mutaxassislar", value: `${freelancers.length}+` },
-  { label: "Eskrou himoyasi", value: "100%" },
-  { label: "O'rtacha javob vaqti", value: "< 2 soat" },
+const statsFallback = [
+  { label: "Ochiq loyihalar", value: `${projects.length}+`, isLive: false },
+  { label: "Tekshirilgan mutaxassislar", value: `${freelancers.length}+`, isLive: false },
+  { label: "Eskrou himoyasi", value: "100%", isLive: true },
+  { label: "O'rtacha javob vaqti", value: "< 2 soat", isLive: false },
 ];
 
 const testimonials = [
@@ -127,6 +138,32 @@ function Landing() {
   useEffect(() => {
     recordConversionEvent("landing_view");
   }, []);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const { user } = useAuth();
+  const { activeRole } = useActiveRole();
+  const recVersion = useSyncExternalStore(subscribeRecommendations, getRecommendationsVersion, () => 0);
+  const statsVersion = useSyncExternalStore(
+    subscribeProjects,
+    () => getPublishedProjects().length,
+    () => 0,
+  );
+
+  const stats = useMemo(() => getLandingStats(), [statsVersion]);
+  const statsDisplay = mounted ? stats : statsFallback;
+
+  const homeContent = useMemo(() => {
+    if (!mounted) {
+      return getPersonalizedHomeContent(undefined);
+    }
+    return getPersonalizedHomeContent(user?.id, user ? activeRole : undefined);
+  }, [mounted, user?.id, activeRole, recVersion]);
+
+  const freelancerEyebrow = homeContent.personalized ? "Sizga mos mutaxassislar" : "Eng yuqori baholangan mutaxassislar";
+  const projectEyebrow = homeContent.personalized && activeRole === "freelancer" ? "Sizga mos loyihalar" : "Ochiq loyihalar";
+  const serviceEyebrow = homeContent.personalized ? "Sizga mos xizmatlar" : "Premium xizmatlar";
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,8 +204,7 @@ function Landing() {
 
           <div className="mt-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
             <Link
-              to="/login"
-              search={{ redirect: "/projects/create" }}
+              to="/projects/preview"
               className="rounded-xl border border-primary/20 bg-primary/5 p-5 text-left transition-default hover:border-primary/40"
             >
               <div className="font-mono text-[10px] uppercase tracking-widest text-primary">Men yollamoqchiman</div>
@@ -186,10 +222,13 @@ function Landing() {
           </div>
 
           <div className="mt-14 grid grid-cols-2 gap-y-5 border-t border-border pt-8 md:grid-cols-4">
-            {stats.map((s) => (
+            {statsDisplay.map((s) => (
               <div key={s.label} className="text-center">
                 <div className="font-mono mb-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                   {s.label}
+                  {"isLive" in s && s.isLive && (
+                    <span className="ml-1 text-primary">· jonli</span>
+                  )}
                 </div>
                 <div className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
                   {s.value}
@@ -197,6 +236,9 @@ function Landing() {
               </div>
             ))}
           </div>
+          <p className="mt-4 text-center text-[11px] text-muted-foreground">
+            Demo ma'lumotlar bilan aralash ko'rsatkichlar. Haqiqiy tranzaksiyalar platformada ko'rinadi.
+          </p>
         </div>
       </section>
 
@@ -274,6 +316,8 @@ function Landing() {
         </div>
       </section>
 
+      <FeeTransparencySection />
+
       <section className="section-y border-b border-border bg-surface/20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 text-center">
@@ -323,8 +367,8 @@ function Landing() {
             {categories.map((c) => (
               <Link
                 key={c.slug}
-                to="/services"
-                search={{ category: c.slug }}
+                to="/services/category/$slug"
+                params={{ slug: c.slug }}
                 className="group relative overflow-hidden rounded-xl border border-border bg-card p-4 transition-default hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)]"
               >
                 <div className="font-display mb-4 text-2xl text-primary">{c.glyph}</div>
@@ -343,7 +387,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <div className="eyebrow mb-2">Eng yuqori baholangan mutaxassislar</div>
+              <div className="eyebrow mb-2">{freelancerEyebrow}</div>
               <h2 className="font-display truncate text-2xl font-bold tracking-tight sm:text-3xl">
                 Mintaqaning eng intizomli ijodkorlari
               </h2>
@@ -356,7 +400,7 @@ function Landing() {
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-            {freelancers.slice(0, 6).map((f) => (
+            {homeContent.freelancers.map((f) => (
               <FreelancerCard key={f.id} f={f} />
             ))}
           </div>
@@ -428,7 +472,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <div className="eyebrow mb-2">Ochiq loyihalar</div>
+              <div className="eyebrow mb-2">{projectEyebrow}</div>
               <h2 className="font-display truncate text-2xl font-bold tracking-tight sm:text-3xl">
                 Butun mintaqadan shartnomalar uchun taklif bering
               </h2>
@@ -441,7 +485,7 @@ function Landing() {
             </Link>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            {projects.slice(0, 4).map((p) => (
+            {homeContent.projects.map((p) => (
               <ProjectCard key={p.id} p={p} />
             ))}
           </div>
@@ -452,7 +496,7 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div className="min-w-0">
-              <div className="eyebrow mb-2">Premium xizmatlar</div>
+              <div className="eyebrow mb-2">{serviceEyebrow}</div>
               <h2 className="font-display truncate text-2xl font-bold tracking-tight sm:text-3xl">
                 Tayyor mahsulotlashtirilgan ishlar
               </h2>
@@ -465,7 +509,7 @@ function Landing() {
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {services.slice(0, 4).map((s) => (
+            {homeContent.services.map((s) => (
               <ServiceCard key={s.id} s={s} />
             ))}
           </div>
@@ -568,6 +612,24 @@ function Landing() {
         </div>
       </section>
 
+      <LiveActivityFeed />
+
+      <section className="border-b border-border bg-primary/5 py-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 text-center sm:px-6 md:flex-row md:text-left">
+          <div className="flex-1">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-primary">Referral dasturi</div>
+            <h2 className="font-display mt-1 text-xl font-bold">Do'stingizni taklif qiling — 50.000 UZS kredit oling</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Har bir faol referral uchun kredit. Sozlamalar → Referral bo'limida kodingiz.</p>
+          </div>
+          <Link
+            to="/register"
+            className="inline-flex h-10 shrink-0 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            Bepul qo'shilish
+          </Link>
+        </div>
+      </section>
+
       <section className="section-y">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
           <h2 className="font-display text-balance text-3xl font-extrabold tracking-tight sm:text-5xl">
@@ -578,8 +640,7 @@ function Landing() {
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-2.5">
             <Link
-              to="/login"
-              search={{ redirect: "/projects/create" }}
+              to="/projects/preview"
               className="inline-flex h-10 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring"
             >
               Loyiha joylash

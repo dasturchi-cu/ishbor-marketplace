@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { Plus, FolderOpen, FileText, Briefcase } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -13,6 +13,12 @@ import { filterProjects, normalizeSearch, type MarketplaceSearch } from "@/lib/m
 import { getPublishedProjects, subscribeProjects } from "@/lib/projects-store";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
+import {
+  applyPersonalizedProjectOrder,
+  getRecommendationsVersion,
+  shouldPersonalizeList,
+  subscribeRecommendations,
+} from "@/lib/recommendations";
 
 export const Route = createFileRoute("/projects/")({
   validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
@@ -40,7 +46,14 @@ function ProjectsPage() {
   const search = Route.useSearch();
   const setSearch = useMarketplaceSearch(search, "/projects");
   const allProjects = useSyncExternalStore(subscribeProjects, getPublishedProjects, getPublishedProjects);
-  const filtered = filterProjects(allProjects, search);
+  const recVersion = useSyncExternalStore(subscribeRecommendations, getRecommendationsVersion, () => 0);
+  const filtered = useMemo(() => {
+    const base = filterProjects(allProjects, search);
+    if (user && activeRole === "freelancer" && shouldPersonalizeList(search)) {
+      return applyPersonalizedProjectOrder(base, user.id);
+    }
+    return base;
+  }, [allProjects, search, user?.id, activeRole, recVersion]);
   const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
     filtered,
     MARKETPLACE_PAGE_SIZE,

@@ -59,6 +59,7 @@ import { Route as AgenciesIndexRouteImport } from './routes/agencies.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ServicesCreateRouteImport } from './routes/services.create'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
+import { Route as ProjectsPreviewRouteImport } from './routes/projects.preview'
 import { Route as ProjectsCreateRouteImport } from './routes/projects.create'
 import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
 import { Route as PortfolioCreateRouteImport } from './routes/portfolio.create'
@@ -110,6 +111,7 @@ import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin.users.index'
 import { Route as AdminEscrowIndexRouteImport } from './routes/admin.escrow.index'
+import { Route as ServicesCategorySlugRouteImport } from './routes/services.category.$slug'
 import { Route as PortfolioEditSlugRouteImport } from './routes/portfolio.edit.$slug'
 import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 import { Route as AdminEscrowIdRouteImport } from './routes/admin.escrow.$id'
@@ -363,6 +365,11 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ServicesRoute,
+} as any)
+const ProjectsPreviewRoute = ProjectsPreviewRouteImport.update({
+  id: '/preview',
+  path: '/preview',
+  getParentRoute: () => ProjectsRoute,
 } as any)
 const ProjectsCreateRoute = ProjectsCreateRouteImport.update({
   id: '/create',
@@ -619,6 +626,11 @@ const AdminEscrowIndexRoute = AdminEscrowIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminEscrowRoute,
 } as any)
+const ServicesCategorySlugRoute = ServicesCategorySlugRouteImport.update({
+  id: '/category/$slug',
+  path: '/category/$slug',
+  getParentRoute: () => ServicesRoute,
+} as any)
 const PortfolioEditSlugRoute = PortfolioEditSlugRouteImport.update({
   id: '/edit/$slug',
   path: '/edit/$slug',
@@ -721,6 +733,7 @@ export interface FileRoutesByFullPath {
   '/portfolio/create': typeof PortfolioCreateRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/projects/create': typeof ProjectsCreateRoute
+  '/projects/preview': typeof ProjectsPreviewRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/create': typeof ServicesCreateRoute
   '/admin/': typeof AdminIndexRoute
@@ -738,6 +751,7 @@ export interface FileRoutesByFullPath {
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
   '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
+  '/services/category/$slug': typeof ServicesCategorySlugRoute
   '/admin/escrow/': typeof AdminEscrowIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
 }
@@ -813,6 +827,7 @@ export interface FileRoutesByTo {
   '/portfolio/create': typeof PortfolioCreateRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/projects/create': typeof ProjectsCreateRoute
+  '/projects/preview': typeof ProjectsPreviewRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/create': typeof ServicesCreateRoute
   '/admin': typeof AdminIndexRoute
@@ -830,6 +845,7 @@ export interface FileRoutesByTo {
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
   '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
+  '/services/category/$slug': typeof ServicesCategorySlugRoute
   '/admin/escrow': typeof AdminEscrowIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
 }
@@ -920,6 +936,7 @@ export interface FileRoutesById {
   '/portfolio/create': typeof PortfolioCreateRoute
   '/projects/$slug': typeof ProjectsSlugRoute
   '/projects/create': typeof ProjectsCreateRoute
+  '/projects/preview': typeof ProjectsPreviewRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/create': typeof ServicesCreateRoute
   '/admin/': typeof AdminIndexRoute
@@ -937,6 +954,7 @@ export interface FileRoutesById {
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
   '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
+  '/services/category/$slug': typeof ServicesCategorySlugRoute
   '/admin/escrow/': typeof AdminEscrowIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
 }
@@ -1028,6 +1046,7 @@ export interface FileRouteTypes {
     | '/portfolio/create'
     | '/projects/$slug'
     | '/projects/create'
+    | '/projects/preview'
     | '/services/$slug'
     | '/services/create'
     | '/admin/'
@@ -1045,6 +1064,7 @@ export interface FileRouteTypes {
     | '/admin/escrow/$id'
     | '/admin/users/$id'
     | '/portfolio/edit/$slug'
+    | '/services/category/$slug'
     | '/admin/escrow/'
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
@@ -1120,6 +1140,7 @@ export interface FileRouteTypes {
     | '/portfolio/create'
     | '/projects/$slug'
     | '/projects/create'
+    | '/projects/preview'
     | '/services/$slug'
     | '/services/create'
     | '/admin'
@@ -1137,6 +1158,7 @@ export interface FileRouteTypes {
     | '/admin/escrow/$id'
     | '/admin/users/$id'
     | '/portfolio/edit/$slug'
+    | '/services/category/$slug'
     | '/admin/escrow'
     | '/admin/users'
   id:
@@ -1226,6 +1248,7 @@ export interface FileRouteTypes {
     | '/portfolio/create'
     | '/projects/$slug'
     | '/projects/create'
+    | '/projects/preview'
     | '/services/$slug'
     | '/services/create'
     | '/admin/'
@@ -1243,6 +1266,7 @@ export interface FileRouteTypes {
     | '/admin/escrow/$id'
     | '/admin/users/$id'
     | '/portfolio/edit/$slug'
+    | '/services/category/$slug'
     | '/admin/escrow/'
     | '/admin/users/'
   fileRoutesById: FileRoutesById
@@ -1641,6 +1665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesSlugRouteImport
       parentRoute: typeof ServicesRoute
     }
+    '/projects/preview': {
+      id: '/projects/preview'
+      path: '/preview'
+      fullPath: '/projects/preview'
+      preLoaderRoute: typeof ProjectsPreviewRouteImport
+      parentRoute: typeof ProjectsRoute
+    }
     '/projects/create': {
       id: '/projects/create'
       path: '/create'
@@ -1998,6 +2029,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEscrowIndexRouteImport
       parentRoute: typeof AdminEscrowRoute
     }
+    '/services/category/$slug': {
+      id: '/services/category/$slug'
+      path: '/category/$slug'
+      fullPath: '/services/category/$slug'
+      preLoaderRoute: typeof ServicesCategorySlugRouteImport
+      parentRoute: typeof ServicesRoute
+    }
     '/portfolio/edit/$slug': {
       id: '/portfolio/edit/$slug'
       path: '/edit/$slug'
@@ -2267,12 +2305,14 @@ const PortfolioRouteWithChildren = PortfolioRoute._addFileChildren(
 interface ProjectsRouteChildren {
   ProjectsSlugRoute: typeof ProjectsSlugRoute
   ProjectsCreateRoute: typeof ProjectsCreateRoute
+  ProjectsPreviewRoute: typeof ProjectsPreviewRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
 }
 
 const ProjectsRouteChildren: ProjectsRouteChildren = {
   ProjectsSlugRoute: ProjectsSlugRoute,
   ProjectsCreateRoute: ProjectsCreateRoute,
+  ProjectsPreviewRoute: ProjectsPreviewRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
 }
 
@@ -2284,12 +2324,14 @@ interface ServicesRouteChildren {
   ServicesSlugRoute: typeof ServicesSlugRoute
   ServicesCreateRoute: typeof ServicesCreateRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
+  ServicesCategorySlugRoute: typeof ServicesCategorySlugRoute
 }
 
 const ServicesRouteChildren: ServicesRouteChildren = {
   ServicesSlugRoute: ServicesSlugRoute,
   ServicesCreateRoute: ServicesCreateRoute,
   ServicesIndexRoute: ServicesIndexRoute,
+  ServicesCategorySlugRoute: ServicesCategorySlugRoute,
 }
 
 const ServicesRouteWithChildren = ServicesRoute._addFileChildren(
