@@ -7,6 +7,8 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Railway / Node deploy: without this, Lovable config skips nitro and no .output server is built.
+  nitro: { preset: "node-server" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
