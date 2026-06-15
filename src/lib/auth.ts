@@ -30,6 +30,49 @@ export type AuthSession = {
   loggedInAt: string;
 };
 
+const PASSWORD_OVERRIDES_KEY = "ishbor-password-overrides";
+
+function readPasswordOverrides(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(PASSWORD_OVERRIDES_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePasswordOverrides(data: Record<string, string>) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(PASSWORD_OVERRIDES_KEY, JSON.stringify(data));
+}
+
+function getPasswordForEmail(email: string): string | null {
+  const demo = demoUsers[email];
+  if (!demo) return null;
+  const overrides = readPasswordOverrides();
+  return overrides[email] ?? demo.password;
+}
+
+export function verifyUserPassword(email: string, password: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  const expected = getPasswordForEmail(normalized);
+  if (expected) return expected === password;
+  return password.length >= 6;
+}
+
+export function updateUserPassword(userId: string, newPassword: string): boolean {
+  const session = getSession();
+  if (!session || session.user.id !== userId || newPassword.length < 8) return false;
+  const email = session.user.email.trim().toLowerCase();
+  if (demoUsers[email]) {
+    const overrides = readPasswordOverrides();
+    overrides[email] = newPassword;
+    writePasswordOverrides(overrides);
+  }
+  return true;
+}
+
 const demoUsers: Record<string, { password: string; user: AuthUser }> = {
   "sardor@asaka.uz": {
     password: "demo1234",
@@ -174,7 +217,8 @@ export function loginWithCredentials(
 ): { ok: true; session: AuthSession } | { ok: false; error: string } {
   const normalized = email.trim().toLowerCase();
   const demo = demoUsers[normalized];
-  if (demo && demo.password === password) {
+  const expectedPassword = getPasswordForEmail(normalized);
+  if (demo && expectedPassword === password) {
     const verified = isUserVerified(demo.user.id, demo.user.verified);
     const session: AuthSession = {
       user: { ...demo.user, verified },

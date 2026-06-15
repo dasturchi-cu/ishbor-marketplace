@@ -15,8 +15,7 @@ export function ReferralTab({ userId }: { userId: string }) {
 
   return (
     <SettingsTabLayout
-      title="Taklif dasturi"
-      description="Do'stlaringizni taklif qiling va kredit oling"
+      title=""
       stats={
         <SettingsStatRow>
           <SettingsStatCard label="Kredit" value={`${referral.credits.toLocaleString()} UZS`} accent />

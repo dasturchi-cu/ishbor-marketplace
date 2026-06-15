@@ -127,7 +127,7 @@ function ApplicationDetailPage() {
             <span className="font-semibold text-foreground">Keyingi qadam:</span>{" "}
             {app.status === "accepted"
               ? app.orderId
-                ? "Buyurtmani faollashtirish uchun To'lov sahifasida eskrouni moliyalashtiring."
+                ? "Buyurtma yaratildi. Mijoz eskrouni moliyalashtirguncha kuting."
                 : "Eskrou moliyalashtirilishi va bosqichlar yetkazilishi uchun Buyurtmalarni kuzating."
               : "Mavjud bo'ling — mijozlar ko'pincha 48 soat ichida javob beradi."}
           </div>

@@ -26,9 +26,9 @@ import {
 } from "@/components/site/trust";
 import { PortfolioPreviewGrid } from "@/components/portfolio/portfolio-preview-card";
 import { SkillsMatrix } from "@/components/site/profile/skills-matrix";
-import { VideoIntro } from "@/components/site/profile/video-intro";
 import { VerificationCenter } from "@/components/site/profile/verification-center";
 import { SuccessMetrics } from "@/components/site/profile/success-metrics";
+import { VideoIntro } from "@/components/site/profile/video-intro";
 import { ProfileReviews } from "@/components/site/profile/profile-reviews";
 import { ConversionFlowBanner, FREELANCER_HIRE_CHECKOUT_FLOW } from "@/components/site/conversion-flow";
 import { SaveButtonInline } from "@/components/site/save-button";

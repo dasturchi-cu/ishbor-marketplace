@@ -15,6 +15,7 @@ import { getOrder, getEscrowByOrderId } from "@/lib/mock-data";
 import { getOrderById, subscribeOrders, approveOrderDelivery } from "@/lib/orders-store";
 import { getEscrowByOrderId as getStoredEscrowByOrderId } from "@/lib/escrow-store";
 import { hasUserReviewedOrder, getReviewsForOrder, getOrderReviewDirection } from "@/lib/reviews-store";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 
 function canAccessOrder(order: ReturnType<typeof getOrderById>, session: ReturnType<typeof getSession>) {
@@ -212,6 +213,14 @@ function OrderDetailPage() {
               </div>
             </div>
           </div>
+          {isClient && !order.escrowFunded && (
+            <ClientCheckoutLink
+              search={{ type: "order", order: order.id }}
+              className="block rounded-2xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Eskrouni moliyalashtirish
+            </ClientCheckoutLink>
+          )}
           {escrow && (
             <Link
               to="/escrow/$id"

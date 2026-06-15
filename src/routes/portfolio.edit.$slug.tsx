@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, notFound, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import { ChevronLeft } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -92,20 +92,20 @@ function TahrirlashPortfolioForm({
 
   const handleSaveDraft = () => {
     if (!input.title.trim()) {
-      toast.error("Loyiha nomi talab qilinadi.");
+      actionFeedback.error("Loyiha nomi talab qilinadi.");
       return;
     }
     savePortfolioDraft(input, ctx, slug);
-    toast.success("Qoralama saqlandi");
+    actionFeedback.draftSaved("Qoralama");
   };
 
   const handlePublish = () => {
     if (!isValid) {
-      toast.error("Barcha majburiy maydonlarni to'ldiring.");
+      actionFeedback.error("Barcha majburiy maydonlarni to'ldiring.");
       return;
     }
     publishPortfolio(input, ctx, slug);
-    toast.success("Portfolio yangilandi");
+    actionFeedback.updated("Portfolio");
     navigate({ to: "/portfolio/$slug", params: { slug } });
   };
 

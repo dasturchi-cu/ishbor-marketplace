@@ -1,13 +1,14 @@
 import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { SettingsTabLayout, SettingsSection } from "@/components/settings/settings-tab-layout";
+import { SettingsSelect } from "@/components/settings/settings-field";
 import { SettingsStatCard, SettingsStatRow } from "@/components/settings/settings-stat-card";
 import { subscribeSettings, getUserSettings, updateLanguagePrefs } from "@/lib/settings-store";
 
 const LANGUAGES = [
-  { code: "O'zbek", flag: "🇺🇿", desc: "O'zbek tili — standart" },
-  { code: "Inglizcha", flag: "🇬🇧", desc: "Ingliz tili — xalqaro" },
-  { code: "Ruscha", flag: "🇷🇺", desc: "Русский язык" },
+  { code: "O'zbek", flag: "🇺🇿", desc: "Asosiy interfeys tili" },
+  { code: "Inglizcha", flag: "🇬🇧", desc: "Formatlar va ko'rinish" },
+  { code: "Ruscha", flag: "🇷🇺", desc: "Formatlar va ko'rinish" },
 ];
 
 export function LanguageTab({ userId }: { userId: string }) {
@@ -16,7 +17,7 @@ export function LanguageTab({ userId }: { userId: string }) {
 
   const selectDefault = (code: string) => {
     updateLanguagePrefs(userId, { default: code, marketplace: code, notifications: code });
-    toast.success("Til yangilandi");
+    toast.success(code === "O'zbek" ? "Til yangilandi" : "Format sozlamalari yangilandi");
   };
 
   const sampleDate = new Date().toLocaleDateString(
@@ -27,8 +28,7 @@ export function LanguageTab({ userId }: { userId: string }) {
 
   return (
     <SettingsTabLayout
-      title="Til"
-      description="Interfeys va format sozlamalari"
+      title=""
       stats={
         <SettingsStatRow>
           <SettingsStatCard label="Asosiy til" value={language.default} accent />
@@ -51,6 +51,7 @@ export function LanguageTab({ userId }: { userId: string }) {
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
+              type="button"
               onClick={() => selectDefault(lang.code)}
               className={`rounded-xl border p-4 text-left transition-default ${
                 language.default === lang.code ? "border-primary bg-primary/8" : "border-border hover:border-primary/20"
@@ -62,32 +63,31 @@ export function LanguageTab({ userId }: { userId: string }) {
             </button>
           ))}
         </div>
+        {language.default !== "O'zbek" && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Interfeys matnlari hozircha o'zbekcha. Tanlangan til sana va valyuta formatlariga qo'llanadi.
+          </p>
+        )}
       </SettingsSection>
       <SettingsSection title="Formatlar">
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Sana formati</span>
-            <select
-              value={language.dateFormat}
-              onChange={(e) => updateLanguagePrefs(userId, { dateFormat: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-            >
-              <option value="DD.MM.YYYY">DD.MM.YYYY</option>
-              <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-            </select>
-          </label>
-          <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Valyuta</span>
-            <select
-              value={language.currencyFormat}
-              onChange={(e) => updateLanguagePrefs(userId, { currencyFormat: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-            >
-              <option value="UZS">UZS (so'm)</option>
-              <option value="USD">USD ($)</option>
-            </select>
-          </label>
+          <SettingsSelect
+            label="Sana formati"
+            value={language.dateFormat}
+            onChange={(e) => updateLanguagePrefs(userId, { dateFormat: e.target.value })}
+          >
+            <option value="DD.MM.YYYY">DD.MM.YYYY</option>
+            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+          </SettingsSelect>
+          <SettingsSelect
+            label="Valyuta"
+            value={language.currencyFormat}
+            onChange={(e) => updateLanguagePrefs(userId, { currencyFormat: e.target.value })}
+          >
+            <option value="UZS">UZS (so'm)</option>
+            <option value="USD">USD ($)</option>
+          </SettingsSelect>
         </div>
       </SettingsSection>
     </SettingsTabLayout>

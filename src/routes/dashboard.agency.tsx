@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
+import { NextActionCard } from "@/components/ftue/next-action-card";
+import { ProgressStrip } from "@/components/ux/progress-strip";
 import { AgencyVerificationBadge } from "@/components/agency/agency-verification-badge";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
@@ -205,6 +207,11 @@ function AgencyDashboardContent({
         )
       }
     >
+      <div className="mb-6 space-y-4">
+        <NextActionCard user={user} />
+        <ProgressStrip user={user} />
+      </div>
+
       <div className="mb-4 flex items-center gap-2">
         <AgencyVerificationBadge level={agency.verificationLevel} />
         {agency.status === "draft" && (
@@ -320,8 +327,23 @@ function AgencyDashboardContent({
         </div>
         <ul className="mt-4 divide-y divide-border">
           {caseStudies.length === 0 ? (
-            <li className="py-6 text-center text-sm text-muted-foreground">
-              Hali loyiha hikoyalari yo'q. Yuqoridagi maydondan birinchi case study qo'shing.
+            <li>
+              <EmptyState
+                compact
+                icon={Briefcase}
+                title="Loyiha hikoyalari yo'q"
+                description="Muvaffaqiyatli loyihalaringizni ko'rsating — mijozlar agentlik ishonchini oshiradi."
+                benefit="Portfolio bilan qabul qilinish 2× ko'proq."
+                action={
+                  <button
+                    type="button"
+                    onClick={() => document.querySelector<HTMLInputElement>('[placeholder="Loyiha hikoyasi sarlavhasi"]')?.focus()}
+                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                  >
+                    Birinchi hikoya qo'shish
+                  </button>
+                }
+              />
             </li>
           ) : caseStudies.map((cs) => (
             <li key={cs.id} className="flex items-center justify-between py-3 text-sm">

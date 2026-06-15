@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import { ChevronLeft } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -71,21 +71,21 @@ function YaratishPortfolioForm({
 
   const handleSaveDraft = () => {
     if (!input.title.trim()) {
-      toast.error("Qoralama saqlash uchun loyiha nomi talab qilinadi.");
+      actionFeedback.error("Qoralama saqlash uchun loyiha nomi talab qilinadi.");
       return;
     }
     const item = savePortfolioDraft(input, ctx);
-    toast.success("Qoralama saqlandi");
+    actionFeedback.draftSaved("Qoralama");
     navigate({ to: "/portfolio/edit/$slug", params: { slug: item.slug } });
   };
 
   const handlePublish = () => {
     if (!isValid) {
-      toast.error("Joylashdan oldin barcha majburiy maydonlarni to'ldiring.");
+      actionFeedback.error("Joylashdan oldin barcha majburiy maydonlarni to'ldiring.");
       return;
     }
     const item = publishPortfolio(input, ctx);
-    toast.success("Portfolio joylandi", { description: "Ommaviy ro'yxat uchun admin tasdig'i kutilmoqda." });
+    actionFeedback.published("Portfolio", "Ommaviy ro'yxat uchun admin tasdig'i kutilmoqda.");
     navigate({ to: "/portfolio/$slug", params: { slug: item.slug } });
   };
 

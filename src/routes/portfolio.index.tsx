@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSyncExternalStore, useState } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import {
   Plus,
   FolderOpen,
@@ -29,6 +29,7 @@ import {
 import type { PortfolioItem, PortfolioStatus } from "@/lib/portfolio-types";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { useIncrementalList, WORKSPACE_PAGE_SIZE } from "@/hooks/use-incremental-list";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 export const Route = createFileRoute("/portfolio/")({
   head: () => ({ meta: [{ title: "Portfel — Ishbor" }] }),
   component: PortfolioDashboardPage,
@@ -101,6 +102,8 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
         </Link>
       }
     >
+      <WorkspaceGuidance user={user} hideNextAction />
+
       <PortfolioAnalyticsWidget items={items.filter((p) => p.status === "published")} />
 
       <div className="mb-6 mt-8 flex flex-wrap gap-2">
@@ -125,13 +128,19 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
         <EmptyState
           icon={FolderOpen}
           title="Eng yaxshi ishingizni mijozlarga ko'rsating"
-          description="Yollanish konversiyasini oshirish uchun keys stadiyalar, metrikalar va loyiha havolalari bilan professional portfolio yarating."
+          description="Keys stadiyalar, metrikalar va loyiha havolalari bilan professional portfolio yarating."
+          benefit="Portfolio bilan ishonch balli +8 ga oshadi va qabul qilinish 2× ko'proq."
           action={
             <Link
               to="/portfolio/create"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
               Portfel yaratish
+            </Link>
+          }
+          secondaryAction={
+            <Link to="/ai/portfolio-optimizer" className="text-sm font-medium text-primary hover:underline">
+              AI bilan optimallashtirish
             </Link>
           }
         />
@@ -168,19 +177,19 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
 function PortfolioRow({ item: p, ctx }: { item: PortfolioItem; ctx: { id: string; fullName: string; username?: string; avatarHue: number } }) {
   const handleDelete = () => {
     if (!confirmDestructive(`"${p.title}" portfolioni o'chirishni tasdiqlaysizmi?`)) return;
-    if (deletePortfolio(p.slug)) toast.success("Portfel o'chirildi");
-    else toast.error("O'chirishda xato yuz berdi");
+    if (deletePortfolio(p.slug)) actionFeedback.deleted("Portfel");
+    else actionFeedback.error("O'chirishda xato yuz berdi");
   };
 
   const handleArchive = () => {
     if (!confirmDestructive(`"${p.title}" arxivlansinmi?`)) return;
     archivePortfolio(p.slug);
-    toast.success("Portfel arxivlandi");
+    actionFeedback.archived("Portfel");
   };
 
   const handleRestoreDraft = () => {
     updatePortfolioStatus(p.slug, "draft");
-    toast.success("Qoralamalarga ko'chirildi");
+    actionFeedback.saved("Portfel qoralamalarga ko'chirildi");
   };
 
   const handlePublish = () => {
@@ -191,7 +200,7 @@ function PortfolioRow({ item: p, ctx }: { item: PortfolioItem; ctx: { id: string
       freelancerName: ctx.fullName,
       freelancerHue: ctx.avatarHue,
     }, p.slug);
-    toast.success("Portfel joylandi", { description: "Ommaviy ko'rinish uchun admin tasdig'i kutilmoqda." });
+    actionFeedback.published("Portfel", "Ommaviy ko'rinish uchun admin tasdig'i kutilmoqda.");
   };
 
   return (

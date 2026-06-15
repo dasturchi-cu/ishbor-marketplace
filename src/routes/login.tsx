@@ -12,8 +12,8 @@ import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components
 
 import { GoogleButton } from "@/components/auth/google-button";
 
-import { loginWithCredentials } from "@/lib/auth";
-import { getActiveRole, getActiveDashboardPath } from "@/lib/active-role-store";
+import { loginWithCredentials, isAdminUser, type AuthUser } from "@/lib/auth";
+import { resetActiveRoleOnLogin, getActiveDashboardPath } from "@/lib/active-role-store";
 
 import { requireGuest } from "@/lib/guards";
 
@@ -69,6 +69,12 @@ function LoginPage() {
 
 
 
+  const postLoginPath = (user: AuthUser) => {
+    resetActiveRoleOnLogin(user);
+    if (isAdminUser(user)) return "/admin";
+    return getActiveDashboardPath();
+  };
+
   const demoLogin = (email: string) => {
     const result = loginWithCredentials(email, "demo1234", true);
     if (!result.ok) {
@@ -80,7 +86,7 @@ function LoginPage() {
       window.location.href = redirectTo;
       return;
     }
-    navigate({ to: getActiveDashboardPath(getActiveRole()) });
+    navigate({ to: postLoginPath(result.session.user) });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -116,9 +122,7 @@ function LoginPage() {
         }
 
         navigate({
-
-          to: getActiveDashboardPath(getActiveRole()),
-
+          to: postLoginPath(result.session.user),
         });
 
       } catch {
@@ -153,7 +157,7 @@ function LoginPage() {
 
       }
 
-      navigate({ to: getActiveDashboardPath(getActiveRole()) });
+      navigate({ to: postLoginPath(result.session.user) });
 
     }
 
@@ -189,7 +193,7 @@ function LoginPage() {
 
       <div className="mb-4 rounded-lg border border-border bg-secondary/30 px-3 py-2 text-xs text-muted-foreground">
 
-        Demo: <button type="button" onClick={() => demoLogin("sardor@asaka.uz")} className="font-medium text-primary hover:underline">mijoz</button>
+        Tezkor kirish: <button type="button" onClick={() => demoLogin("sardor@asaka.uz")} className="font-medium text-primary hover:underline">mijoz</button>
 
         {" · "}
 
@@ -199,13 +203,13 @@ function LoginPage() {
 
         <button type="button" onClick={() => demoLogin("admin@ishbor.uz")} className="font-medium text-primary hover:underline">admin</button>
 
-        {" · parol: demo1234"}
+        {" · standart parol bilan"}
 
       </div>
 
 
 
-      <GoogleButton label="Google orqali kirish (demo)" onClick={handleGoogle} />
+      <GoogleButton label="Google orqali kirish" onClick={handleGoogle} />
 
 
 

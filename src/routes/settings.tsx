@@ -1,10 +1,16 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronLeft } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { LoadingSpinner, confirmDestructive } from "@/components/site/feedback";
 import { SettingsSaveBar } from "@/components/settings/settings-save-bar";
+import {
+  SettingsNavButton,
+  SettingsMoreToggle,
+  SETTINGS_SECTION_META,
+  type SettingsSectionId,
+} from "@/components/settings/settings-nav";
 import { AccountTab } from "@/components/settings/tabs/account-tab";
 import { SecurityTab } from "@/components/settings/tabs/security-tab";
 import { NotificationsTab } from "@/components/settings/tabs/notifications-tab";
@@ -16,10 +22,10 @@ import { PaymentMethodsTab } from "@/components/settings/tabs/payment-tab";
 import { VerificationTab } from "@/components/settings/tabs/verification-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
-import { RoleSwitcher } from "@/components/site/role-switcher";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import { updateSessionUser } from "@/lib/auth";
+import { getActiveDashboardPath } from "@/lib/active-role-store";
 import {
   getUserSettings,
   setAutoSave,
@@ -28,9 +34,7 @@ import {
   type SaveState,
   type AccountFormData,
 } from "@/lib/settings-store";
-import {
-  computeProfileCompletionPercent,
-} from "@/lib/profile-store";
+import { computeProfileCompletionPercent } from "@/lib/profile-store";
 import { computeSecurityScore } from "@/lib/security-store";
 import { computeVerificationScore } from "@/lib/verification-settings-store";
 
@@ -40,14 +44,14 @@ const coreSections = [
   "Bildirishnomalar",
   "To'lov usullari",
   "Shaxsni tasdiqlash",
-] as const;
+] as const satisfies readonly SettingsSectionId[];
 
 const moreSections = [
   "Ogohlantirishlar",
   "Taklif dasturi",
   "Ko'rinish",
   "Til",
-] as const;
+] as const satisfies readonly SettingsSectionId[];
 
 const sections = [...coreSections, ...moreSections] as const;
 
@@ -102,8 +106,12 @@ function SettingsPage() {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [accountDirty, setAccountDirty] = useState(false);
   const [accountForm, setAccountForm] = useState<AccountFormData | null>(null);
+  const [accountSaveVersion, setAccountSaveVersion] = useState(0);
   const [payAddConsumed, setPayAddConsumed] = useState(false);
   const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dashboardPath = getActiveDashboardPath(activeRole);
+  const activeMeta = SETTINGS_SECTION_META[active];
 
   useEffect(() => {
     if (!accountDirty) return;
@@ -127,8 +135,7 @@ function SettingsPage() {
 
   const sectionCompletion = useMemo(() => {
     if (!user) return {} as Record<Section, string | null>;
-    const userType = activeRole;
-    const profilePct = computeProfileCompletionPercent(user.id, userType);
+    const profilePct = computeProfileCompletionPercent(user.id, activeRole);
     const security = computeSecurityScore(user.id, !!user.verified);
     const verification = computeVerificationScore(user.id, !!user.verified);
     return {
@@ -167,7 +174,7 @@ function SettingsPage() {
   const switchTab = (s: Section) => {
     setTabLoading(true);
     setActive(s);
-    setTimeout(() => setTabLoading(false), 200);
+    setTimeout(() => setTabLoading(false), 150);
   };
 
   const handleAccountDirty = useCallback((dirty: boolean, form: AccountFormData) => {
@@ -193,6 +200,7 @@ function SettingsPage() {
         username: accountForm.username || user.username,
       });
       setAccountDirty(false);
+      setAccountSaveVersion((v) => v + 1);
       setSaveState("saved");
       toast.success("Sozlamalar saqlandi");
       setTimeout(() => setSaveState("idle"), 2000);
@@ -220,78 +228,129 @@ function SettingsPage() {
   if (!user) return null;
 
   const showSaveBar = active === "Hisob" && (accountDirty || saveState !== "idle");
+  const moreActive = moreSections.includes(active as (typeof moreSections)[number]);
 
   return (
-    <WorkspaceShell eyebrow="Hisob" title="Sozlamalar">
-      <RoleSwitcher variant="compact" className="mb-4 w-fit" />
-      <div className={`grid gap-6 lg:grid-cols-[220px_1fr] ${showSaveBar ? "pb-20" : ""}`}>
-        <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Sozlamalarni qidirish..."
-              className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm"
-              aria-label="Sozlamalarni qidirish"
-            />
+    <WorkspaceShell
+      eyebrow="Hisob"
+      title="Sozlamalar"
+      actions={
+        <Link
+          to={dashboardPath}
+          className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+        >
+          <ChevronLeft className="size-4" />
+          Ish maydoni
+        </Link>
+      }
+    >
+      <div className="mb-5 overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <activeMeta.icon className="size-5" />
           </div>
-          <nav className="flex flex-col gap-2 lg:overflow-visible">
-            {(query.trim() ? filteredSections : coreSections).map((s) => (
-              <SectionButton key={s} section={s} active={active} completion={sectionCompletion[s]} onSelect={() => switchTab(s)} />
-            ))}
-            {!query.trim() && (
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setMoreOpen((o) => !o)}
-                  className={`touch-target flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-default ${
-                    moreSections.includes(active as (typeof moreSections)[number])
-                      ? "bg-primary/8 font-medium text-primary"
-                      : "text-muted-foreground hover:bg-secondary/50"
-                  }`}
-                >
-                  <span>Yana</span>
-                  <ChevronDown className={`size-4 transition-transform ${moreOpen || moreSections.includes(active as (typeof moreSections)[number]) ? "rotate-180" : ""}`} />
-                </button>
-                {(moreOpen || moreSections.includes(active as (typeof moreSections)[number])) && (
-                  <div className="mt-1 space-y-1">
-                    {moreSections.map((s) => (
-                      <SectionButton key={s} section={s} active={active} completion={sectionCompletion[s]} onSelect={() => switchTab(s)} />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </nav>
+          <div className="min-w-0">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-primary">Faol bo'lim</div>
+            <div className="font-display text-lg font-semibold">{active}</div>
+            <p className="mt-1 text-sm text-muted-foreground">{activeMeta.description}</p>
+          </div>
         </div>
+      </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-          {tabLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <LoadingSpinner />
+      <div className="-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 pb-1 lg:hidden">
+        {sections.map((s) => (
+          <SettingsNavButton
+            key={s}
+            section={s}
+            active={active === s}
+            completion={sectionCompletion[s]}
+            onSelect={() => switchTab(s)}
+            compact
+          />
+        ))}
+      </div>
+
+      <div className={`grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] ${showSaveBar ? "pb-36 lg:pb-20" : ""}`}>
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 space-y-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Qidirish…"
+                className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-sm transition-default focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/15"
+                aria-label="Sozlamalarni qidirish"
+              />
             </div>
-          ) : (
-            <>
-              {active === "Hisob" && (
-                <AccountTab user={user} onDirtyChange={handleAccountDirty} />
-              )}
-              {active === "Xavfsizlik" && <SecurityTab userId={user.id} />}
-              {active === "Bildirishnomalar" && <NotificationsTab userId={user.id} />}
-              {active === "Ogohlantirishlar" && <JobAlertsTab userId={user.id} />}
-              {active === "Taklif dasturi" && <ReferralTab userId={user.id} />}
-              {active === "Ko'rinish" && <AppearanceTab userId={user.id} />}
-              {active === "Til" && <LanguageTab userId={user.id} />}
-              {active === "To'lov usullari" && (
-                <PaymentMethodsTab
-                  userId={user.id}
-                  openAddOnMount={search.pay === "add" && !payAddConsumed}
-                  onAddOpened={() => setPayAddConsumed(true)}
+            <nav className="flex flex-col gap-1">
+              {(query.trim() ? filteredSections : coreSections).map((s) => (
+                <SettingsNavButton
+                  key={s}
+                  section={s}
+                  active={active === s}
+                  completion={sectionCompletion[s]}
+                  onSelect={() => switchTab(s)}
                 />
+              ))}
+              {!query.trim() && (
+                <>
+                  <SettingsMoreToggle
+                    open={moreOpen || moreActive}
+                    active={moreActive}
+                    onToggle={() => setMoreOpen((o) => !o)}
+                  />
+                  {(moreOpen || moreActive) && (
+                    <div className="space-y-1 pl-1">
+                      {moreSections.map((s) => (
+                        <SettingsNavButton
+                          key={s}
+                          section={s}
+                          active={active === s}
+                          completion={sectionCompletion[s]}
+                          onSelect={() => switchTab(s)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
-              {active === "Shaxsni tasdiqlash" && <VerificationTab userId={user.id} />}
-            </>
-          )}
+            </nav>
+          </div>
+        </aside>
+
+        <div className="min-w-0 rounded-2xl border border-border bg-card shadow-sm">
+          <div className="border-b border-border bg-elevated/30 px-4 py-3 sm:px-6">
+            <h2 className="font-display text-base font-semibold sm:text-lg">{active}</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{activeMeta.description}</p>
+          </div>
+          <div className="p-4 sm:p-6">
+            {tabLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <>
+                {active === "Hisob" && (
+                  <AccountTab user={user} onDirtyChange={handleAccountDirty} saveVersion={accountSaveVersion} />
+                )}
+                {active === "Xavfsizlik" && <SecurityTab userId={user.id} />}
+                {active === "Bildirishnomalar" && <NotificationsTab userId={user.id} />}
+                {active === "Ogohlantirishlar" && <JobAlertsTab userId={user.id} />}
+                {active === "Taklif dasturi" && <ReferralTab userId={user.id} />}
+                {active === "Ko'rinish" && <AppearanceTab userId={user.id} />}
+                {active === "Til" && <LanguageTab userId={user.id} />}
+                {active === "To'lov usullari" && (
+                  <PaymentMethodsTab
+                    userId={user.id}
+                    openAddOnMount={search.pay === "add" && !payAddConsumed}
+                    onAddOpened={() => setPayAddConsumed(true)}
+                  />
+                )}
+                {active === "Shaxsni tasdiqlash" && <VerificationTab userId={user.id} />}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -306,34 +365,5 @@ function SettingsPage() {
         />
       )}
     </WorkspaceShell>
-  );
-}
-
-function SectionButton({
-  section,
-  active,
-  completion,
-  onSelect,
-}: {
-  section: Section;
-  active: Section;
-  completion: string | null | undefined;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`touch-target flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-default ${
-        active === section ? "bg-primary/8 font-medium text-primary" : "text-muted-foreground hover:bg-secondary/50"
-      }`}
-    >
-      <span>{section}</span>
-      {completion && (
-        <span className={`font-mono text-[10px] ${completion === "✓" ? "text-success" : "text-muted-foreground"}`}>
-          {completion}
-        </span>
-      )}
-    </button>
   );
 }

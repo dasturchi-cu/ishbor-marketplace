@@ -2,7 +2,7 @@
 
 Ishbor visual design system. **Do not redesign** — extend consistently.
 
-Reference: `DESIGN_GUARDRAILS1111.md`, `PROJECT_STANDARDS.md` §1
+Reference: [DESIGN_GUARDRAILS.md](../00-constitution/DESIGN_GUARDRAILS.md), [PROJECT_STANDARDS.md](../00-constitution/PROJECT_STANDARDS.md) §1
 
 ---
 

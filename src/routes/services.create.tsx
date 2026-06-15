@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import { ChevronLeft, Save, Send } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
@@ -102,26 +102,26 @@ function CreateServicePage() {
   const handleDraft = () => {
     const input = buildInput();
     if (!input) {
-      toast.error("Sarlavha, tavsif va narx to'ldirilishi shart.");
+      actionFeedback.error("Sarlavha, tavsif va narx to'ldirilishi shart.");
       return;
     }
     const s = saveServiceDraft(input, ctx, edit);
-    toast.success("Qoralama saqlandi");
+    actionFeedback.draftSaved("Qoralama");
     navigate({ to: "/services/create", search: { edit: s.slug } });
   };
 
   const handlePublish = () => {
     const input = buildInput();
     if (!input) {
-      toast.error("Sarlavha, tavsif va narx to'ldirilishi shart.");
+      actionFeedback.error("Sarlavha, tavsif va narx to'ldirilishi shart.");
       return;
     }
     const s = publishService(input, ctx, edit);
     if ("error" in s) {
-      toast.error(s.error, { action: { label: "Narxlar", onClick: () => navigate({ to: "/pricing" }) } });
+      actionFeedback.error(s.error, { label: "Narxlar", onClick: () => navigate({ to: "/pricing" }) });
       return;
     }
-    toast.success("Xizmat e'lon qilindi!");
+    actionFeedback.published("Xizmat");
     navigate({ to: "/services/$slug", params: { slug: s.slug } });
   };
 

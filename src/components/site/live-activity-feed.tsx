@@ -91,7 +91,7 @@ export function LiveActivityFeed() {
           </div>
           <div className="hidden items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 sm:flex">
             <span className="size-2 animate-pulse rounded-full bg-primary" />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-primary">Demo + haqiqiy</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-primary">Jonli</span>
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { Bell, Search, Plus } from "lucide-react";
 import { EmptyState } from "@/components/site/feedback";
 import { SettingsTabLayout, SettingsSection } from "@/components/settings/settings-tab-layout";
+import { SettingsField } from "@/components/settings/settings-field";
+import { SettingsToggleRow } from "@/components/settings/settings-toggle";
 import { SettingsStatCard, SettingsStatRow } from "@/components/settings/settings-stat-card";
 import {
   subscribeAlerts,
@@ -21,8 +23,7 @@ export function JobAlertsTab({ userId }: { userId: string }) {
 
   return (
     <SettingsTabLayout
-      title="Ish ogohlantirishlari"
-      description="Mos loyihalar va saqlangan qidiruvlar"
+      title=""
       stats={
         <SettingsStatRow>
           <SettingsStatCard label="Holat" value={alerts.jobAlerts.enabled ? "Faol" : "O'chirilgan"} accent={alerts.jobAlerts.enabled} />
@@ -48,34 +49,24 @@ export function JobAlertsTab({ userId }: { userId: string }) {
       }
     >
       <SettingsSection title="Asosiy sozlamalar">
-        <label className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-          <span className="text-sm">Mos loyihalar haqida xabar olish</span>
-          <input
-            type="checkbox"
-            checked={alerts.jobAlerts.enabled}
-            onChange={(e) => updateJobAlertPrefs(userId, { enabled: e.target.checked })}
-            className="size-4 rounded"
-          />
-        </label>
+        <SettingsToggleRow
+          label="Mos loyihalar haqida xabar olish"
+          checked={alerts.jobAlerts.enabled}
+          onChange={(v) => updateJobAlertPrefs(userId, { enabled: v })}
+        />
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Min byudjet ($)</span>
-            <input
-              type="number"
-              value={alerts.jobAlerts.minBudget}
-              onChange={(e) => updateJobAlertPrefs(userId, { minBudget: Number(e.target.value) || 0 })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Max byudjet ($)</span>
-            <input
-              type="number"
-              value={alerts.jobAlerts.maxBudget}
-              onChange={(e) => updateJobAlertPrefs(userId, { maxBudget: Number(e.target.value) || 999999 })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-            />
-          </label>
+          <SettingsField
+            label="Min byudjet ($)"
+            type="number"
+            value={alerts.jobAlerts.minBudget}
+            onChange={(e) => updateJobAlertPrefs(userId, { minBudget: Number(e.target.value) || 0 })}
+          />
+          <SettingsField
+            label="Max byudjet ($)"
+            type="number"
+            value={alerts.jobAlerts.maxBudget}
+            onChange={(e) => updateJobAlertPrefs(userId, { maxBudget: Number(e.target.value) || 999999 })}
+          />
         </div>
         <div className="mt-3 rounded-lg border border-border p-4 text-sm text-muted-foreground">
           Ko'nikmalar: {alerts.jobAlerts.skills.join(", ") || "Hali belgilanmagan"}

@@ -28,7 +28,12 @@ export type AnalyticsEventType =
   | "credit_spent"
   | "credit_refund"
   | "credit_purchase"
-  | "review_submitted";
+  | "review_submitted"
+  | "agency_view"
+  | "agency_created"
+  | "agency_published"
+  | "agency_member_invited"
+  | "agency_verified";
 
 export type AnalyticsEvent = {
   id: string;
@@ -40,8 +45,13 @@ export type AnalyticsEvent = {
   meta?: Record<string, string>;
 };
 
+export type DistinctAnalyticsEvent = AnalyticsEvent & { count: number };
+
+const distinctRecentCache = new Map<string, DistinctAnalyticsEvent[]>();
+
 function notify() {
   cache = null;
+  distinctRecentCache.clear();
   listeners.forEach((l) => l());
 }
 
@@ -107,14 +117,44 @@ export function getRecentEventsForUser(userId: string, limit = 5): AnalyticsEven
     .slice(0, limit);
 }
 
-const EVENT_LABELS: Partial<Record<AnalyticsEventType, string>> = {
+/** Bir xil turdagi ketma-ket hodisalarni birlashtiradi (masalan, ikki marta "To'lov boshlandi"). */
+export function dedupeActivityEvents(events: AnalyticsEvent[]): DistinctAnalyticsEvent[] {
+  const result: DistinctAnalyticsEvent[] = [];
+  for (const e of events) {
+    const last = result[result.length - 1];
+    const sameDay =
+      last &&
+      new Date(last.timestamp).toDateString() === new Date(e.timestamp).toDateString();
+    if (last && last.type === e.type && sameDay) {
+      last.count += 1;
+    } else {
+      result.push({ ...e, count: 1 });
+    }
+  }
+  return result;
+}
+
+export function getDistinctRecentEventsForUser(userId: string, limit = 5): DistinctAnalyticsEvent[] {
+  const key = `${userId}:${limit}`;
+  const cached = distinctRecentCache.get(key);
+  if (cached) return cached;
+  const raw = getAllAnalyticsEvents().filter((e) => e.userId === userId);
+  const result = dedupeActivityEvents(raw).slice(0, limit);
+  distinctRecentCache.set(key, result);
+  return result;
+}
+
+const EVENT_LABELS: Record<string, string> = {
   landing_view: "Bosh sahifani ko'rdi",
   profile_view: "Profil ko'rildi",
   service_view: "Xizmat ko'rildi",
   service_save: "Xizmat saqlandi",
   service_order: "Xizmat buyurtmasi",
   portfolio_view: "Portfolio ko'rildi",
+  portfolio_save: "Portfolio saqlandi",
+  portfolio_share: "Portfolio ulashildi",
   contact_click: "Aloqa bosildi",
+  hire_conversion: "Yollash yakunlandi",
   checkout_start: "To'lov boshlandi",
   order_created: "Buyurtma yaratildi",
   order_completed: "Buyurtma yakunlandi",
@@ -122,17 +162,26 @@ const EVENT_LABELS: Partial<Record<AnalyticsEventType, string>> = {
   project_created: "Loyiha yaratildi",
   proposal_received: "Taklif olindi",
   proposal_accepted: "Taklif qabul qilindi",
-  featured_purchase: "Ajratilgan sotib olindi",
+  featured_purchase: "Ajratilgan joy sotib olindi",
   referral_credit_spent: "Referral kredit sarflandi",
   subscription_purchase: "Obuna sotib olindi",
   credit_spent: "Kredit sarflandi",
   credit_refund: "Kredit qaytarildi",
   credit_purchase: "Kredit sotib olindi",
   review_submitted: "Sharh yuborildi",
+  agency_view: "Agentlik ko'rildi",
+  agency_created: "Agentlik yaratildi",
+  agency_published: "Agentlik e'lon qilindi",
+  agency_member_invited: "Jamoa a'zosi taklif qilindi",
+  agency_verified: "Agentlik tasdiqlandi",
 };
 
-export function getEventLabel(type: AnalyticsEventType): string {
-  return EVENT_LABELS[type] ?? type;
+export function getEventLabel(type: AnalyticsEventType | string): string {
+  if (EVENT_LABELS[type]) return EVENT_LABELS[type]!;
+  return type
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 export function countEventsByType(types: AnalyticsEventType[], days: number): number {

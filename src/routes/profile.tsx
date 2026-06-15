@@ -153,12 +153,16 @@ function FreelancerProfile({ user, actions }: { user: AuthUser; actions: ReactNo
                   </Link>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Hali portfolio yo'q.{" "}
-                  <Link to="/portfolio/create" className="font-medium text-primary hover:underline">
+                <div className="rounded-lg border border-dashed border-border bg-surface/50 px-4 py-4 text-center">
+                  <p className="text-sm text-muted-foreground">Hali portfolio yo'q.</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Ish namunalaringiz ishonchni oshiradi.</p>
+                  <Link
+                    to="/portfolio/create"
+                    className="mt-3 inline-flex rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"
+                  >
                     Birinchi ishni qo'shing
                   </Link>
-                </p>
+                </div>
               )}
             </div>
           </ProfileSection>

@@ -12,13 +12,12 @@ import type { UserType } from "@/lib/auth-constants";
 export function ProfilePreviewPanel({
   user,
   headline,
-  completionPercent,
   tier,
   previewRole,
 }: {
   user: AuthUser;
   headline: string;
-  completionPercent: number;
+  completionPercent?: number;
   tier?: ReputationTier;
   previewRole?: UserType;
 }) {
@@ -33,34 +32,35 @@ export function ProfilePreviewPanel({
         : "/profile";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <PortfolioCover hue={user.avatarHue} aspect="aspect-[3/1]" className="rounded-none" />
-      <div className="relative px-4 pb-4">
-        <div className="-mt-8">
-          <GradientAvatar name={user.fullName} hue={user.avatarHue} size={64} rounded="rounded-xl" className="border-4 border-card" />
+    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <PortfolioCover hue={user.avatarHue} aspect="aspect-[5/2]" className="rounded-none" />
+      <div className="relative px-4 pb-4 pt-0">
+        <div className="-mt-7">
+          <GradientAvatar
+            name={user.fullName}
+            hue={user.avatarHue}
+            size={56}
+            rounded="rounded-xl"
+            className="border-[3px] border-card shadow-md"
+          />
         </div>
-        <h3 className="font-display mt-3 text-base font-semibold">{user.fullName}</h3>
-        {headline && <p className="text-xs text-primary">{headline}</p>}
-        <p className="text-xs text-muted-foreground">@{username}</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <h3 className="font-display mt-3 truncate text-base font-semibold">{user.fullName}</h3>
+        {headline ? (
+          <p className="mt-0.5 truncate text-xs font-medium text-primary">{headline}</p>
+        ) : (
+          <p className="mt-0.5 text-xs italic text-muted-foreground">Sarlavha qo'shilmagan</p>
+        )}
+        <p className="truncate text-xs text-muted-foreground">@{username}</p>
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
           {user.verified && <VerifiedIdentityBadge />}
           {tier && <ReputationBadge tier={tier} />}
         </div>
         {user.bio && (
-          <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-muted-foreground">{user.bio}</p>
+          <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{user.bio}</p>
         )}
-        <div className="mt-4">
-          <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
-            <span>Profil to'ldirilishi</span>
-            <span className="font-semibold text-foreground">{completionPercent}%</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${completionPercent}%` }} />
-          </div>
-        </div>
         <Link
           to={profilePath}
-          className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background py-2 text-xs font-semibold text-primary transition-default hover:border-primary/25 hover:bg-primary/5"
         >
           Ommaviy profil <ExternalLink className="size-3" />
         </Link>

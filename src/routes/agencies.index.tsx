@@ -8,7 +8,9 @@ import { AgencyCard } from "@/components/agency/agency-card";
 import { getPublishedAgencies, subscribeAgencies } from "@/lib/agency-store";
 import { getRankedAgencies, agencySortLabels, normalizeAgencySearch, filterAgencies } from "@/lib/agency-marketplace";
 import { computeAgencyMetrics } from "@/lib/agency-metrics-store";
-import type { AgencySearchParams, AgencySortOption } from "@/lib/agency-types";
+import type { Agency, AgencySearchParams, AgencySortOption } from "@/lib/agency-types";
+
+const EMPTY_AGENCIES: Agency[] = [];
 import { useNavigate } from "@tanstack/react-router";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
@@ -39,7 +41,7 @@ function AgenciesPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
 
-  const agencies = useSyncExternalStore(subscribeAgencies, getPublishedAgencies, () => []);
+  const agencies = useSyncExternalStore(subscribeAgencies, getPublishedAgencies, () => EMPTY_AGENCIES);
   const ranked = useMemo(() => getRankedAgencies(agencies), [agencies]);
   const filtered = useMemo(() => filterAgencies(agencies, search), [agencies, search]);
   const { visible, hasMore, loadMore, showing, total } = useIncrementalList(

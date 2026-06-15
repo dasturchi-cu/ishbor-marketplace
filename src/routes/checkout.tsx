@@ -1,13 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
+import { toast } from "sonner";
 import { Lock, ShieldCheck, CircleCheck as CheckCircle2, ArrowRight, ChevronLeft, CreditCard, Building2, Clock } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
+import { EntityNotFound } from "@/components/site/entity-not-found";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield, LevelBadge, CompactTrustRow, TrustGuaranteeCard } from "@/components/site/trust";
 import { ConversionFlowBanner, SERVICE_ORDER_FLOW, FREELANCER_HIRE_CHECKOUT_FLOW, ORDER_ESCROW_FLOW } from "@/components/site/conversion-flow";
 import { enrichService, freelancers, services, type Service, type Freelancer } from "@/lib/mock-data";
-import { requireAuth } from "@/lib/guards";
+import { requireRole } from "@/lib/guards";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { getOrderById, fundOrderEscrow } from "@/lib/orders-store";
 import { fundEscrow, getEscrowByOrderId } from "@/lib/escrow-store";
@@ -23,7 +25,6 @@ import { recordServiceOrder } from "@/lib/analytics-utils";
 import { recordAnalyticsEvent } from "@/lib/analytics-events-store";
 import { getAllServices } from "@/lib/services-store";
 import { computeSuccessScore } from "@/lib/growth-metrics";
-import { ensureClientRoleForCheckout } from "@/lib/client-checkout";
 
 type CheckoutSearch = {
   type?: "service" | "hire" | "order";
@@ -80,7 +81,7 @@ function checkoutPresentation(type: CheckoutKind, step: "review" | "payment") {
 }
 
 export const Route = createFileRoute("/checkout")({
-  beforeLoad: requireAuth,
+  beforeLoad: requireRole(["client"]),
   validateSearch: (search: Record<string, unknown>): CheckoutSearch => ({
     type:
       search.type === "hire" ? "hire"
@@ -98,7 +99,7 @@ export const Route = createFileRoute("/checkout")({
   }),
   head: () => ({ meta: [{ title: "To'lov — Ishbor" }] }),
   component: () => (
-    <ProtectedGate>
+    <ProtectedGate roles={["client"]}>
       <CheckoutPage />
     </ProtectedGate>
   ),
@@ -110,7 +111,7 @@ function CheckoutPage() {
   const type = search.type ?? "service";
 
   const service = type === "service" && search.service
-    ? getAllServices().find((s) => s.slug === search.service) ?? services.find((s) => s.slug === search.service) ?? services[0]
+    ? getAllServices().find((s) => s.slug === search.service) ?? services.find((s) => s.slug === search.service) ?? null
     : null;
   const freelancer = search.freelancer
     ? freelancers.find((f) => f.username === search.freelancer)
@@ -120,8 +121,10 @@ function CheckoutPage() {
 
   const [step, setStep] = useState<"review" | "payment" | "confirmed">("review");
   const [paymentMethod, setPaymentMethod] = useState<"humo" | "uzcard" | "swift">("humo");
-  const [confirmedOrderId, setConfirmedOrderId] = useState("o1");
-  const [confirmedEscrowId, setConfirmedEscrowId] = useState("ew1");
+  const [confirmedOrderId, setConfirmedOrderId] = useState("");
+  const [confirmedEscrowId, setConfirmedEscrowId] = useState("");
+  const [confirmedSellerUsername, setConfirmedSellerUsername] = useState<string | undefined>();
+  const [paying, setPaying] = useState(false);
 
   const presentation = checkoutPresentation(type, step === "payment" ? "payment" : "review");
 
@@ -141,30 +144,64 @@ function CheckoutPage() {
   const platformFee = Math.round(total * 0.05);
   const escrowSumma = total;
 
-  useEffect(() => {
-    ensureClientRoleForCheckout();
-  }, []);
+  const checkoutError = useMemo(() => {
+    if (type === "service") {
+      if (!search.service) return "Xizmat tanlanmagan.";
+      if (!service) return "Xizmat topilmadi.";
+    }
+    if (type === "hire") {
+      if (!search.freelancer) return "Frilanser tanlanmagan.";
+      if (!freelancer) return "Frilanser topilmadi.";
+    }
+    if (type === "order") {
+      if (!search.order) return "Buyurtma tanlanmagan.";
+      if (!existingOrder) return "Buyurtma topilmadi.";
+      if (existingOrder.escrowFunded) return "Bu buyurtma allaqachon moliyalashtirilgan.";
+    }
+    if (total <= 0) return "To'lov summasi noto'g'ri.";
+    return null;
+  }, [type, search.service, search.freelancer, search.order, service, freelancer, existingOrder, total]);
 
   useEffect(() => {
     recordConversionEvent("checkout_start", search.service ?? search.freelancer ?? search.order);
   }, [search.service, search.freelancer, search.order]);
 
   const handleConfirmPayment = () => {
+    if (paying || checkoutError || !user) return;
+    setPaying(true);
+
     let orderTitle = "";
-    let newOrderId = confirmedOrderId;
-    let newEscrowId = confirmedEscrowId;
+    let newOrderId = "";
+    let newEscrowId = "";
+    let sellerUsername: string | undefined;
+    const chargeAmount = total + platformFee;
+
+    const finishFail = (message: string) => {
+      toast.error(message);
+      setPaying(false);
+    };
+
     if (type === "order" && existingOrder) {
-      fundOrderEscrow(existingOrder.id);
-      const escrow = fundEscrow(existingOrder.id) ?? getEscrowByOrderId(existingOrder.id);
-      newOrderId = existingOrder.id;
-      newEscrowId = escrow?.id ?? "ew1";
-      setConfirmedOrderId(newOrderId);
-      setConfirmedEscrowId(newEscrowId);
-      orderTitle = existingOrder.title;
-      if (user) {
-        holdEscrowFunds(user.id, existingOrder.amount + Math.round(existingOrder.amount * 0.05), existingOrder.title);
+      const funded = fundOrderEscrow(existingOrder.id);
+      if (!funded) {
+        finishFail("Buyurtmani moliyalashtirib bo'lmadi.");
+        return;
       }
-    } else if (type === "hire" && freelancer && user) {
+      const escrow = fundEscrow(existingOrder.id) ?? getEscrowByOrderId(existingOrder.id);
+      if (!escrow) {
+        finishFail("Eskrou yozuvi yaratilmadi.");
+        return;
+      }
+      const wallet = holdEscrowFunds(user.id, chargeAmount, existingOrder.title);
+      if (!wallet) {
+        finishFail("Hamyon balansi yetarli emas.");
+        return;
+      }
+      newOrderId = existingOrder.id;
+      newEscrowId = escrow.id;
+      orderTitle = existingOrder.title;
+      sellerUsername = existingOrder.freelancerUsername;
+    } else if (type === "hire" && freelancer) {
       const order = createOrder({
         title: project ? project.title : `Yollash ${freelancer.name}`,
         client: user.company ?? user.fullName,
@@ -178,13 +215,16 @@ function CheckoutPage() {
       const escrow = createEscrowFromOrder(order);
       fundOrderEscrow(order.id);
       fundEscrow(order.id);
-      setConfirmedOrderId(order.id);
-      setConfirmedEscrowId(escrow.id);
+      const wallet = holdEscrowFunds(user.id, chargeAmount, order.title);
+      if (!wallet) {
+        finishFail("Hamyon balansi yetarli emas.");
+        return;
+      }
       newOrderId = order.id;
       newEscrowId = escrow.id;
       orderTitle = order.title;
-      holdEscrowFunds(user.id, total + platformFee, order.title);
-    } else if (type === "service" && service && user) {
+      sellerUsername = freelancer.username;
+    } else if (type === "service" && service) {
       const pkg = selectedPaket ?? enrichService(service).packages[0]!;
       const order = createOrder({
         title: `${service.title} — ${formatPackageTier(pkg.tier)}`,
@@ -200,40 +240,67 @@ function CheckoutPage() {
       const escrow = createEscrowFromOrder(order);
       fundOrderEscrow(order.id);
       fundEscrow(order.id);
-      setConfirmedOrderId(order.id);
-      setConfirmedEscrowId(escrow.id);
+      const wallet = holdEscrowFunds(user.id, pkg.price + platformFee, order.title);
+      if (!wallet) {
+        finishFail("Hamyon balansi yetarli emas.");
+        return;
+      }
       newOrderId = order.id;
       newEscrowId = escrow.id;
       orderTitle = order.title;
-      holdEscrowFunds(user.id, pkg.price + platformFee, order.title);
+      sellerUsername = service.sellerUsername;
       recordConversionEvent("order_created", order.id, pkg.price);
       recordAnalyticsEvent({ type: "escrow_funded", entityId: order.id, value: pkg.price });
       recordServiceOrder(service.slug, service.sellerUsername, pkg.price);
+    } else {
+      finishFail("To'lovni yakunlab bo'lmadi.");
+      return;
     }
-    if (newOrderId && type !== "service") {
+
+    setConfirmedOrderId(newOrderId);
+    setConfirmedEscrowId(newEscrowId);
+    setConfirmedSellerUsername(sellerUsername);
+
+    if (type !== "service") {
       recordConversionEvent("order_created", newOrderId, total);
       recordAnalyticsEvent({ type: "escrow_funded", entityId: newOrderId, value: total });
     }
-    if (user && orderTitle) {
-      addNotification({
-        kind: "escrow",
-        title: "Eskrou moliyalashtirildi",
-        body: `$${escrowSumma.toLocaleString()} eskrouda saqlanmoqda — ${orderTitle}.`,
-        priority: "high",
-        href: `/escrow/${newEscrowId}`,
-        userId: user.id,
-      });
-      addNotification({
-        kind: "order",
-        title: "Buyurtma tasdiqlandi",
-        body: `Buyurtmangiz "${orderTitle}" endi faol.`,
-        priority: "high",
-        href: `/orders/${newOrderId}`,
-        userId: user.id,
-      });
-    }
+
+    addNotification({
+      kind: "escrow",
+      title: "Eskrou moliyalashtirildi",
+      body: `$${escrowSumma.toLocaleString()} eskrouda saqlanmoqda — ${orderTitle}. To'lov: ${paymentMethod.toUpperCase()}.`,
+      priority: "high",
+      href: `/escrow/${newEscrowId}`,
+      userId: user.id,
+    });
+    addNotification({
+      kind: "order",
+      title: "Buyurtma tasdiqlandi",
+      body: `Buyurtmangiz "${orderTitle}" endi faol.`,
+      priority: "high",
+      href: `/orders/${newOrderId}`,
+      userId: user.id,
+    });
+
+    setPaying(false);
     setStep("confirmed");
   };
+
+  if (checkoutError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteNav />
+        <EntityNotFound
+          title="To'lovni boshlab bo'lmadi"
+          description={checkoutError}
+          backTo="/dashboard"
+          backLabel="Boshqaruv paneliga qaytish"
+        />
+        <SiteFooter />
+      </div>
+    );
+  }
 
   if (step === "confirmed") {
     return (
@@ -264,9 +331,19 @@ function CheckoutPage() {
             <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
               Boshqaruv paneli
             </Link>
-            <Link to="/messages" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
-              Sotuvchiga xabar
-            </Link>
+            {confirmedSellerUsername ? (
+              <Link
+                to="/freelancers/$username"
+                params={{ username: confirmedSellerUsername }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+              >
+                Sotuvchiga xabar
+              </Link>
+            ) : (
+              <Link to="/messages" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+                Xabarlar
+              </Link>
+            )}
           </div>
           <ConversionFlowBanner
             title={presentation.confirmedBannerTitle}
@@ -421,6 +498,7 @@ function CheckoutPage() {
             <CheckoutActions
               step={step}
               total={total + platformFee}
+              paying={paying}
               onContinue={() => setStep("payment")}
               onPay={handleConfirmPayment}
               onBack={() => (step === "payment" ? setStep("review") : window.history.back())}
@@ -447,9 +525,10 @@ function CheckoutPage() {
               <button
                 type="button"
                 onClick={handleConfirmPayment}
-                className="touch-target hidden w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring lg:inline-flex"
+                disabled={paying}
+                className="touch-target hidden w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring disabled:cursor-not-allowed disabled:opacity-50 lg:inline-flex"
               >
-                <Lock className="size-4" /> To'lash ${(total + platformFee).toLocaleString()}
+                <Lock className="size-4" /> {paying ? "To'lanmoqda…" : `To'lash $${(total + platformFee).toLocaleString()}`}
               </button>
             )}
           </aside>
@@ -532,7 +611,7 @@ function SellerReviewCard({
           <GradientAvatar name={sellerName} hue={sellerHue} size={56} rounded="rounded-2xl" className="shrink-0 ring-2 ring-border/60" />
           <div className="min-w-0 flex-1">
             <div className="eyebrow">{eyebrow}</div>
-            <h3 className="font-display text-lg font-bold leading-tight">{cardTitle}</h3>
+            <h3 className="font-display break-words text-lg font-bold leading-tight">{cardTitle}</h3>
             <p className="mt-1 text-sm leading-snug text-muted-foreground">{cardSubtitle}</p>
           </div>
         </div>
@@ -622,12 +701,14 @@ function OrderSummary({
 function CheckoutActions({
   step,
   total,
+  paying = false,
   onContinue,
   onPay,
   onBack,
 }: {
   step: "review" | "payment";
   total: number;
+  paying?: boolean;
   onContinue: () => void;
   onPay: () => void;
   onBack: () => void;
@@ -646,9 +727,10 @@ function CheckoutActions({
         <button
           type="button"
           onClick={onPay}
-          className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring sm:w-auto lg:hidden"
+          disabled={paying}
+          className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 focus-ring disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto lg:hidden"
         >
-          <Lock className="size-4" /> To'lash ${total.toLocaleString()}
+          <Lock className="size-4" /> {paying ? "To'lanmoqda…" : `To'lash $${total.toLocaleString()}`}
         </button>
       )}
       <button

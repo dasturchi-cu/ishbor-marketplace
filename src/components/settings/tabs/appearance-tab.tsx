@@ -2,16 +2,12 @@ import { useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { SettingsTabLayout, SettingsSection } from "@/components/settings/settings-tab-layout";
+import { SettingsSelect } from "@/components/settings/settings-field";
+import { SettingsToggleRow } from "@/components/settings/settings-toggle";
 import { SettingsStatCard, SettingsStatRow } from "@/components/settings/settings-stat-card";
 import { subscribeSettings, getUserSettings, updateAppearancePrefs } from "@/lib/settings-store";
 
-function applyTheme(theme: "light" | "dark" | "system") {
-  const isDark =
-    theme === "dark" ||
-    (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", isDark);
-  if (theme !== "system") localStorage.setItem("ishbor-theme", theme);
-}
+import { applyThemeClass, applyAppearancePrefs } from "@/lib/appearance-apply";
 
 export function AppearanceTab({ userId }: { userId: string }) {
   const settings = useSyncExternalStore(subscribeSettings, () => getUserSettings(userId), () => getUserSettings(userId));
@@ -19,8 +15,13 @@ export function AppearanceTab({ userId }: { userId: string }) {
 
   const setTheme = (theme: "light" | "dark" | "system") => {
     updateAppearancePrefs(userId, { theme });
-    applyTheme(theme);
+    applyThemeClass(theme);
     toast.success("Mavzu yangilandi");
+  };
+
+  const patchAppearance = (patch: Parameters<typeof updateAppearancePrefs>[1]) => {
+    updateAppearancePrefs(userId, patch);
+    applyAppearancePrefs(userId);
   };
 
   const themes = [
@@ -31,8 +32,7 @@ export function AppearanceTab({ userId }: { userId: string }) {
 
   return (
     <SettingsTabLayout
-      title="Ko'rinish"
-      description="Mavzu va interfeys sozlamalari"
+      title=""
       stats={
         <SettingsStatRow>
           <SettingsStatCard label="Mavzu" value={appearance.theme === "system" ? "Tizim" : appearance.theme === "dark" ? "Qorong'u" : "Yorug'"} accent />
@@ -69,36 +69,25 @@ export function AppearanceTab({ userId }: { userId: string }) {
       </SettingsSection>
       <SettingsSection title="Qo'shimcha">
         <div className="space-y-3">
-          <label className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-            <span className="text-sm">Ixcham rejim</span>
-            <input
-              type="checkbox"
-              checked={appearance.compactMode}
-              onChange={(e) => updateAppearancePrefs(userId, { compactMode: e.target.checked })}
-              className="size-4 rounded"
-            />
-          </label>
-          <label className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-            <span className="text-sm">Animatsiyalar</span>
-            <input
-              type="checkbox"
-              checked={appearance.animations}
-              onChange={(e) => updateAppearancePrefs(userId, { animations: e.target.checked })}
-              className="size-4 rounded"
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Shrift o'lchami</span>
-            <select
-              value={appearance.fontSize}
-              onChange={(e) => updateAppearancePrefs(userId, { fontSize: e.target.value as "sm" | "md" | "lg" })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-            >
-              <option value="sm">Kichik</option>
-              <option value="md">Standart</option>
-              <option value="lg">Katta</option>
-            </select>
-          </label>
+          <SettingsToggleRow
+            label="Ixcham rejim"
+            checked={appearance.compactMode}
+            onChange={(v) => patchAppearance({ compactMode: v })}
+          />
+          <SettingsToggleRow
+            label="Animatsiyalar"
+            checked={appearance.animations}
+            onChange={(v) => patchAppearance({ animations: v })}
+          />
+          <SettingsSelect
+            label="Shrift o'lchami"
+            value={appearance.fontSize}
+            onChange={(e) => patchAppearance({ fontSize: e.target.value as "sm" | "md" | "lg" })}
+          >
+            <option value="sm">Kichik</option>
+            <option value="md">Standart</option>
+            <option value="lg">Katta</option>
+          </SettingsSelect>
         </div>
       </SettingsSection>
     </SettingsTabLayout>

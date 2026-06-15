@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSyncExternalStore, useState } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import {
   Plus,
   FolderOpen,
@@ -26,6 +26,7 @@ import {
 } from "@/lib/projects-store";
 import { getApplicationsByProjectSlug } from "@/lib/applications-store";
 import type { Project, ProjectStatus } from "@/lib/mock-data";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 
 export const Route = createFileRoute("/my-projects")({
   beforeLoad: requireRole(["client"]),
@@ -82,6 +83,8 @@ function MyProjectsPage() {
         </Link>
       }
     >
+      {user && <WorkspaceGuidance user={user} hideNextAction />}
+
       <div className="mb-6 flex flex-wrap gap-2">
         {filterTabs.map((t) => (
           <button
@@ -107,12 +110,18 @@ function MyProjectsPage() {
           icon={FolderOpen}
           title="Birinchi loyihangizni joylang"
           description="Tekshirilgan frilanserlardan taklif olish uchun loyiha yarating."
+          benefit="O'rtacha 24 soat ichida birinchi takliflar keladi."
           action={
             <Link
               to="/projects/create"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+              className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
             >
-              Birinchi loyihangizni joylang
+              Loyiha joylash
+            </Link>
+          }
+          secondaryAction={
+            <Link to="/freelancers" className="text-sm font-medium text-primary hover:underline">
+              Avval frilanser qidirish
             </Link>
           }
         />
@@ -146,21 +155,21 @@ function ProjectRow({ project: p }: { project: Project }) {
   const handlePause = () => {
     const next = status === "paused" ? "published" : "paused";
     updateProjectStatus(p.slug, next);
-    toast.success(next === "paused" ? "Loyiha to'xtatildi" : "Loyiha davom ettirildi");
+    actionFeedback.saved("Loyiha", next === "paused" ? "To'xtatildi" : "Davom ettirildi");
   };
 
   const handleYopish = () => {
     if (!confirmDestructive(`"${p.title}" loyihasini yopishni tasdiqlaysizmi?`)) return;
     updateProjectStatus(p.slug, "closed");
-    toast.success("Loyiha yopildi");
+    actionFeedback.updated("Loyiha", "Yopildi");
   };
 
   const handleDelete = () => {
     if (!confirmDestructive(`"${p.title}" butunlay o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) return;
     if (deleteProject(p.slug)) {
-      toast.success("Loyiha o'chirildi");
+      actionFeedback.deleted("Loyiha");
     } else {
-      toast.error("O'chirishda xato yuz berdi");
+      actionFeedback.error("O'chirishda xato yuz berdi");
     }
   };
 

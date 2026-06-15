@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import {
   ChevronLeft,
   Save,
@@ -95,7 +95,7 @@ function CreateProjectPage() {
               }}
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:border-primary/20"
             >
-              Demo mijozni sinash (Asaka Capital)
+              Asaka Capital sifatida kirish
             </button>
             <Link to="/dashboard/freelancer" className="text-sm text-muted-foreground hover:text-foreground">
               Frilanser paneliga qaytish
@@ -133,7 +133,7 @@ function CreateProjectPage() {
     setDuration(`${draft.timeline.weeks} hafta`);
     setDescription(draft.description);
     setSkillsText(draft.skills.join(", "));
-    toast.success("AI loyiha ma'lumotlari yuklandi");
+    actionFeedback.loaded("AI loyiha ma'lumotlari");
   }, [edit, ai]);
 
   useEffect(() => {
@@ -146,7 +146,7 @@ function CreateProjectPage() {
     setDuration(draft.duration);
     setDescription(draft.description);
     setSkillsText(draft.skills);
-    toast.success("Loyiha rejasi yuklandi — e'lon qilish uchun davom eting");
+    actionFeedback.loaded("Loyiha rejasi", "E'lon qilish uchun davom eting");
   }, [edit, restore]);
 
   const buildInput = (): ProjectFormInput => ({
@@ -177,22 +177,22 @@ function CreateProjectPage() {
 
   const handleSaveDraft = () => {
     if (!title.trim()) {
-      toast.error("Qoralama saqlash uchun loyiha nomi talab qilinadi.");
+      actionFeedback.error("Qoralama saqlash uchun loyiha nomi talab qilinadi.");
       return;
     }
     const project = saveProjectDraft(buildInput(), ctx, edit);
-    toast.success("Qoralama saqlandi", { description: "Mening loyihalarimdan istalgan vaqtda davom etishingiz mumkin." });
+    actionFeedback.draftSaved("Qoralama");
     navigate({ to: "/projects/create", search: { edit: project.slug } });
   };
 
   const handlePublish = () => {
     const result = validateProjectInput(buildInput());
     if (!result.ok) {
-      toast.error(result.errors[0] ?? "Joylashdan oldin barcha majburiy maydonlarni to'ldiring.");
+      actionFeedback.error(result.errors[0] ?? "Joylashdan oldin barcha majburiy maydonlarni to'ldiring.");
       return;
     }
     const project = publishProject(buildInput(), ctx, edit);
-    toast.success("Loyiha joylandi", { description: "Frilanserlar endi taklif yuborishi mumkin." });
+    actionFeedback.published("Loyiha", "Frilanserlar endi taklif yuborishi mumkin.");
     navigate({ to: "/projects/$slug", params: { slug: project.slug }, search: { published: true } });
   };
 
@@ -204,11 +204,11 @@ function CreateProjectPage() {
     ];
     const next = mockFiles[attachments.length % mockFiles.length]!;
     if (attachments.some((a) => a.name === next.name)) {
-      toast.info("Ilova allaqachon qo'shilgan (mock).");
+      actionFeedback.info("Ilova allaqachon qo'shilgan (mock).");
       return;
     }
     setAttachments((prev) => [...prev, next]);
-    toast.success("Ilova qo'shildi (mock)");
+    actionFeedback.created("Ilova (mock)");
   };
 
   return (

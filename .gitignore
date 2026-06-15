@@ -1,2 +1,17 @@
 node_modules/
 .env
+
+# Build output
+dist/
+
+# Tool / MCP temp
+.playwright-mcp/
+.tanstack/
+
+# Accidental downloads in repo root
+*.exe
+*.zip
+
+# Playwright/MCP test artifacts
+guest-landing.yml
+login-*.png

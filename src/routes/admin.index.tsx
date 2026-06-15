@@ -4,11 +4,13 @@ import {
   Lock, DollarSign, AlertTriangle, Activity,
 } from "lucide-react";
 import { AdminShell } from "@/components/admin/shell";
+import { AdminNextActionCard } from "@/components/admin/admin-next-action-card";
 import { AdminStatCard } from "@/components/admin/actions";
 import { AdminLineChart } from "@/components/admin/charts";
 import { ActivityFeed } from "@/components/admin/activity-feed";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { resolveAdminNextAction } from "@/lib/next-action-resolver";
 import { adminStats, activityFeed, chartData } from "@/lib/admin-mock-data";
 import { useAdminSearchOpen } from "@/components/admin/search";
 
@@ -19,9 +21,18 @@ export const Route = createFileRoute("/admin/")({
 
 function AdminDashboard() {
   const { onSearchOpen } = useAdminSearchOpen();
+  const primaryActionHref = resolveAdminNextAction().href;
+
+  const quickActions = [
+    { to: "/admin/verifications", label: "Tasdiqlashlarni ko'rib chiqish", count: adminStats.verificationRequests },
+    { to: "/admin/disputes", label: "Ochiq nizolar", count: adminStats.disputes },
+    { to: "/admin/support", label: "Ochiq chiptalar", count: 3 },
+  ].filter((a) => a.to !== primaryActionHref);
 
   return (
     <AdminShell eyebrow="Korporativ Admin OS" title="Boshqaruv paneli" onSearchOpen={onSearchOpen}>
+      <AdminNextActionCard />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <AdminStatCard label="Jami foydalanuvchilar" value={adminStats.totalUsers.toLocaleString()} trend="+8%" trendUp icon={Users} />
         <AdminStatCard label="Faol buyurtmalar" value={adminStats.activeOrders.toLocaleString()} trend="+9%" trendUp icon={ClipboardList} />
@@ -56,13 +67,7 @@ function AdminDashboard() {
             <CardTitle className="text-base">Tezkor harakatlar</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-2">
-            {[
-              { to: "/admin/verifications", label: "Tasdiqlashlarni ko'rib chiqish", count: adminStats.verificationRequests },
-              { to: "/admin/disputes", label: "Ochiq nizolar", count: adminStats.disputes },
-              { to: "/admin/payments", label: "Kutilayotgan yechib olishlar", count: 3 },
-              { to: "/admin/support", label: "Ochiq chiptalar", count: 3 },
-              { to: "/admin/ai", label: "AI Markaz", count: 0 },
-            ].map((a) => (
+            {quickActions.map((a) => (
               <Link
                 key={a.to}
                 to={a.to}

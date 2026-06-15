@@ -4,6 +4,7 @@ import { Modal } from "@/components/site/modals";
 import { AuthField, AuthButton } from "@/components/auth/auth-field";
 import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/password-strength";
 import { recordPasswordChange } from "@/lib/security-store";
+import { getSession, updateUserPassword, verifyUserPassword } from "@/lib/auth";
 
 export function ChangePasswordModal({
   open,
@@ -30,12 +31,13 @@ export function ChangePasswordModal({
   }, [open]);
 
   const handleSave = () => {
-    if (!current) {
-      setError("Joriy parolni kiriting");
+    const session = getSession();
+    if (!session) {
+      setError("Sessiya topilmadi");
       return;
     }
-    if (current.length < 6) {
-      setError("Joriy parol kamida 6 ta belgidan iborat bo'lishi kerak");
+    if (!verifyUserPassword(session.user.email, current)) {
+      setError("Joriy parol noto'g'ri");
       return;
     }
     if (next.length < 8) {
@@ -49,6 +51,11 @@ export function ChangePasswordModal({
     setLoading(true);
     setTimeout(() => {
       const strong = getPasswordStrength(next) >= 3;
+      if (!updateUserPassword(userId, next)) {
+        setLoading(false);
+        setError("Parolni yangilab bo'lmadi");
+        return;
+      }
       recordPasswordChange(userId, strong);
       setLoading(false);
       toast.success("Parol muvaffaqiyatli yangilandi");

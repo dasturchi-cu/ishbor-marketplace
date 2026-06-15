@@ -13,6 +13,7 @@ import {
   IncrementalListFooter,
 } from "@/components/site/incremental-list-footer";
 import { useIncrementalList, WORKSPACE_PAGE_SIZE } from "@/hooks/use-incremental-list";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 
 export const Route = createFileRoute("/orders/")({
   head: () => ({ meta: [{ title: "Buyurtmalar — Ishbor" }] }),
@@ -55,6 +56,8 @@ function OrdersPage() {
 
   return (
     <WorkspaceShell eyebrow="Ish maydoni" title="Buyurtmalar">
+      {session?.user && <WorkspaceGuidance user={session.user} hideNextAction />}
+
       <div className="mobile-scroll-x flex gap-2 border-b border-border pb-3">
         {tabs.map((t) => (
           <button
@@ -74,6 +77,7 @@ function OrdersPage() {
           icon={ClipboardList}
           title={`${current.emptyLabel} buyurtmalar yo'q`}
           description="Ish yollagan yoki bajarganingizda buyurtmalar shu yerda paydo bo'ladi."
+          benefit="Eskrou himoyasi bilan har bir to'lov xavfsiz."
           action={
             activeRole === "client" ? (
               <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">

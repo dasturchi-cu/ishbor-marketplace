@@ -161,9 +161,30 @@ function Landing() {
     return getPersonalizedHomeContent(user?.id, user ? activeRole : undefined);
   }, [mounted, user?.id, activeRole, recVersion]);
 
-  const freelancerEyebrow = homeContent.personalized ? "Sizga mos mutaxassislar" : "Eng yuqori baholangan mutaxassislar";
-  const projectEyebrow = homeContent.personalized && activeRole === "freelancer" ? "Sizga mos loyihalar" : "Ochiq loyihalar";
-  const serviceEyebrow = homeContent.personalized ? "Sizga mos xizmatlar" : "Premium xizmatlar";
+  const staticFreelancers = useMemo(() => freelancers.slice(0, 6), []);
+  const staticProjects = useMemo(() => projects.slice(0, 4), []);
+  const staticServices = useMemo(() => services.slice(0, 4), []);
+
+  const displayFreelancers = mounted ? homeContent.freelancers : staticFreelancers;
+  const displayAgencies = mounted ? getPublishedAgencies().slice(0, 3) : [];
+  const displayProjects = mounted ? homeContent.projects : staticProjects;
+  const displayServices = mounted ? homeContent.services : staticServices;
+
+  const freelancerEyebrow = !mounted
+    ? "Eng yuqori baholangan mutaxassislar"
+    : homeContent.personalized
+      ? "Sizga mos mutaxassislar"
+      : "Eng yuqori baholangan mutaxassislar";
+  const projectEyebrow = !mounted
+    ? "Ochiq loyihalar"
+    : homeContent.personalized && activeRole === "freelancer"
+      ? "Sizga mos loyihalar"
+      : "Ochiq loyihalar";
+  const serviceEyebrow = !mounted
+    ? "Premium xizmatlar"
+    : homeContent.personalized
+      ? "Sizga mos xizmatlar"
+      : "Premium xizmatlar";
 
   return (
     <div className="min-h-screen bg-background">
@@ -237,7 +258,7 @@ function Landing() {
             ))}
           </div>
           <p className="mt-4 text-center text-[11px] text-muted-foreground">
-            Demo ma'lumotlar bilan aralash ko'rsatkichlar. Haqiqiy tranzaksiyalar platformada ko'rinadi.
+            Ko'rsatkichlar platforma faolligini aks ettiradi.
           </p>
         </div>
       </section>
@@ -400,7 +421,7 @@ function Landing() {
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 stagger-children">
-            {homeContent.freelancers.map((f) => (
+            {displayFreelancers.map((f) => (
               <FreelancerCard key={f.id} f={f} />
             ))}
           </div>
@@ -485,7 +506,7 @@ function Landing() {
             </Link>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            {homeContent.projects.map((p) => (
+            {displayProjects.map((p) => (
               <ProjectCard key={p.id} p={p} />
             ))}
           </div>
@@ -509,7 +530,7 @@ function Landing() {
             </Link>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {homeContent.services.map((s) => (
+            {displayServices.map((s) => (
               <ServiceCard key={s.id} s={s} />
             ))}
           </div>
@@ -557,16 +578,14 @@ function Landing() {
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {getPublishedAgencies()
-              .slice(0, 3)
-              .map((agency) => (
+            {displayAgencies.map((agency) => (
                 <AgencyCard key={agency.slug} agency={agency} metrics={computeAgencyMetrics(agency)} />
               ))}
           </div>
-          {getPublishedAgencies().length === 0 && (
+          {mounted && displayAgencies.length === 0 && (
             <div className="rounded-xl border border-dashed border-border bg-card p-8 text-center">
               <Building2 className="mx-auto size-8 text-muted-foreground" />
-              <p className="mt-3 text-sm text-muted-foreground">Agentliklar tez orada qo'shiladi.</p>
+              <p className="mt-3 text-sm text-muted-foreground">Hozircha e'lon qilingan agentliklar yo'q.</p>
               <Link to="/login" search={{ redirect: "/agencies/create" }} className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                 Birinchi agentlikni yaratish
               </Link>

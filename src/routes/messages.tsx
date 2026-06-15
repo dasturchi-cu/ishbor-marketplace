@@ -23,9 +23,10 @@ import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EmojiPickerModal, FileAttachModal, SendOfferModal, EscrowActionModal } from "@/components/site/modals";
+import { CallModal } from "@/components/messages/call-modal";
 import { freelancers, escrowWorkflows } from "@/lib/mock-data";
 import { ProtectedGate } from "@/components/auth/protected-gate";
-import { downloadDemoFile } from "@/lib/export-utils";
+import { downloadTextFile } from "@/lib/export-utils";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
@@ -123,9 +124,9 @@ function FileBubble({ m }: { m: ThreadMessage }) {
         </div>
         <button
           onClick={() => {
-            downloadDemoFile(
+            downloadTextFile(
               file.name,
-              `Ishbor demo fayl: ${file.name}\nHajm: ${file.size}\n\nBu demo muhitda haqiqiy fayl saqlanmaydi.`,
+              `${file.name}\nHajm: ${file.size}\n\nIshbor xabarlar ilovasidan yuklab olindi.`,
             );
           }}
           className="shrink-0 rounded-lg border border-border px-2.5 py-1 text-xs font-medium transition-default hover:border-primary/20 focus-ring"
@@ -238,6 +239,8 @@ function MessagesPage() {
   const [offerOchish, setOfferOchish] = useState(false);
   const [escrowOchish, setEscrowOchish] = useState(false);
   const [menuOchish, setMenuOchish] = useState(false);
+  const [callOpen, setCallOpen] = useState(false);
+  const [callType, setCallType] = useState<"voice" | "video">("voice");
   const [inboxTab, setInboxTab] = useState<ConversationInbox>("active");
   const [listLimit, setListLimit] = useState(50);
 
@@ -275,6 +278,13 @@ function MessagesPage() {
     ? escrowWorkflows.find((ew) => ew.project === activeConversation.projectContext)
     : undefined;
   const hasAnyConversations = getMessagesState().conversations.length > 0;
+
+  const startCall = (type: "voice" | "video") => {
+    if (!activeConversation || !participant) return;
+    setCallType(type);
+    setCallOpen(true);
+    setMenuOchish(false);
+  };
 
   const handleSelectConversation = (id: string) => {
     setActiveId(id);
@@ -544,20 +554,20 @@ function MessagesPage() {
                   <Lock className="size-3.5 text-primary" /> <span className="hidden sm:inline">Eskrou</span>
                 </button>
                 <button
-                  onClick={() => toast.info("Ovozli qo'ng'iroq tez orada qo'shiladi")}
-                  className="touch-target hidden items-center justify-center rounded-lg border border-border opacity-60 transition-default sm:inline-flex"
-                  aria-label="Qo'ng'iroq (tez orada)"
-                  title="Tez orada"
-                  disabled
+                  type="button"
+                  onClick={() => startCall("voice")}
+                  className="touch-target hidden items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring sm:inline-flex"
+                  aria-label="Ovozli qo'ng'iroq"
+                  title="Ovozli qo'ng'iroq"
                 >
                   <Phone className="size-4" />
                 </button>
                 <button
-                  onClick={() => toast.info("Video qo'ng'iroq tez orada qo'shiladi")}
-                  className="touch-target hidden items-center justify-center rounded-lg border border-border opacity-60 transition-default sm:inline-flex"
-                  aria-label="Video qo'ng'iroq (tez orada)"
-                  title="Tez orada"
-                  disabled
+                  type="button"
+                  onClick={() => startCall("video")}
+                  className="touch-target hidden items-center justify-center rounded-lg border border-border transition-default hover:border-primary/20 focus-ring sm:inline-flex"
+                  aria-label="Video qo'ng'iroq"
+                  title="Video qo'ng'iroq"
                 >
                   <Video className="size-4" />
                 </button>
@@ -769,6 +779,16 @@ function MessagesPage() {
           toast.success("Eskrou moliyalashtirildi");
         }}
       />
+      {activeConversation && participant && (
+        <CallModal
+          open={callOpen}
+          onClose={() => setCallOpen(false)}
+          type={callType}
+          participantName={participant.name}
+          participantHue={participant.hue}
+          conversationId={activeConversation.id}
+        />
+      )}
     </WorkspaceShell>
   );
 }

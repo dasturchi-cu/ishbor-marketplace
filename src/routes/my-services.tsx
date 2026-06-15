@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useSyncExternalStore } from "react";
 import { Plus, Pencil, Copy, Pause, Play, Trash2, Sparkles, BarChart3 } from "lucide-react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/services-store";
 import { getAllAnalyticsEvents } from "@/lib/analytics-events-store";
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 
 type Tab = "published" | "draft" | "paused" | "archived";
 
@@ -73,6 +74,8 @@ function MyServicesPage() {
         </div>
       }
     >
+      {user && <WorkspaceGuidance user={user} hideNextAction />}
+
       <div className="mb-6 flex flex-wrap gap-2">
         {tabs.map((t) => (
           <button key={t.key} type="button" onClick={() => setTab(t.key)} className={`rounded-lg px-3 py-2 text-sm font-medium ${tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50"}`}>
@@ -86,7 +89,9 @@ function MyServicesPage() {
           icon={Sparkles}
           title="Xizmatlar yo'q"
           description="Birinchi xizmatingizni yarating va sotishni boshlang."
-          action={<Link to="/services/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Xizmat yaratish</Link>}
+          benefit="Tayyor paketlar mijozlarga tezroq qaror qilishga yordam beradi."
+          action={<Link to="/services/create" className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Xizmat yaratish</Link>}
+          secondaryAction={<Link to="/ai" className="text-sm font-medium text-primary hover:underline">AI markaz →</Link>}
         />
       ) : (
         <div className="space-y-4">
@@ -129,16 +134,16 @@ function ServiceRow({
         </div>
         <div className="flex flex-wrap gap-2">
           <ActionBtn icon={Pencil} label="Tahrirlash" onClick={() => navigate({ to: "/services/create", search: { edit: s.slug } })} />
-          <ActionBtn icon={Copy} label="Nusxa" onClick={() => { duplicateService(s.slug); toast.success("Nusxa yaratildi"); onRefresh(); }} />
+          <ActionBtn icon={Copy} label="Nusxa" onClick={() => { duplicateService(s.slug); actionFeedback.created("Xizmat nusxasi"); onRefresh(); }} />
           {s.status === "paused" ? (
-            <ActionBtn icon={Play} label="Faollashtirish" onClick={() => { updateServiceStatus(s.slug, "published"); toast.success("E'lon qilindi"); onRefresh(); }} />
+            <ActionBtn icon={Play} label="Faollashtirish" onClick={() => { updateServiceStatus(s.slug, "published"); actionFeedback.published("Xizmat"); onRefresh(); }} />
           ) : (
-            <ActionBtn icon={Pause} label="To'xtatish" onClick={() => { updateServiceStatus(s.slug, "paused"); toast.success("To'xtatildi"); onRefresh(); }} />
+            <ActionBtn icon={Pause} label="To'xtatish" onClick={() => { updateServiceStatus(s.slug, "paused"); actionFeedback.saved("Xizmat", "To'xtatildi"); onRefresh(); }} />
           )}
           <ActionBtn icon={Trash2} label="O'chirish" onClick={() => {
             if (!confirmDestructive(`"${s.title}" xizmatini o'chirishni tasdiqlaysizmi?`)) return;
-            if (deleteService(s.slug)) { toast.success("O'chirildi"); onRefresh(); }
-            else toast.error("O'chirishda xato yuz berdi");
+            if (deleteService(s.slug)) { actionFeedback.deleted("Xizmat"); onRefresh(); }
+            else actionFeedback.error("O'chirishda xato yuz berdi");
           }} />
         </div>
       </div>

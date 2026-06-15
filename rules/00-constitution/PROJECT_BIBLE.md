@@ -127,7 +127,7 @@ Ishbor connects **clients** who need work done with **freelancers** and **agenci
 6. Confirm destructive actions with `confirm()` or modal
 7. Toast is **feedback**, not the action itself
 
-See `docs/UX_STANDARDS.md`.
+See [UX_STANDARDS.md](../03-ux/UX_STANDARDS.md).
 
 ---
 
@@ -139,7 +139,7 @@ See `docs/UX_STANDARDS.md`.
 - Touch targets ≥ 44px
 - Use existing: WorkspaceShell, SiteNav, cards, trust badges, EmptyState
 
-See `docs/UI_STANDARDS.md` and `DESIGN_GUARDRAILS1111.md`.
+See [UI_STANDARDS.md](../03-ux/UI_STANDARDS.md) and [DESIGN_GUARDRAILS.md](./DESIGN_GUARDRAILS.md).
 
 ---
 
@@ -151,7 +151,7 @@ See `docs/UI_STANDARDS.md` and `DESIGN_GUARDRAILS1111.md`.
 - Reviews tied to completed orders
 - Featured/promoted listings disclosed
 
-See `docs/TRUST_SYSTEM.md`.
+See [TRUST_SYSTEM.md](../04-trust/TRUST_SYSTEM.md).
 
 ---
 

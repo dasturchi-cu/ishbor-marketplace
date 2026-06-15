@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
 import { Modal } from "@/components/site/modals";
 import { AuthButton } from "@/components/auth/auth-field";
-import { submitVerificationDocument, approveVerificationStep } from "@/lib/verification-settings-store";
+import { submitVerificationDocument } from "@/lib/verification-settings-store";
 
 const DOC_TYPES = [
   { id: "identity", label: "Pasport yoki ID karta" },
@@ -27,6 +27,14 @@ export function VerificationUploadModal({
   const [selected, setSelected] = useState(stepId ?? "identity");
   const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setSelected(stepId ?? "identity");
+      setFileName("");
+    }
+  }, [open, stepId]);
 
   const submit = () => {
     if (!fileName) {
@@ -36,9 +44,6 @@ export function VerificationUploadModal({
     setLoading(true);
     setTimeout(() => {
       submitVerificationDocument(userId, selected, fileName);
-      setTimeout(() => {
-        approveVerificationStep(userId, selected);
-      }, 1500);
       setLoading(false);
       toast.success("Hujjat yuborildi", { description: "Ko'rib chiqish 1-2 ish kuni davom etadi." });
       onSubmitted();
@@ -76,9 +81,19 @@ export function VerificationUploadModal({
             ))}
           </select>
         </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) setFileName(file.name);
+          }}
+        />
         <button
           type="button"
-          onClick={() => setFileName("passport_scan.pdf")}
+          onClick={() => fileInputRef.current?.click()}
           className="flex w-full flex-col items-center gap-2 rounded-xl border border-dashed border-border py-8 transition-default hover:border-primary/30 hover:bg-secondary/20"
         >
           <Upload className="size-8 text-muted-foreground" />

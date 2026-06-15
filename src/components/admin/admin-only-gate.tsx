@@ -62,7 +62,7 @@ export function AdminOnlyGate({ children }: { children: ReactNode }) {
               }}
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:border-primary/20"
             >
-              Demo adminni sinab ko'rish
+              Administrator sifatida kirish
             </button>
           </div>
         </div>

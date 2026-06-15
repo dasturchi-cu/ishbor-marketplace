@@ -11,7 +11,7 @@ Known bug classes from Phases 27–28. **Prevent recurrence.**
 **Prevention:**
 - Every `onClick` must: navigate, open modal, mutate store, or trigger real download
 - Code review: grep `toast.success` without preceding mutation
-- Use `docs/LAUNCH_CHECKLIST.md` modal section
+- Use [LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md) modal section
 
 **Fixed examples:** wallet export, package-card save (Phase 28)
 

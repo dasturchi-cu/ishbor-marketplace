@@ -36,7 +36,7 @@ import { computeSuccessScore, computeResponseRate, formatResponseTime, getMonthl
 import { getOrdersForFreelancer, subscribeOrders, readStoredOrders } from "@/lib/orders-store";
 import { getReviewsForFreelancer, subscribeReviews } from "@/lib/reviews-store";
 import { FreelancerRecommendations } from "@/components/site/personalized-recommendations";
-import { NextActionCard } from "@/components/ftue/next-action-card";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 
 import { getAllApplications, subscribeApplications } from "@/lib/applications-store";
 import type { StoredReview } from "@/lib/reviews-store";
@@ -140,7 +140,7 @@ function FreelancerDashboard() {
 
     >
 
-      {user && <NextActionCard user={user} />}
+      {user && <WorkspaceGuidance user={user} />}
 
       {user && <FreelancerRecommendations />}
 
@@ -247,7 +247,7 @@ function FreelancerDashboard() {
 
               <div className="divide-y divide-border">
 
-                {activeOrders.map((order) => (
+                {activeOrders.length > 0 ? activeOrders.map((order) => (
 
                   <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block p-5 transition-default hover:bg-secondary/20">
 
@@ -295,7 +295,20 @@ function FreelancerDashboard() {
 
                   </Link>
 
-                ))}
+                )) : (
+                  <EmptyState
+                    compact
+                    icon={Package}
+                    title="Faol buyurtmalar yo'q"
+                    description="Taklifingiz qabul qilinganda buyurtma shu yerda boshlanadi."
+                    benefit="Portfolio va xizmat qo'shsangiz, qabul qilinish ehtimoli oshadi."
+                    action={
+                      <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                        Ish topish
+                      </Link>
+                    }
+                  />
+                )}
 
               </div>
 
@@ -353,6 +366,21 @@ function FreelancerDashboard() {
 
               <div className="max-h-96 divide-y divide-border overflow-y-auto">
 
+                {activeTab === "applications" && myApplications.length === 0 && (
+                  <EmptyState
+                    compact
+                    icon={FileText}
+                    title="Hali arizalar yo'q"
+                    description="Loyihalarga taklif yuboring — mijozlar 48 soat ichida javob beradi."
+                    benefit="AI taklif yordamchisi professional matn yozadi."
+                    action={
+                      <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                        Loyihalarni ko'rish
+                      </Link>
+                    }
+                  />
+                )}
+
                 {activeTab === "applications" && myApplications.map((app) => (
 
                   <Link key={app.id} to="/applications/$id" params={{ id: app.id }} className="block p-4 transition-default hover:bg-secondary/20">
@@ -394,6 +422,14 @@ function FreelancerDashboard() {
                     title="Hali sharhlar yo'q"
 
                     description="Mijozlar fikrini olish uchun birinchi loyihangizni yakunlang."
+
+                    benefit="5★ sharhlar ishonch ballingizni sezilarli oshiradi."
+
+                    action={
+                      <Link to="/orders" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                        Buyurtmalarga o'tish
+                      </Link>
+                    }
 
                   />
 
@@ -453,9 +489,9 @@ function FreelancerDashboard() {
 
           <div className="grid gap-4 sm:grid-cols-3">
 
-            <MetricCard label="Ishni yakunlash foizi" value={successMetrics ? `${successMetrics.completionRate}%` : "—"} />
-            <MetricCard label="Javob vaqti" value={responseMetrics?.medianMinutes != null ? formatResponseTime(responseMetrics.medianMinutes) : "—"} />
-            <MetricCard label="Takroriy mijozlar" value={successMetrics ? `${successMetrics.repeatClientRate}%` : "—"} />
+            <MetricCard label="Ishni yakunlash foizi" value={successMetrics ? `${successMetrics.completionRate}%` : "—"} progress={successMetrics?.completionRate} />
+            <MetricCard label="Javob vaqti" value={responseMetrics?.medianMinutes != null ? formatResponseTime(responseMetrics.medianMinutes) : "—"} progress={responseMetrics?.rate} />
+            <MetricCard label="Takroriy mijozlar" value={successMetrics ? `${successMetrics.repeatClientRate}%` : "—"} progress={successMetrics?.repeatClientRate} />
 
           </div>
 
@@ -546,7 +582,9 @@ function ProposalStat({ label, value }: { label: string; value: string | number 
 
 
 
-function MetricCard({ label, value }: { label: string; value: string }) {
+function MetricCard({ label, value, progress }: { label: string; value: string; progress?: number }) {
+
+  const pct = progress != null && progress > 0 ? Math.min(100, progress) : 0;
 
   return (
 
@@ -556,17 +594,19 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 
         <div className="eyebrow">{label}</div>
 
-        <CheckCircle2 className="size-4 shrink-0 text-success" />
+        {pct > 0 && <CheckCircle2 className="size-4 shrink-0 text-success" />}
 
       </div>
 
       <div className="font-display text-3xl font-bold">{value}</div>
 
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
+      {pct > 0 && (
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-secondary">
 
-        <div className="h-full w-4/5 rounded-full bg-primary" />
+          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
 
-      </div>
+        </div>
+      )}
 
     </div>
 

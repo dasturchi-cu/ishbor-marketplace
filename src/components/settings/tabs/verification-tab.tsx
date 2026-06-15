@@ -21,7 +21,13 @@ export function VerificationTab({ userId }: { userId: string }) {
     () => getVerificationSettings(userId, verified),
   );
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [activeStepId, setActiveStepId] = useState("identity");
   const [, setTick] = useState(0);
+
+  const openUpload = (stepId: string) => {
+    setActiveStepId(stepId);
+    setUploadOpen(true);
+  };
 
   const items = buildVerificationItems(userId, verified);
   const score = computeVerificationScore(userId, verified);
@@ -30,8 +36,7 @@ export function VerificationTab({ userId }: { userId: string }) {
   return (
     <>
       <SettingsTabLayout
-        title="Shaxsni tasdiqlash"
-        description="Ishonch va yuqori limitlar uchun tasdiqlash"
+        title=""
         stats={
           <SettingsStatRow>
             <SettingsStatCard label="Tasdiqlash balli" value={`${score}/100`} accent />
@@ -71,7 +76,7 @@ export function VerificationTab({ userId }: { userId: string }) {
                 </div>
                 {step.status !== "approved" && (
                   <button
-                    onClick={() => setUploadOpen(true)}
+                    onClick={() => openUpload(step.id)}
                     className="touch-target rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-primary/20"
                   >
                     Yuklash
@@ -84,7 +89,7 @@ export function VerificationTab({ userId }: { userId: string }) {
 
         {!verified && (
           <button
-            onClick={() => setUploadOpen(true)}
+            onClick={() => openUpload("identity")}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
             <Upload className="size-4" /> Tasdiqlashni boshlash
@@ -111,8 +116,13 @@ export function VerificationTab({ userId }: { userId: string }) {
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
         userId={userId}
+        stepId={activeStepId}
         onSubmitted={() => {
-          updateUser({ verified: true });
+          const state = getVerificationSettings(userId, !!user?.verified);
+          const manualSteps = state.steps.filter((s) => !["email", "phone"].includes(s.id));
+          if (manualSteps.every((s) => s.status === "approved")) {
+            updateUser({ verified: true });
+          }
           setTick((t) => t + 1);
         }}
       />

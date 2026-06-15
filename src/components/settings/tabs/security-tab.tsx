@@ -28,8 +28,7 @@ export function SecurityTab({ userId }: { userId: string }) {
   return (
     <>
       <SettingsTabLayout
-        title="Xavfsizlik"
-        description="Parol, 2FA va faol seanslar"
+        title=""
         stats={
           <SettingsStatRow>
             <SettingsStatCard label="Xavfsizlik balli" value={`${score}/100`} accent />

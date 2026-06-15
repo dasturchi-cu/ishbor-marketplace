@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 import { useSyncExternalStore, useMemo, useEffect } from "react";
 
-import { Clock, Plus, Shield, TrendingUp, Lock, FolderOpen, Users, Wallet, Heart } from "lucide-react";
+import { Clock, Plus, Shield, TrendingUp, Lock, FolderOpen, Users, Heart, ClipboardList } from "lucide-react";
 
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
@@ -11,7 +11,7 @@ import { GradientAvatar } from "@/components/site/avatar";
 
 import { EscrowShield, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 
-import { PipelineEmpty } from "@/components/site/feedback";
+import { PipelineEmpty, EmptyState } from "@/components/site/feedback";
 
 import { hiringPipeline, messages } from "@/lib/mock-data";
 import type { EscrowWorkflow, Order, HiringLead } from "@/lib/mock-data";
@@ -24,7 +24,7 @@ import { getAllEscrowWorkflows, subscribeEscrow } from "@/lib/escrow-store";
 import { getWallet, subscribeWallet } from "@/lib/wallet-store";
 import { getAllOrders, subscribeOrders } from "@/lib/orders-store";
 import { ClientRecommendations } from "@/components/site/personalized-recommendations";
-import { NextActionCard } from "@/components/ftue/next-action-card";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 import {
   buildHiringPipelineForClient,
   getClientLifetimeSpend,
@@ -181,8 +181,6 @@ function ClientDashboard() {
 
   const recentProjects = myProjects.slice(0, 4);
 
-  const activeProjectCount = myProjects.filter((p) => p.status === "published" || !p.status).length;
-
   const savedFreelancers = saved.freelancers.length;
 
   const lifetimeSpent = user ? getClientLifetimeSpend(user) : 0;
@@ -211,7 +209,7 @@ function ClientDashboard() {
 
     >
 
-      {user && <NextActionCard user={user} />}
+      {user && <WorkspaceGuidance user={user} />}
 
       {user && <ClientRecommendations />}
 
@@ -314,19 +312,26 @@ function ClientDashboard() {
               </div>
 
             ) : (
-
-              <div className="p-6 text-center text-sm text-muted-foreground">
-
-                Hali loyihalar yo'q.{" "}
-
-                <Link to="/projects/create" className="font-medium text-primary hover:underline">
-
-                  Birinchi loyihangizni joylang
-
-                </Link>
-
-              </div>
-
+              <EmptyState
+                compact
+                icon={FolderOpen}
+                title="Hali loyihalar yo'q"
+                description="Birinchi loyihangizni joylang — frilanserlar 24 soat ichida taklif yuborishni boshlaydi."
+                benefit="O'rtacha 3–5 ta sifatli taklif olasiz."
+                action={
+                  <Link
+                    to="/projects/create"
+                    className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+                  >
+                    Loyiha joylash
+                  </Link>
+                }
+                secondaryAction={
+                  <Link to="/freelancers" className="text-sm font-medium text-primary hover:underline">
+                    Avval frilanser qidirish
+                  </Link>
+                }
+              />
             )}
 
           </section>
@@ -377,7 +382,7 @@ function ClientDashboard() {
 
             <div className="divide-y divide-border">
 
-              {activeOrders.map((order) => (
+              {activeOrders.length > 0 ? activeOrders.map((order) => (
 
                 <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block p-4 transition-default hover:bg-secondary/20 sm:p-6">
 
@@ -441,7 +446,25 @@ function ClientDashboard() {
 
                 </Link>
 
-              ))}
+              )) : (
+                <EmptyState
+                  compact
+                  icon={ClipboardList}
+                  title="Faol buyurtmalar yo'q"
+                  description="Frilanserni yollaganingizdan keyin buyurtmalar shu yerda paydo bo'ladi."
+                  action={
+                    myProjects.length > 0 ? (
+                      <Link to="/my-projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                        Loyihalarim
+                      </Link>
+                    ) : (
+                      <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                        Loyiha joylash
+                      </Link>
+                    )
+                  }
+                />
+              )}
 
             </div>
 
@@ -450,9 +473,7 @@ function ClientDashboard() {
 
 
           <section className="rounded-2xl border border-border bg-card">
-
             <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
-
               <h2 className="font-display text-base font-semibold">Yollash voronkasi</h2>
 
               <Link to="/clients/manage" className="inline-flex items-center gap-1 text-xs font-medium text-primary transition-default hover:text-primary/80">
@@ -499,7 +520,17 @@ function ClientDashboard() {
 
                     )) : (
 
-                      <PipelineEmpty label={pipelineKey} />
+                      <PipelineEmpty
+                        label={pipelineKey}
+                        description="Takliflar kelganda shu yerda ko'rinadi."
+                        action={
+                          myProjects.length === 0 ? (
+                            <Link to="/projects/create" className="text-xs font-medium text-primary hover:underline">
+                              Loyiha joylash →
+                            </Link>
+                          ) : undefined
+                        }
+                      />
 
                     )}
 
@@ -518,58 +549,6 @@ function ClientDashboard() {
 
 
         <div className="flex flex-col gap-8">
-
-          <section className="rounded-2xl border border-border bg-card">
-
-            <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
-
-              <h2 className="font-display text-base font-semibold">Xarajatlar</h2>
-
-              <Link to="/wallet" className="text-xs font-medium text-primary transition-default hover:text-primary/80">
-
-                Hamyon
-
-              </Link>
-
-            </div>
-
-            <div className="p-4 sm:p-6">
-
-              <div className="grid gap-4 sm:grid-cols-2">
-
-                <div className="rounded-xl border border-border bg-surface p-4">
-
-                  <div className="flex items-center gap-2 eyebrow">
-
-                    <Wallet className="size-3" /> Mavjud
-
-                  </div>
-
-                  <div className="font-display mt-2 text-2xl font-bold">${availableBalance.toLocaleString()}</div>
-
-                </div>
-
-                <div className="rounded-xl border border-border bg-surface p-4">
-
-                  <div className="eyebrow">Umumiy sarflangan</div>
-
-                  <div className="font-display mt-2 text-2xl font-bold">${lifetimeSpent.toLocaleString()}</div>
-
-                </div>
-
-              </div>
-
-              <div className="mt-4 font-mono text-[10px] text-muted-foreground">
-
-                {activeProjectCount} ochiq loyiha · {savedFreelancers} saqlangan frilanser
-
-              </div>
-
-            </div>
-
-          </section>
-
-
 
           <section className="rounded-2xl border border-border bg-card">
 
@@ -640,9 +619,17 @@ function ClientDashboard() {
                   );
 
                 }) : (
-
-                  <p className="text-sm text-muted-foreground">Hisobingizda faol eskrou yo'q.</p>
-
+                  <EmptyState
+                    compact
+                    icon={Lock}
+                    title="Faol eskrou yo'q"
+                    description="Frilanserni yollaganingizda mablag'lar xavfsiz eskrouda saqlanadi."
+                    action={
+                      <Link to="/escrow" className="text-xs font-medium text-primary hover:underline">
+                        Eskrou haqida →
+                      </Link>
+                    }
+                  />
                 )}
 
               </div>
@@ -671,6 +658,7 @@ function ClientDashboard() {
 
 
 
+          {savedFreelancers > 0 && (
           <section className="rounded-2xl border border-border bg-card">
 
             <div className="flex items-center justify-between border-b border-border px-4 py-4 sm:px-6">
@@ -705,25 +693,22 @@ function ClientDashboard() {
 
               </div>
 
-              {savedFreelancers > 0 && (
+              <Link
 
-                <Link
+                to="/saved"
 
-                  to="/saved"
+                className="mt-4 block text-center text-xs font-medium text-primary transition-default hover:text-primary/80"
 
-                  className="mt-4 block text-center text-xs font-medium text-primary transition-default hover:text-primary/80"
+              >
 
-                >
+                Saqlanganlarni ko'rish →
 
-                  Saqlanganlarni ko'rish →
-
-                </Link>
-
-              )}
+              </Link>
 
             </div>
 
           </section>
+          )}
 
 
 

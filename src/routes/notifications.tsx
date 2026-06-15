@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useSyncExternalStore, useEffect } from "react";
-import { toast } from "sonner";
+import { actionFeedback } from "@/lib/action-feedback";
 import {
   Bell,
   Banknote,
@@ -163,7 +163,7 @@ function NotificationsPage() {
                 onClick={() => {
                   dismissNotification(n.id, user?.id);
                   setDismissed((s) => new Set([...s, n.id]));
-                  toast.success("Bildirishnoma yopildi");
+                  actionFeedback.dismissed();
                 }}
                 className={`touch-target inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring ${isUnread ? "opacity-100" : "opacity-60 sm:opacity-0 sm:group-hover:opacity-100"}`}
                 aria-label="Yopish"
@@ -206,40 +206,34 @@ function NotificationsPage() {
     );
   }
 
+  const handleMarkAllRead = () => {
+    markAllNotificationsRead(user?.id);
+    actionFeedback.markedAllRead();
+  };
+
   return (
     <AuthGate>
     <WorkspaceShell
       eyebrow="Faoliyat"
       title="Bildirishnomalar"
-      actions={
-        <button
-          onClick={() => {
-            markAllNotificationsRead(user?.id);
-            toast.success("Barcha bildirishnomalar o'qilgan deb belgilandi");
-          }}
-          className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
-        >
-          <CheckCheck className="size-4" /> Barchasini o'qilgan deb belgilash
-        </button>
-      }
     >
-      {/* Summary bar */}
+      {/* Summary bar — yagona "barchasini o'qilgan" harakati */}
       {unreadCount > 0 && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
-          <Bell className="size-4 text-primary" />
-          <span className="text-sm">
-            Sizda{" "}
-            <span className="font-semibold text-primary">{unreadCount} o'qilmagan</span>{" "}
-            bildirishnoma
-          </span>
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <Bell className="size-4 shrink-0 text-primary" />
+            <span className="text-sm">
+              Sizda{" "}
+              <span className="font-semibold text-primary">{unreadCount} o'qilmagan</span>{" "}
+              bildirishnoma
+            </span>
+          </div>
           <button
-            onClick={() => {
-              markAllNotificationsRead(user?.id);
-              toast.success("Barcha bildirishnomalar o'qilgan deb belgilandi");
-            }}
-            className="ml-auto text-xs font-medium text-primary transition-default hover:opacity-80"
+            type="button"
+            onClick={handleMarkAllRead}
+            className="touch-target inline-flex shrink-0 items-center justify-center gap-1.5 self-start rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:self-center"
           >
-            Barchasini o'qilgan deb belgilash
+            <CheckCheck className="size-4" /> Barchasini o'qilgan deb belgilash
           </button>
         </div>
       )}

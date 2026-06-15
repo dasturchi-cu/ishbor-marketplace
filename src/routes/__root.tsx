@@ -14,6 +14,8 @@ import { AlertTriangle, SearchX } from "lucide-react";
 import appCss from "../styles.css?url";
 import { runClientAuthBootstrap } from "../lib/client-auth-bootstrap";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { applyAppearancePrefs } from "../lib/appearance-apply";
+import { getSession } from "../lib/auth";
 import { installStressSeedGlobals } from "../lib/stress-seed";
 
 function NotFoundComponent() {
@@ -105,6 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -114,7 +117,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
-        children: `(function(){try{var t=localStorage.getItem('ishbor-theme');var d=t?t==='dark':true;if(d)document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`,
+        children: `(function(){try{var t=localStorage.getItem('ishbor-theme');var d=t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){document.documentElement.classList.add('dark');}})();`,
       },
     ],
   }),
@@ -151,6 +154,10 @@ function RootComponent() {
   useEffect(() => {
     runClientAuthBootstrap(window.location.pathname);
     installStressSeedGlobals();
+    const session = getSession();
+    if (session?.user.id) {
+      applyAppearancePrefs(session.user.id);
+    }
   }, []);
 
   return (

@@ -97,12 +97,23 @@ type EmptyStateProps = {
   icon: LucideIcon;
   title: string;
   description: string;
+  benefit?: string;
   action?: ReactNode;
+  secondaryAction?: ReactNode;
   className?: string;
   compact?: boolean;
 };
 
-export function EmptyState({ icon: Icon, title, description, action, className, compact }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  benefit,
+  action,
+  secondaryAction,
+  className,
+  compact,
+}: EmptyStateProps) {
   return (
     <div
       className={cn(
@@ -117,8 +128,18 @@ export function EmptyState({ icon: Icon, title, description, action, className, 
       <div className="max-w-sm">
         <h3 className="font-display text-base font-semibold tracking-tight">{title}</h3>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{description}</p>
+        {benefit && (
+          <p className="mt-2 rounded-lg border border-primary/10 bg-primary/5 px-3 py-2 text-xs leading-relaxed text-primary">
+            {benefit}
+          </p>
+        )}
       </div>
-      {action && <div className="mt-1">{action}</div>}
+      {(action || secondaryAction) && (
+        <div className="mt-1 flex flex-col items-center gap-2 sm:flex-row">
+          {action}
+          {secondaryAction}
+        </div>
+      )}
     </div>
   );
 }
@@ -184,10 +205,23 @@ export function confirmDestructive(message: string): boolean {
   return window.confirm(message);
 }
 
-export function PipelineEmpty({ label, action }: { label: string; action?: ReactNode }) {
+export function PipelineEmpty({
+  label,
+  description,
+  action,
+}: {
+  label: string;
+  description?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="rounded-lg border border-dashed border-border bg-surface/50 px-3 py-6 text-center">
-      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Hali {label} yo'q</p>
+      <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+        Hali {label} yo'q
+      </p>
+      {description && (
+        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{description}</p>
+      )}
       {action && <div className="mt-3">{action}</div>}
     </div>
   );

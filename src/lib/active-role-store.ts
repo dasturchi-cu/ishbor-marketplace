@@ -129,6 +129,11 @@ export function getActiveDashboardPath(role?: WorkspaceRole): string {
   return "/dashboard";
 }
 
+/** Sync workspace role to account type after login (clears stale role). */
+export function resetActiveRoleOnLogin(user: AuthUser): void {
+  setActiveRole(user.userType);
+}
+
 function pathMatchesPrefix(path: string, prefix: string, exactOnly?: boolean): boolean {
   if (exactOnly) return path === prefix;
   return path === prefix || path.startsWith(`${prefix}/`);

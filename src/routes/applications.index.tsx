@@ -17,6 +17,8 @@ import {
 import type { Application } from "@/lib/mock-data";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { useIncrementalList, WORKSPACE_PAGE_SIZE } from "@/hooks/use-incremental-list";
+import { useAuth } from "@/hooks/use-auth";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
 
 export const Route = createFileRoute("/applications/")({
   beforeLoad: requireRole(["freelancer"]),
@@ -57,6 +59,7 @@ function filterByTab(apps: Application[], tab: (typeof tabs)[number]["key"]) {
 }
 
 function ApplicationsPage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<(typeof tabs)[number]["key"]>("pending");
   const applications = useSyncExternalStore(subscribeApplications, getAllApplications, getAllApplications);
   const filtered = filterByTab(applications, tab);
@@ -75,6 +78,7 @@ function ApplicationsPage() {
         nextHint="Taklif holatini shu yerda kuzating. Qabul qilinganda mijoz eskrouni moliyalashtiradi va buyurtma boshlanadi."
         className="mb-6"
       />
+      {user && <WorkspaceGuidance user={user} hideNextAction />}
       <div className="mobile-scroll-x flex gap-2 border-b border-border pb-3">
         {tabs.map((t) => (
           <button
@@ -101,6 +105,7 @@ function ApplicationsPage() {
               ? "Rad etilgan arizalarni arxivlaganingizda ular shu yerda ko'rinadi."
               : "Boshlash uchun loyihalarni ko'rib chiqing va taklif yuboring."
           }
+          benefit={tab !== "archived" ? "AI taklif yordamchisi professional matn va narx tavsiya qiladi." : undefined}
           action={
             tab === "archived" ? undefined : (
               <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">

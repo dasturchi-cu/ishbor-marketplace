@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Sparkles, TrendingUp, Eye, Zap } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { ProtectedGate } from "@/components/auth/protected-gate";
-import { requireAuth } from "@/lib/guards";
+import { requireRole } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 import {
@@ -24,10 +24,10 @@ import { getFeaturedDiscount, getPlan } from "@/lib/subscription-store";
 import { UpsellBanner } from "@/components/monetization/upsell-banner";
 
 export const Route = createFileRoute("/promotions")({
-  beforeLoad: requireAuth,
+  beforeLoad: requireRole(["freelancer"]),
   head: () => ({ meta: [{ title: "Promotsiya markazi — Ishbor" }] }),
   component: () => (
-    <ProtectedGate>
+    <ProtectedGate roles={["freelancer"]}>
       <PromotionsPage />
     </ProtectedGate>
   ),

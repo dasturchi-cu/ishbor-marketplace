@@ -391,3 +391,15 @@
     }
   }
 }
+
+html[data-compact="true"] .section-y {
+  padding-block: calc(var(--spacing, 1rem) * 2.5);
+}
+
+html[data-animations="off"] *,
+html[data-animations="off"] *::before,
+html[data-animations="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

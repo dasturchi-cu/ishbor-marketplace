@@ -165,8 +165,16 @@ export function rehydrateFromStorage() {
 
 export function fundOrderEscrow(orderId: string): Order | undefined {
   const stored = readStored();
-  const idx = stored.findIndex((o) => o.id === orderId);
-  if (idx === -1) return undefined;
+  let idx = stored.findIndex((o) => o.id === orderId);
+  if (idx === -1) {
+    const mock = mockOrders.find((o) => o.id === orderId);
+    if (!mock || mock.escrowFunded) return mock?.escrowFunded ? mock : undefined;
+    const copied = { ...mock, escrowFunded: true };
+    writeStored([copied, ...stored]);
+    notify();
+    return copied;
+  }
+  if (stored[idx]!.escrowFunded) return stored[idx];
   const updated = { ...stored[idx]!, escrowFunded: true };
   const next = [...stored];
   next[idx] = updated;

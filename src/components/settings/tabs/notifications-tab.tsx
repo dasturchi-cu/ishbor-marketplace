@@ -1,6 +1,7 @@
 import { useSyncExternalStore, useState } from "react";
 import { Bell, Mail, MessageSquare } from "lucide-react";
 import { SettingsTabLayout, SettingsSection } from "@/components/settings/settings-tab-layout";
+import { SettingsToggleRow } from "@/components/settings/settings-toggle";
 import { SettingsStatCard, SettingsStatRow } from "@/components/settings/settings-stat-card";
 import {
   subscribeSettings,
@@ -8,15 +9,6 @@ import {
   updateNotificationPrefs,
   type NotificationPrefs,
 } from "@/lib/settings-store";
-
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-      <span className="text-sm">{label}</span>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded" />
-    </label>
-  );
-}
 
 export function NotificationsTab({ userId }: { userId: string }) {
   const settings = useSyncExternalStore(subscribeSettings, () => getUserSettings(userId), () => getUserSettings(userId));
@@ -45,8 +37,7 @@ export function NotificationsTab({ userId }: { userId: string }) {
 
   return (
     <SettingsTabLayout
-      title="Bildirishnomalar"
-      description="Qaysi hodisalar haqida xabar olishni tanlang"
+      title=""
       stats={
         <SettingsStatRow>
           <SettingsStatCard label="Yoqilgan" value={enabledCount} hint="Jami sozlamalar" accent />
@@ -84,19 +75,19 @@ export function NotificationsTab({ userId }: { userId: string }) {
     >
       <SettingsSection title="Kanallar">
         <div className="space-y-2">
-          <ToggleRow label="Email bildirishnomalar" checked={settings.notifications.email} onChange={(v) => patch({ email: v })} />
-          <ToggleRow label="Push bildirishnomalar" checked={settings.notifications.push} onChange={(v) => patch({ push: v })} />
-          <ToggleRow label="SMS bildirishnomalar" checked={settings.notifications.sms} onChange={(v) => patch({ sms: v })} />
+          <SettingsToggleRow label="Email bildirishnomalar" checked={settings.notifications.email} onChange={(v) => patch({ email: v })} />
+          <SettingsToggleRow label="Push bildirishnomalar" checked={settings.notifications.push} onChange={(v) => patch({ push: v })} />
+          <SettingsToggleRow label="SMS bildirishnomalar" checked={settings.notifications.sms} onChange={(v) => patch({ sms: v })} />
         </div>
       </SettingsSection>
       <SettingsSection title="Marketplace">
         <div className="space-y-2">
-          <ToggleRow label="Marketplace ogohlantirishlari" checked={settings.notifications.marketplace} onChange={(v) => patch({ marketplace: v })} />
-          <ToggleRow label="Taklif ogohlantirishlari" checked={settings.notifications.proposals} onChange={(v) => patch({ proposals: v })} />
-          <ToggleRow label="Buyurtma ogohlantirishlari" checked={settings.notifications.orders} onChange={(v) => patch({ orders: v })} />
-          <ToggleRow label="Eskrou ogohlantirishlari" checked={settings.notifications.escrow} onChange={(v) => patch({ escrow: v })} />
-          <ToggleRow label="Sharh ogohlantirishlari" checked={settings.notifications.reviews} onChange={(v) => patch({ reviews: v })} />
-          <ToggleRow label="Marketing xabarlari" checked={settings.notifications.marketing} onChange={(v) => patch({ marketing: v })} />
+          <SettingsToggleRow label="Marketplace ogohlantirishlari" checked={settings.notifications.marketplace} onChange={(v) => patch({ marketplace: v })} />
+          <SettingsToggleRow label="Taklif ogohlantirishlari" checked={settings.notifications.proposals} onChange={(v) => patch({ proposals: v })} />
+          <SettingsToggleRow label="Buyurtma ogohlantirishlari" checked={settings.notifications.orders} onChange={(v) => patch({ orders: v })} />
+          <SettingsToggleRow label="Eskrou ogohlantirishlari" checked={settings.notifications.escrow} onChange={(v) => patch({ escrow: v })} />
+          <SettingsToggleRow label="Sharh ogohlantirishlari" checked={settings.notifications.reviews} onChange={(v) => patch({ reviews: v })} />
+          <SettingsToggleRow label="Marketing xabarlari" checked={settings.notifications.marketing} onChange={(v) => patch({ marketing: v })} />
         </div>
       </SettingsSection>
     </SettingsTabLayout>

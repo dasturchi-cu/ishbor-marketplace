@@ -54,8 +54,7 @@ export function PaymentMethodsTab({
   return (
     <>
       <SettingsTabLayout
-        title="To'lov usullari"
-        description="Kartalar va hisob-kitob ma'lumotlari"
+        title=""
         stats={
           <SettingsStatRow>
             <SettingsStatCard label="Jami kartalar" value={methods.length} accent />
