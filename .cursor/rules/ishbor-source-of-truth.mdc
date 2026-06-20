@@ -1,0 +1,50 @@
+---
+description: Ishbor Single Source of Truth — read core docs before any code, audit, or feature work
+alwaysApply: true
+---
+
+# Ishbor Documentation First
+
+Before writing code, running audits, or adding features, read these documents in order:
+
+1. `rules/00-constitution/PROJECT_BIBLE.md` — product law
+2. `rules/00-constitution/PROJECT_STANDARDS.md` — markaziy konstitutsiya
+3. `rules/01-product/PRODUCT_REQUIREMENTS.md` — feature registry
+4. `rules/01-product/PLAN.md` — product-ready roadmap (priorities 1–10)
+5. `rules/01-product/PRODUCT_READY_CHECKLIST.md` — release checklist
+6. `rules/06-quality/LAUNCH_CHECKLIST.md` — pre-ship verification
+7. `rules/06-quality/AUDIT_PLAYBOOK.md` — audit procedure
+
+Full index: `rules/README.md`
+
+Also consult when relevant (by PLAN priority):
+- P1: `rules/02-integration/INTEGRATION_RULES.md`, `rules/02-integration/ROLE_CONSISTENCY.md`
+- P2: `rules/07-personalization/PERSONALIZATION_RULES.md`
+- P3: `rules/03-ux/UX_STANDARDS.md`
+- P4: `rules/04-trust/TRUST_SYSTEM.md`
+- P5: `rules/05-mobile/MOBILE_STANDARDS.md`
+- P6+P9: `rules/06-quality/QA_CHECKLIST.md`
+- P7: `rules/06-quality/PERFORMANCE_STANDARDS.md`
+- P8: `rules/03-ux/DEAD_ACTION_POLICY.md`, `rules/03-ux/FEATURE_COMPLETION_POLICY.md`, `rules/03-ux/COMING_SOON_ELIMINATION.md`
+- P10: `rules/01-product/PRODUCT_RULES.md`
+- Registry: `rules/02-integration/ROLE_MATRIX.md`, `rules/02-integration/ROUTE_REGISTRY.md`, `rules/02-integration/STORE_REGISTRY.md`
+- Other: `rules/03-ux/UI_STANDARDS.md`, `rules/00-constitution/DESIGN_GUARDRAILS.md`, `rules/06-quality/BUG_PREVENTION.md`
+
+## Conflict resolution
+
+If documentation and code disagree:
+1. Verify documentation against latest phase reports in `rules/99-reports/`
+2. Audit the code path
+3. Align code OR update docs (same PR)
+4. Note change in audit/report
+
+## Hard rules (from PROJECT_BIBLE + rules/)
+
+- No dead actions — `rules/03-ux/DEAD_ACTION_POLICY.md`
+- Complete visible features (don't hide) — `rules/03-ux/FEATURE_COMPLETION_POLICY.md`
+- No coming-soon UI copy — `rules/03-ux/COMING_SOON_ELIMINATION.md`
+- Audit → Fix → Retest → Verify — `rules/06-quality/QA_CHECKLIST.md`
+- No branding/navigation redesign without explicit request
+- Primary color `#2563EB`, language Uzbek
+- Auth: `beforeLoad` + `AuthGate`/`ProtectedGate`/`RoleGate`
+- Stable `useSyncExternalStore` snapshots (no inline `[]` or `{}`)
