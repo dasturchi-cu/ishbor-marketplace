@@ -34,7 +34,7 @@ export function NextActionCard({ user }: { user: AuthUser }) {
   if (!action) return null;
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <div className="font-mono text-[10px] uppercase tracking-widest text-primary">
           Keyingi nima qilish kerak?
@@ -46,7 +46,7 @@ export function NextActionCard({ user }: { user: AuthUser }) {
       </div>
       <Link
         to={action.href}
-        className="touch-target inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-4px_oklch(0.546_0.185_257/0.4)] hover:opacity-90"
+        className="touch-target inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90"
       >
         {action.cta ?? "Boshlash"} <ArrowRight className="size-4" />
       </Link>

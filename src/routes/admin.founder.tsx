@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
 import { AdminShell } from "@/components/admin/shell";
 import { useAdminSearchOpen } from "@/components/admin/search";
 import { getMarketplaceOverview, subscribeRevenue } from "@/lib/revenue-store";
@@ -14,6 +13,8 @@ import { computeFounderAiInsights } from "@/lib/ai-insights-store";
 import { getAllAnalyticsEvents, subscribeAnalyticsEvents } from "@/lib/analytics-events-store";
 import { subscribeCredits } from "@/lib/credits-store";
 import { TrendingUp, DollarSign, Users, Shield, Gift, RefreshCw, Star, Layers, CreditCard, Flame, Building2 } from "lucide-react";
+import { useStoreVersion } from "@/hooks/use-store-version";
+import { STORE_KEYS } from "@/lib/store-version";
 
 export const Route = createFileRoute("/admin/founder")({
   head: () => ({ meta: [{ title: "Asoschilar paneli — Ishbor" }] }),
@@ -36,11 +37,11 @@ function statusLabel(status: "healthy" | "watch" | "critical") {
 
 function FounderDashboardPage() {
   const { onSearchOpen } = useAdminSearchOpen();
-  useSyncExternalStore(subscribeRevenue, () => null, () => null);
-  useSyncExternalStore(subscribeSubscriptions, () => null, () => null);
-  useSyncExternalStore(subscribeAgencies, () => null, () => null);
-  useSyncExternalStore(subscribeAnalyticsEvents, () => null, () => null);
-  useSyncExternalStore(subscribeCredits, () => null, () => null);
+  useStoreVersion(STORE_KEYS.revenue, subscribeRevenue);
+  useStoreVersion(STORE_KEYS.subscriptions, subscribeSubscriptions);
+  useStoreVersion(STORE_KEYS.agencies, subscribeAgencies);
+  useStoreVersion(STORE_KEYS.analyticsEvents, subscribeAnalyticsEvents);
+  useStoreVersion(STORE_KEYS.credits, subscribeCredits);
 
   const overview = getMarketplaceOverview(30);
   const monetization = getMonetizationOverview(30);

@@ -531,7 +531,8 @@ function FreelancerProfile() {
               steps={FREELANCER_HIRE_CHECKOUT_FLOW}
               currentStep="profile"
               nextHint="To'g'ridan-to'g'ri yollang yoki avval loyiha orqali taklif yuboring."
-              className="rounded-2xl"
+              variant="compact"
+              className="mb-4"
             />
 
             {isOwnProfile && user && (

@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import { Logo } from "./logo";
+import { getLocale, setLocale, subscribeLocale, type AppLocale } from "@/lib/locale-store";
 
 type FooterLink = {
   to: string;
@@ -18,6 +21,7 @@ const cols: { title: string; links: FooterLink[] }[] = [
       { to: "/services/category/$slug", params: { slug: "marketing" }, label: "Marketing" },
       { to: "/freelancers", label: "Mutaxassislarni ko'rish" },
       { to: "/projects", label: "Loyihalarni ko'rish" },
+      { to: "/search", label: "Qidiruv" },
       { to: "/projects/preview", label: "Loyiha rejasini tuzish" },
     ],
   },
@@ -36,11 +40,14 @@ const cols: { title: string; links: FooterLink[] }[] = [
       { to: "/terms", label: "Savdo shartlari" },
       { to: "/privacy", label: "Maxfiylik" },
       { to: "/register", label: "Ishborda qo'shilish" },
+      { to: "/help", label: "Yordam markazi" },
     ],
   },
 ];
 
 export function SiteFooter() {
+  const locale = useSyncExternalStore(subscribeLocale, getLocale, () => "uz" as AppLocale);
+
   return (
     <footer className="border-t border-border bg-elevated/30">
       <div className="mx-auto max-w-7xl px-6 py-14">
@@ -91,7 +98,33 @@ export function SiteFooter() {
             <Link to="/privacy" className="transition-default hover:text-foreground">
               Maxfiylik
             </Link>
-            <span className="font-mono">UZ · EN · RU</span>
+            <span className="font-mono inline-flex items-center gap-1.5">
+              {(["uz", "en", "ru"] as AppLocale[]).map((code, i) => (
+                <span key={code}>
+                  {i > 0 && <span className="text-muted-foreground/40"> · </span>}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (locale === code) return;
+                      setLocale(code);
+                      toast.success(
+                        code === "uz"
+                          ? "Til: O'zbek"
+                          : code === "ru"
+                            ? "Til: Rus"
+                            : "Language: English",
+                      );
+                    }}
+                    className={`transition-default hover:text-foreground ${
+                      locale === code ? "font-semibold text-foreground" : "text-muted-foreground"
+                    }`}
+                    aria-current={locale === code ? "true" : undefined}
+                  >
+                    {code.toUpperCase()}
+                  </button>
+                </span>
+              ))}
+            </span>
           </div>
         </div>
       </div>

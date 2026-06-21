@@ -8,9 +8,12 @@ All client-side persistence for Ishbor (localStorage / sessionStorage).
 
 | Key | Structure | Consumers | Dependencies |
 |-----|-----------|-----------|--------------|
-| `ishbor-session` | `AuthSession { user, remember, loggedInAt }` | useAuth, all guards | auth.ts |
-| `ishbor-active-role-{userId}` | `"client"` \| `"freelancer"` | active-role-store, RoleGate | auth session |
+| `ishbor-session` | `AuthSession { user, remember, loggedInAt }` | useAuth, all guards | auth.ts + HttpOnly ishbor_sid cookie |
+| `ishbor-active-role-{userId}` | `"client"` \| `"freelancer"` \| `"agency"` | active-role-store, RoleGate | auth session |
 | `ishbor-onboarding` | `OnboardingState` (sessionStorage) | onboarding routes, register | auth-constants |
+| `ishbor-pending-registration-password` | string (sessionStorage) | verify-otp | registration-store |
+| `ishbor-user-status` | email → AccountStatus | login block | user-status-store |
+| `ishbor-locale` | `"uz"` \| `"en"` \| `"ru"` | footer | locale-store |
 
 ---
 

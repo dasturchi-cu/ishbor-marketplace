@@ -36,6 +36,9 @@ export function VideoIntro({ name, hue, duration }: { name: string; hue: number;
             <span className="absolute right-4 top-4 rounded-full bg-black/50 px-2.5 py-1 font-mono text-[10px] text-white backdrop-blur-sm">
               {duration}
             </span>
+            <span className="absolute left-4 top-4 rounded-full bg-warning/90 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-warning-foreground">
+              Demo
+            </span>
           </div>
         </button>
         <p className="px-5 py-4 text-xs leading-relaxed text-muted-foreground sm:px-6">
@@ -60,7 +63,7 @@ export function VideoIntro({ name, hue, duration }: { name: string; hue: number;
             <p className="text-sm leading-relaxed opacity-90">
               {name} dizayn jarayoni, ishonch ko'rsatkichlari va hamkorlik uslubi haqida qisqa tanishtiruv.
             </p>
-            <div className="font-mono text-xs uppercase tracking-widest opacity-70">Ijro etilmoqda · {duration}</div>
+            <div className="font-mono text-xs uppercase tracking-widest opacity-70">Demo tanishtiruv · {duration}</div>
           </div>
         </div>
       </Modal>

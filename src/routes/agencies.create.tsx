@@ -8,6 +8,7 @@ import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { createAgency, publishAgency } from "@/lib/agency-store";
+import { setActiveRole } from "@/lib/active-role-store";
 
 export const Route = createFileRoute("/agencies/create")({
   beforeLoad: requireAuth,
@@ -65,6 +66,7 @@ function CreateAgencyPage() {
       const pub = publishAgency(result.slug);
       if ("error" in pub) {
         toast.error(pub.error);
+        setActiveRole("agency");
         navigate({ to: "/agencies/$slug", params: { slug: result.slug } });
         return;
       }
@@ -72,6 +74,7 @@ function CreateAgencyPage() {
     } else {
       toast.success("Agentlik qoralama sifatida saqlandi.");
     }
+    setActiveRole("agency");
     navigate({ to: "/agencies/$slug", params: { slug: result.slug } });
   };
 

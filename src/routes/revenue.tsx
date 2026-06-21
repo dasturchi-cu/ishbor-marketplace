@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { DollarSign, TrendingUp, CreditCard, Sparkles, Users, Flame } from "lucide-react";
 import { AdminShell } from "@/components/admin/shell";
@@ -14,6 +14,8 @@ import { subscribeRevenue } from "@/lib/revenue-store";
 import { subscribeSubscriptions, PLANS } from "@/lib/subscription-store";
 import { subscribeCredits } from "@/lib/credits-store";
 import { getMonthlyBuckets } from "@/lib/analytics-events-store";
+import { useStoreVersion } from "@/hooks/use-store-version";
+import { STORE_KEYS } from "@/lib/store-version";
 
 export const Route = createFileRoute("/revenue")({
   beforeLoad: requireAdmin,
@@ -47,9 +49,9 @@ function RevenueDashboardContent() {
   const { onSearchOpen } = useAdminSearchOpen();
   const [days, setDays] = useState<30 | 90>(30);
 
-  useSyncExternalStore(subscribeRevenue, () => null, () => null);
-  useSyncExternalStore(subscribeSubscriptions, () => null, () => null);
-  useSyncExternalStore(subscribeCredits, () => null, () => null);
+  useStoreVersion(STORE_KEYS.revenue, subscribeRevenue);
+  useStoreVersion(STORE_KEYS.subscriptions, subscribeSubscriptions);
+  useStoreVersion(STORE_KEYS.credits, subscribeCredits);
 
   const m = getMonetizationOverview(days);
   const health = getMonetizationHealth();

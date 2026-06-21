@@ -274,7 +274,8 @@ function ProjectDetailContent({
                 ? "Mijoz ko'rib chiqadigan ariza yaratish uchun taklif yuboring."
                 : "Qisqacha ma'lumotni o'qing, keyin yollanish uchun mos taklif yuboring."
           }
-          className="mb-8 overflow-hidden shadow-[0_8px_32px_-16px_oklch(0.546_0.185_257/0.12)]"
+          variant="compact"
+          className="mb-6"
         />
 
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">

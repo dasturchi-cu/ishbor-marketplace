@@ -16,3 +16,5 @@ dist/
 # Playwright/MCP test artifacts
 guest-landing.yml
 login-*.png
+test-results/
+playwright-report/

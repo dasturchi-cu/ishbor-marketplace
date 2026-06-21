@@ -2,19 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useSyncExternalStore, useEffect } from "react";
 import { toast } from "sonner";
 import {
-  Users,
-  DollarSign,
-  TrendingUp,
-  Briefcase,
-  UserPlus,
   Shield,
+  Briefcase,
   Building2,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
-import { NextActionCard } from "@/components/ftue/next-action-card";
-import { ProgressStrip } from "@/components/ux/progress-strip";
+import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { SimpleStatCard } from "@/components/site/simple-stat-card";
 import { AgencyVerificationBadge } from "@/components/agency/agency-verification-badge";
+import { AgencyInvitePicker } from "@/components/agency/agency-invite-picker";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
@@ -111,7 +108,8 @@ function AgencyDashboardPage() {
   if (!agency) return null;
 
   const dash = getAgencyDashboardMetrics(agency);
-  const canInvite = hasAgencyPermission(agency, user.id, "invite") || hasAgencyPermission(agency, user.id, "invite_freelancer");
+  const canInviteAll = hasAgencyPermission(agency, user.id, "invite");
+  const canInvite = canInviteAll || hasAgencyPermission(agency, user.id, "invite_freelancer");
   const canVerify = hasAgencyPermission(agency, user.id, "verify_request");
   const canPublish = hasAgencyPermission(agency, user.id, "publish");
   const caseStudies = getCaseStudiesByAgency(agency.slug);
@@ -122,6 +120,7 @@ function AgencyDashboardPage() {
       dash={dash}
       user={user}
       canInvite={canInvite}
+      canInviteFreelancerOnly={!canInviteAll && canInvite}
       canVerify={canVerify}
       canPublish={canPublish}
       caseStudies={caseStudies}
@@ -135,6 +134,7 @@ function AgencyDashboardContent({
   dash,
   user,
   canInvite,
+  canInviteFreelancerOnly,
   canVerify,
   canPublish,
   caseStudies,
@@ -144,24 +144,25 @@ function AgencyDashboardContent({
   dash: ReturnType<typeof getAgencyDashboardMetrics>;
   user: AuthUser;
   canInvite: boolean;
+  canInviteFreelancerOnly: boolean;
   canVerify: boolean;
   canPublish: boolean;
   caseStudies: ReturnType<typeof getCaseStudiesByAgency>;
   onRefresh: () => void;
 }) {
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteName, setInviteName] = useState("");
-  const [inviteRole, setInviteRole] = useState<AgencyRole>("freelancer");
   const [csTitle, setCsTitle] = useState("");
 
-  const handleInvite = () => {
-    if (!inviteEmail.trim() || !inviteName.trim()) {
-      toast.error("Email va ism kerak.");
-      return;
-    }
-    const r = inviteMember(agency.slug, inviteEmail, inviteRole, inviteName);
+  const excludedEmails = agency.members
+    .filter((member) => member.status !== "removed")
+    .map((member) => member.email);
+
+  const handleInviteUser = (picked: { email: string; fullName: string }, inviteRole: AgencyRole) => {
+    const r = inviteMember(agency.slug, picked.email, inviteRole, picked.fullName);
     if ("error" in r) toast.error(r.error);
-    else { toast.success("Taklif yuborildi"); setInviteEmail(""); setInviteName(""); onRefresh(); }
+    else {
+      toast.success("Taklif yuborildi");
+      onRefresh();
+    }
   };
 
   const handleAddCaseStudy = () => {
@@ -207,10 +208,7 @@ function AgencyDashboardContent({
         )
       }
     >
-      <div className="mb-6 space-y-4">
-        <NextActionCard user={user} />
-        <ProgressStrip user={user} />
-      </div>
+      <WorkspaceGuidance user={user} />
 
       <div className="mb-4 flex items-center gap-2">
         <AgencyVerificationBadge level={agency.verificationLevel} />
@@ -225,26 +223,24 @@ function AgencyDashboardContent({
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Metric icon={DollarSign} label="Daromad" value={`$${dash.revenue.toLocaleString()}`} />
-        <Metric icon={Briefcase} label="Buyurtmalar" value={dash.orders} />
-        <Metric icon={Users} label="Jamoa foydalanishi" value={`${dash.teamUtilization}%`} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <SimpleStatCard label="Daromad" value={`$${dash.revenue.toLocaleString()}`} />
+        <SimpleStatCard label="Buyurtmalar" value={String(dash.orders)} />
+        <SimpleStatCard label="Jamoa foydalanishi" value={`${dash.teamUtilization}%`} />
       </div>
 
       {canInvite && (
         <section className="mt-8 rounded-xl border border-border bg-card p-5">
           <h2 className="font-display font-semibold">Jamoa boshqaruvi</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-4">
-            <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Ism" className="rounded-lg border border-border px-3 py-2 text-sm" />
-            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="Email" className="rounded-lg border border-border px-3 py-2 text-sm" />
-            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as AgencyRole)} className="rounded-lg border border-border px-3 py-2 text-sm">
-              {(["manager", "recruiter", "freelancer"] as const).map((r) => (
-                <option key={r} value={r}>{agencyRoleLabels[r]}</option>
-              ))}
-            </select>
-            <button type="button" onClick={handleInvite} className="inline-flex items-center justify-center gap-1 rounded-lg bg-primary py-2 text-sm font-semibold text-primary-foreground">
-              <UserPlus className="size-4" /> Taklif
-            </button>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Platformadagi foydalanuvchini tanlang va jamoaga taklif yuboring.
+          </p>
+          <div className="mt-4">
+            <AgencyInvitePicker
+              excludeEmails={[...excludedEmails, user.email]}
+              freelancerOnly={canInviteFreelancerOnly}
+              onInvite={handleInviteUser}
+            />
           </div>
           <ul className="mt-4 space-y-2">
             {agency.members.filter((m) => m.status !== "removed").map((m) => (
@@ -369,15 +365,5 @@ function AgencyDashboardContent({
         </ul>
       </section>
     </WorkspaceShell>
-  );
-}
-
-function Metric({ icon: Icon, label, value }: { icon: typeof Users; label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Icon className="size-4 text-primary" />
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="font-display mt-1 text-xl font-bold">{value}</div>
-    </div>
   );
 }

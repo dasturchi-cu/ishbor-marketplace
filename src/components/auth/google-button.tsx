@@ -23,11 +23,24 @@ function GoogleIcon() {
   );
 }
 
-export function GoogleButton({ label = "Google orqali davom etish", onClick }: { label?: string; onClick?: () => void }) {
+export function GoogleButton({
+  label = "Google orqali davom etish (demo)",
+  onClick,
+  demo = true,
+}: {
+  label?: string;
+  onClick?: () => void;
+  demo?: boolean;
+}) {
   return (
-    <AuthButton type="button" variant="secondary" onClick={onClick}>
+    <AuthButton type="button" variant="secondary" onClick={onClick} aria-label={demo ? `${label} — demo rejim` : label}>
       <GoogleIcon />
       {label}
+      {demo && (
+        <span className="ml-1 rounded bg-warning/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-wider text-warning">
+          Demo
+        </span>
+      )}
     </AuthButton>
   );
 }

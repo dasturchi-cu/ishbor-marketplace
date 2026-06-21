@@ -1,4 +1,5 @@
 import { paymentMethods as seedMethods } from "./mock-data";
+import { persistRead, persistWrite } from "./store-persist";
 
 const STORAGE_KEY = "ishbor-payment-methods";
 const listeners = new Set<() => void>();
@@ -46,17 +47,12 @@ export function subscribePaymentMethods(listener: () => void) {
 
 function readAll(): Record<string, StoredPaymentMethod[]> {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, StoredPaymentMethod[]>) : {};
-  } catch {
-    return {};
-  }
+  return persistRead(STORAGE_KEY, {});
 }
 
 function writeAll(data: Record<string, StoredPaymentMethod[]>) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  persistWrite(STORAGE_KEY, data);
 }
 
 function seedForUser(userId: string): StoredPaymentMethod[] {

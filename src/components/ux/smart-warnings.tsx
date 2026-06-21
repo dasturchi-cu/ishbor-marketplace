@@ -108,9 +108,9 @@ function collectWarnings(user: AuthUser, role: ReturnType<typeof useActiveRole>[
   return warnings.slice(0, 2);
 }
 
-export function SmartWarningStack({ user }: { user: AuthUser }) {
+export function SmartWarningStack({ user, limit }: { user: AuthUser; limit?: number }) {
   const { activeRole } = useActiveRole();
-  const warnings = collectWarnings(user, activeRole);
+  const warnings = collectWarnings(user, activeRole).slice(0, limit ?? 2);
 
   if (warnings.length === 0) return null;
 

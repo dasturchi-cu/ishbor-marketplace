@@ -60,6 +60,7 @@ function ApplicationDetailPage() {
               ? "Bu taklif tanlanmadi. Qayta yuborish uchun boshqa loyihalarni ko'ring."
               : "Mijoz ko'rib chiqishini kuting. Holat o'zgarganda xabar beramiz."
         }
+        variant="compact"
         className="mb-6"
       />
 

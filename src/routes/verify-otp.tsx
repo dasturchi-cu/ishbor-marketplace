@@ -4,6 +4,11 @@ import { OTPInput } from "input-otp";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { AuthButton } from "@/components/auth/auth-field";
 import { cn } from "@/lib/utils";
+import { loadOnboardingState } from "@/lib/auth-constants";
+import { consumePendingRegistrationPassword } from "@/lib/registration-store";
+import { completeRegistrationSession } from "@/lib/api/session.functions";
+import { applyServerSession } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/verify-otp")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -29,7 +34,7 @@ function VerifyOtpPage() {
     return () => clearTimeout(t);
   }, [countdown]);
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp.length < 6) {
       setError("6 xonali kodni to'liq kiriting");
       return;
@@ -40,10 +45,36 @@ function VerifyOtpPage() {
     }
     setLoading(true);
     setError("");
-    setTimeout(() => {
+    const onboarding = loadOnboardingState();
+    const password = consumePendingRegistrationPassword();
+    if (!password || password.length < 8) {
+      setError("Ro'yxatdan o'tish ma'lumotlari topilmadi. Qayta ro'yxatdan o'ting.");
       setLoading(false);
+      return;
+    }
+    try {
+      const result = await completeRegistrationSession({
+        data: {
+          email: email || onboarding.email,
+          password,
+          otp,
+          fullName: onboarding.fullName || "Foydalanuvchi",
+          userType: onboarding.userType,
+          company: onboarding.company || undefined,
+        },
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      applyServerSession(result.session);
+      toast.success("Hisob tasdiqlandi!");
       navigate({ to: "/welcome", search: {} });
-    }, 800);
+    } catch {
+      setError("Tasdiqlashda xatolik. Qayta urinib ko'ring.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

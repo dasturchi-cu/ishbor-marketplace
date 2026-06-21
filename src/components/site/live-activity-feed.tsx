@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { Link } from "@tanstack/react-router";
 import { Activity } from "lucide-react";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import {
   getAllAnalyticsEvents,
   getEventLabel,
@@ -65,12 +66,13 @@ const FALLBACK = [
 
 
 export function LiveActivityFeed() {
+  const hydrated = useClientHydrated();
   const eventCount = useSyncExternalStore(
     subscribeAnalyticsEvents,
     () => getAllAnalyticsEvents().length,
     () => 0,
   );
-  const events = useMemo(() => getRecentActivity(6), [eventCount]);
+  const events = useMemo(() => (hydrated ? getRecentActivity(6) : []), [eventCount, hydrated]);
 
   const items =
     events.length > 0

@@ -13,9 +13,11 @@ import { AlertTriangle, SearchX } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { runClientAuthBootstrap } from "../lib/client-auth-bootstrap";
+import { hydrateAuthFromServer } from "../hooks/use-auth";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { applyAppearancePrefs } from "../lib/appearance-apply";
 import { getSession } from "../lib/auth";
+import { getLocale } from "../lib/locale-store";
 import { installStressSeedGlobals } from "../lib/stress-seed";
 
 function NotFoundComponent() {
@@ -152,11 +154,16 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
-    runClientAuthBootstrap(window.location.pathname);
+    void hydrateAuthFromServer().then(() => {
+      runClientAuthBootstrap(window.location.pathname);
+    });
     installStressSeedGlobals();
     const session = getSession();
     if (session?.user.id) {
       applyAppearancePrefs(session.user.id);
+    }
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = getLocale() === "uz" ? "uz" : getLocale();
     }
   }, []);
 

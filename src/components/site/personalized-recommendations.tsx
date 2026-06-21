@@ -24,29 +24,57 @@ function useRecommendationSnapshot() {
   return useSyncExternalStore(subscribeRecommendations, getRecommendationsVersion, () => 0);
 }
 
-export function FreelancerRecommendations() {
+export function FreelancerRecommendations({ compact = false }: { compact?: boolean }) {
   const { user } = useAuth();
   const { activeRole } = useActiveRole();
   const recVersion = useRecommendationSnapshot();
 
   const projects = useMemo(
-    () => (user && activeRole === "freelancer" ? matchProjectsForFreelancer(user.id, 4) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "freelancer" ? matchProjectsForFreelancer(user.id, compact ? 3 : 4) : []),
+    [user, activeRole, recVersion, compact],
   );
   const clients = useMemo(
-    () => (user && activeRole === "freelancer" ? recommendClientsForFreelancer(user.id, 4) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "freelancer" && !compact ? recommendClientsForFreelancer(user.id, 4) : []),
+    [user, activeRole, recVersion, compact],
   );
   const skills = useMemo(
-    () => (user && activeRole === "freelancer" ? recommendSkillsToLearn(user.id, 4) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "freelancer" && !compact ? recommendSkillsToLearn(user.id, 4) : []),
+    [user, activeRole, recVersion, compact],
   );
   const services = useMemo(
-    () => (user && activeRole === "freelancer" ? matchServicesForClient(user.id, 3) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "freelancer" && !compact ? matchServicesForClient(user.id, 3) : []),
+    [user, activeRole, recVersion, compact],
   );
 
   if (!user || activeRole !== "freelancer") return null;
+
+  if (compact) {
+    if (projects.length === 0) return null;
+    return (
+      <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="font-display text-sm font-semibold">Sizga mos loyihalar</h2>
+          <Link to="/projects" className="text-xs font-medium text-primary hover:underline">
+            Barchasi →
+          </Link>
+        </div>
+        <ul className="divide-y divide-border">
+          {projects.map((p) => (
+            <li key={p.slug}>
+              <Link
+                to="/projects/$slug"
+                params={{ slug: p.slug }}
+                className="flex items-center justify-between gap-3 py-2.5 transition-default hover:text-primary"
+              >
+                <span className="min-w-0 truncate text-sm font-medium">{p.title}</span>
+                <ScoreBadge score={p.matchScore} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -138,29 +166,57 @@ export function FreelancerRecommendations() {
   );
 }
 
-export function ClientRecommendations() {
+export function ClientRecommendations({ compact = false }: { compact?: boolean }) {
   const { user } = useAuth();
   const { activeRole } = useActiveRole();
   const recVersion = useRecommendationSnapshot();
 
   const freelancers = useMemo(
-    () => (user && activeRole === "client" ? matchFreelancersForClient(user.id, 4) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "client" ? matchFreelancersForClient(user.id, compact ? 3 : 4) : []),
+    [user, activeRole, recVersion, compact],
   );
   const services = useMemo(
-    () => (user && activeRole === "client" ? matchServicesForClient(user.id, 4) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "client" && !compact ? matchServicesForClient(user.id, 4) : []),
+    [user, activeRole, recVersion, compact],
   );
   const templates = useMemo(
-    () => (user && activeRole === "client" ? recommendProjectTemplates(user.id, 3) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "client" && !compact ? recommendProjectTemplates(user.id, 3) : []),
+    [user, activeRole, recVersion, compact],
   );
   const agencies = useMemo(
-    () => (user && activeRole === "client" ? recommendAgenciesForClient(user.id, 3) : []),
-    [user, activeRole, recVersion],
+    () => (user && activeRole === "client" && !compact ? recommendAgenciesForClient(user.id, 3) : []),
+    [user, activeRole, recVersion, compact],
   );
 
   if (!user || activeRole !== "client") return null;
+
+  if (compact) {
+    if (freelancers.length === 0) return null;
+    return (
+      <section className="rounded-xl border border-border bg-card p-4 sm:p-5">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="font-display text-sm font-semibold">Tavsiya etilgan frilanserlar</h2>
+          <Link to="/freelancers" className="text-xs font-medium text-primary hover:underline">
+            Barchasi →
+          </Link>
+        </div>
+        <ul className="divide-y divide-border">
+          {freelancers.map((f) => (
+            <li key={f.username}>
+              <Link
+                to="/freelancers/$username"
+                params={{ username: f.username }}
+                className="flex items-center justify-between gap-3 py-2.5 transition-default hover:text-primary"
+              >
+                <span className="min-w-0 truncate text-sm font-medium">{f.name}</span>
+                <ScoreBadge score={f.matchScore} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
 
   return (
     <div className="mt-8 flex flex-col gap-6">

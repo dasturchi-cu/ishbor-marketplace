@@ -35,7 +35,7 @@ function AdminProjectsPage() {
           { key: "actions", header: "", className: "text-right", cell: (p) => (
             <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
               <Button size="sm" onClick={() => confirm({ title: "Loyihani tasdiqlash", description: `"${p.title}"?`, action: `Loyiha tasdiqlandi: ${p.title}`, target: p.id, category: "moderation", onConfirm: () => updateAdminProject(p.slug, { adminStatus: "approved" }) })}>Tasdiqlash</Button>
-              <Button size="sm" variant="outline" asChild><Link to="/projects/$slug" params={{ slug: p.slug }}>Tahrirlash</Link></Button>
+              <Button size="sm" variant="outline" asChild><Link to="/projects/$slug" params={{ slug: p.slug }}>Ko'rish</Link></Button>
               <Button size="sm" variant="outline" onClick={() => confirm({ title: "Loyihani to'xtatish", description: `"${p.title}"?`, action: `Loyiha to'xtatildi: ${p.title}`, target: p.id, category: "moderation", onConfirm: () => updateAdminProject(p.slug, { adminStatus: "suspended" }) })}>To'xtatish</Button>
               <Button size="sm" variant="destructive" onClick={() => confirm({ title: "Loyihani o'chirish", description: `"${p.title}"?`, action: `Loyiha o'chirildi: ${p.title}`, target: p.id, category: "moderation", variant: "destructive", confirmLabel: "O'chirish", onConfirm: () => updateAdminProject(p.slug, { adminStatus: "rejected" }) })}>O'chirish</Button>
             </div>

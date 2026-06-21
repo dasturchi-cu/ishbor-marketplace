@@ -609,10 +609,9 @@ function Landing() {
                 className="flex flex-col rounded-xl border border-border bg-card p-5 transition-default hover:border-primary/15"
               >
                 <Quote className="mb-3 size-4 text-primary/60" />
-                <blockquote
-                  className="flex-1 text-balance text-sm leading-relaxed text-foreground/85"
-                  dangerouslySetInnerHTML={{ __html: t.quote }}
-                />
+                <blockquote className="flex-1 text-balance text-sm leading-relaxed text-foreground/85">
+                  {t.quote}
+                </blockquote>
                 <figcaption className="mt-5 flex items-center gap-3 border-t border-border/60 pt-4">
                   <GradientAvatar name={t.name} hue={t.hue} size={32} />
                   <div className="min-w-0">

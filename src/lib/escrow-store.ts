@@ -1,6 +1,7 @@
 import type { EscrowWorkflow } from "./mock-data";
 import { escrowWorkflows as mockEscrow } from "./mock-data";
 import type { Order } from "./mock-data";
+import { persistRead, persistWrite } from "./store-persist";
 
 const STORAGE_KEY = "ishbor-user-escrow";
 const listeners = new Set<() => void>();
@@ -22,17 +23,12 @@ export function subscribeEscrow(listener: () => void) {
 
 function readStored(): EscrowWorkflow[] {
   if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as EscrowWorkflow[]) : [];
-  } catch {
-    return [];
-  }
+  return persistRead(STORAGE_KEY, []);
 }
 
 function writeStored(workflows: EscrowWorkflow[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(workflows));
+  persistWrite(STORAGE_KEY, workflows);
 }
 
 function buildMerged(): EscrowWorkflow[] {

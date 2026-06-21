@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useSyncExternalStore } from "react";
-import { BarChart3, Eye, DollarSign, Star, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { BarChart3 } from "lucide-react";
+import { SimpleStatCard } from "@/components/site/simple-stat-card";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -13,8 +14,10 @@ import {
   getTopPortfolioItems,
   getTopServicesForFreelancer,
 } from "@/lib/analytics-utils";
-import { subscribeAnalyticsEvents, getAllAnalyticsEvents } from "@/lib/analytics-events-store";
+import { subscribeAnalyticsEvents } from "@/lib/analytics-events-store";
 import { subscribeRevenue } from "@/lib/revenue-store";
+import { useStoreVersion } from "@/hooks/use-store-version";
+import { STORE_KEYS } from "@/lib/store-version";
 
 export const Route = createFileRoute("/analytics/freelancer")({
   beforeLoad: requireRole(["freelancer"]),
@@ -30,8 +33,8 @@ function FreelancerAnalyticsPage() {
   const { user } = useAuth();
   const [range, setRange] = useState<7 | 30 | 90>(30);
 
-  useSyncExternalStore(subscribeAnalyticsEvents, () => getAllAnalyticsEvents().length, () => 0);
-  useSyncExternalStore(subscribeRevenue, () => null, () => null);
+  useStoreVersion(STORE_KEYS.analyticsEvents, subscribeAnalyticsEvents);
+  useStoreVersion(STORE_KEYS.revenue, subscribeRevenue);
 
   if (!user) return null;
   const analytics = getFreelancerAnalytics(user, range);
@@ -75,11 +78,11 @@ function FreelancerAnalyticsPage() {
         />
       ) : (
       <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard icon={Eye} label="Profil ko'rishlar" value={analytics.profileViews} />
-        <MetricCard icon={DollarSign} label={`Daromad (${range} kun)`} value={`$${analytics.earnings30.toLocaleString()}`} />
-        <MetricCard icon={Star} label="Ishonch balli" value={analytics.trustScore} />
-        <MetricCard icon={MessageSquare} label="Javob foizi" value={`${analytics.responseRate}%`} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SimpleStatCard label="Profil ko'rishlar" value={String(analytics.profileViews)} />
+        <SimpleStatCard label={`Daromad (${range} kun)`} value={`$${analytics.earnings30.toLocaleString()}`} />
+        <SimpleStatCard label="Ishonch balli" value={String(analytics.trustScore)} />
+        <SimpleStatCard label="Javob foizi" value={`${analytics.responseRate}%`} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -114,16 +117,6 @@ function FreelancerAnalyticsPage() {
       </>
       )}
     </WorkspaceShell>
-  );
-}
-
-function MetricCard({ icon: Icon, label, value }: { icon: typeof Eye; label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Icon className="size-4 text-primary" />
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="font-display mt-1 text-2xl font-bold">{value}</div>
-    </div>
   );
 }
 

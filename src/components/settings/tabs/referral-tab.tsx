@@ -2,6 +2,7 @@ import { toast } from "sonner";
 import { Share2, Copy } from "lucide-react";
 import { SettingsTabLayout, SettingsSection } from "@/components/settings/settings-tab-layout";
 import { SettingsStatCard, SettingsStatRow } from "@/components/settings/settings-stat-card";
+import { ReferralQrCode } from "@/components/settings/referral-qr-code";
 import { getReferralStats, getReferralLink, getReferralState } from "@/lib/referral-store";
 
 export function ReferralTab({ userId }: { userId: string }) {
@@ -25,12 +26,14 @@ export function ReferralTab({ userId }: { userId: string }) {
       }
       sidebar={
         <div className="rounded-xl border border-border bg-card p-4 text-center">
-          <div className="mx-auto mb-3 flex size-32 items-center justify-center rounded-xl border border-border bg-secondary/30 font-mono text-[10px]">
-            QR KOD
-            <br />
-            {referral.code}
-          </div>
-          <p className="text-xs text-muted-foreground">Taklif kodingiz: {referral.code}</p>
+          <ReferralQrCode
+            value={link}
+            label={`Ishbor taklif havolasi: ${referral.code}`}
+          />
+          <p className="mt-3 text-xs font-medium text-foreground">Taklif kodingiz: {referral.code}</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+            Telefon kamerasi bilan skaner qiling — ro&apos;yxatdan o&apos;tish sahifasi ochiladi.
+          </p>
         </div>
       }
     >

@@ -243,6 +243,7 @@ function MessagesPage() {
   const [callType, setCallType] = useState<"voice" | "video">("voice");
   const [inboxTab, setInboxTab] = useState<ConversationInbox>("active");
   const [listLimit, setListLimit] = useState(50);
+  const [, setTypingTick] = useState(0);
 
   const messagesState = useSyncExternalStore(subscribeMessages, getMessagesState, getMessagesState);
 
@@ -264,6 +265,12 @@ function MessagesPage() {
   useEffect(() => {
     setListLimit(50);
   }, [searchQuery, inboxTab]);
+
+  useEffect(() => {
+    if (!activeId || !isTyping(activeId)) return;
+    const timer = window.setInterval(() => setTypingTick((t) => t + 1), 400);
+    return () => window.clearInterval(timer);
+  }, [activeId, messagesState]);
 
   const thread = useMemo(() => getThread(activeId), [messagesState, activeId]);
 
@@ -512,8 +519,12 @@ function MessagesPage() {
         {/* Chat area */}
         <div className="flex min-h-0 flex-col md:flex">
           {showList && (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground md:hidden">
-              Suhbatni tanlang
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center md:hidden">
+              <Inbox className="size-10 text-muted-foreground/60" />
+              <p className="text-sm font-medium text-foreground">Suhbatni tanlang</p>
+              <p className="max-w-xs text-xs text-muted-foreground">
+                Chapdagi ro'yxatdan suhbat tanlang yoki yangi taklif yuboring.
+              </p>
             </div>
           )}
           <div className={`${showList ? "hidden md:flex" : "flex"} min-h-0 flex-1 flex-col`}>
@@ -687,7 +698,12 @@ function MessagesPage() {
                 <div className="flex items-center gap-2 px-3 pt-2 sm:pt-3">
                   <input
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      if (activeId && e.target.value.trim()) setTyping(activeId, true);
+                      else if (activeId) setTyping(activeId, false);
+                    }}
+                    onBlur={() => activeId && setTyping(activeId, false)}
                     placeholder="Xabar yozing..."
                     className="min-h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
                     onKeyDown={(e) => {

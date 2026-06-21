@@ -3,9 +3,15 @@ import { loadOnboardingState } from "./auth-constants";
 import { invalidateActiveRoleCache } from "./active-role-store";
 import { persistOnboardingToProfile, seedDemoProfileIfNeeded } from "./profile-store";
 import { seedDemoAgencyIfNeeded } from "./agency-store";
-import { applyReferralCode } from "./referral-store";
 import { isUserVerified, setUserVerified } from "./verified-users-store";
 import { freelancers } from "./mock-data";
+import {
+  isLoginBlocked,
+  loginBlockedMessage,
+  setUserAccountStatus,
+} from "./user-status-store";
+import { normalizeEmail } from "./sanitize";
+import { clearLoginAttempts, recordFailedLogin } from "./rate-limit";
 
 export const SESSION_STORAGE_KEY = "ishbor-session";
 
@@ -215,7 +221,10 @@ export function loginWithCredentials(
   password: string,
   remember = false,
 ): { ok: true; session: AuthSession } | { ok: false; error: string } {
-  const normalized = email.trim().toLowerCase();
+  const normalized = normalizeEmail(email);
+  if (isLoginBlocked(normalized)) {
+    return { ok: false, error: loginBlockedMessage(normalized) };
+  }
   const demo = demoUsers[normalized];
   const expectedPassword = getPasswordForEmail(normalized);
   if (demo && expectedPassword === password) {
@@ -230,46 +239,48 @@ export function loginWithCredentials(
     seedDemoProfileIfNeeded(session.user.id);
     seedDemoAgencyIfNeeded(session.user.id);
     invalidateActiveRoleCache();
+    clearLoginAttempts(normalized);
     notify();
     return { ok: true, session };
   }
-  if (password.length >= 6 && normalized.includes("@")) {
-    const onboarding = loadOnboardingState();
-    const userId = `u-${Date.now()}`;
-    const session: AuthSession = {
-      user: {
-        id: userId,
-        email: normalized,
-        fullName: onboarding.fullName || normalized.split("@")[0]!,
-        userType: onboarding.userType,
-        username: onboarding.userType === "freelancer" ? onboarding.fullName.toLowerCase().replace(/\s+/g, "-").slice(0, 20) : undefined,
-        company: onboarding.company || undefined,
-        companySlug: onboarding.company
-          ? onboarding.company.toLowerCase().replace(/\s+/g, "-")
-          : undefined,
-        avatarHue: onboarding.userType === "freelancer" ? 250 : 215,
-        verified: isUserVerified(userId, false),
-        location: "Tashkent, Uzbekistan",
-      },
-      remember,
-      loggedInAt: new Date().toISOString(),
-    };
-    writeStorage(session);
-    persistOnboardingToProfile(session.user.id);
-    seedDemoProfileIfNeeded(session.user.id);
-    seedDemoAgencyIfNeeded(session.user.id);
-    if (typeof window !== "undefined") {
-      const ref = new URLSearchParams(window.location.search).get("ref") ?? sessionStorage.getItem("ishbor-pending-ref");
-      if (ref) {
-        applyReferralCode(session.user.id, normalized, ref);
-        sessionStorage.removeItem("ishbor-pending-ref");
-      }
-    }
-    invalidateActiveRoleCache();
-    notify();
-    return { ok: true, session };
+  if (demo && expectedPassword !== password) {
+    recordFailedLogin(normalized);
+    return { ok: false, error: "Email yoki parol noto'g'ri." };
   }
-  return { ok: false, error: "Email yoki parol noto'g'ri." };
+  recordFailedLogin(normalized);
+  return {
+    ok: false,
+    error: "Email yoki parol noto'g'ri. Ro'yxatdan o'tganmisiz?",
+  };
+}
+
+/** Apply server-issued session (HttpOnly cookie is source of truth). */
+export function applyServerSession(session: AuthSession): AuthSession {
+  writeStorage(session);
+  persistOnboardingToProfile(session.user.id);
+  seedDemoProfileIfNeeded(session.user.id);
+  seedDemoAgencyIfNeeded(session.user.id);
+  invalidateActiveRoleCache();
+  clearLoginAttempts(session.user.email);
+  notify();
+  return session;
+}
+
+/** Sync account status from admin panel — blocks future logins. */
+export function syncAccountStatusFromAdmin(
+  email: string,
+  status: "active" | "suspended" | "banned",
+): void {
+  setUserAccountStatus(email, status);
+  const normalized = normalizeEmail(email);
+  const session = getSession();
+  if (
+    session &&
+    normalizeEmail(session.user.email) === normalized &&
+    (status === "suspended" || status === "banned")
+  ) {
+    logout();
+  }
 }
 
 export function loginDemo(userType: UserType, remember = false): AuthSession {
@@ -302,6 +313,11 @@ export function getDefaultDashboard(userType: UserType): string {
 
 export function isAdminUser(user?: AuthUser | null): boolean {
   return !!user?.isAdmin;
+}
+
+/** Demo hisoblar — jamoa taklifida tanlash uchun. */
+export function getRegisteredDemoUsers(): AuthUser[] {
+  return Object.values(demoUsers).map((entry) => entry.user);
 }
 
 /** Map marketplace freelancer username to wallet/session user id. */

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
 import { AdminShell } from "@/components/admin/shell";
 import { AdminStatCard } from "@/components/admin/actions";
 import { AdminLineChart, AdminBarChart } from "@/components/admin/charts";
@@ -20,6 +19,8 @@ import { subscribeCredits } from "@/lib/credits-store";
 import { DollarSign, Percent, Users, TrendingUp, Package, Briefcase } from "lucide-react";
 import { getAllServices } from "@/lib/services-store";
 import { getStoredProjects } from "@/lib/projects-store";
+import { useStoreVersion } from "@/hooks/use-store-version";
+import { STORE_KEYS } from "@/lib/store-version";
 
 export const Route = createFileRoute("/admin/analytics")({
   head: () => ({ meta: [{ title: "Analitika markazi — Ishbor Admin" }] }),
@@ -28,10 +29,10 @@ export const Route = createFileRoute("/admin/analytics")({
 
 function AdminAnalyticsPage() {
   const { onSearchOpen } = useAdminSearchOpen();
-  useSyncExternalStore(subscribeRevenue, () => null, () => null);
-  useSyncExternalStore(subscribeAnalyticsEvents, () => null, () => null);
-  useSyncExternalStore(subscribeSubscriptions, () => null, () => null);
-  useSyncExternalStore(subscribeCredits, () => null, () => null);
+  useStoreVersion(STORE_KEYS.revenue, subscribeRevenue);
+  useStoreVersion(STORE_KEYS.analyticsEvents, subscribeAnalyticsEvents);
+  useStoreVersion(STORE_KEYS.subscriptions, subscribeSubscriptions);
+  useStoreVersion(STORE_KEYS.credits, subscribeCredits);
   const overview = getMarketplaceOverview(30);
   const monetization = getMonetizationOverview(30);
   const topCategories = getTopEarningCategories(5);

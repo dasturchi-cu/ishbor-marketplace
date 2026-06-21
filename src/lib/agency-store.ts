@@ -9,6 +9,7 @@ import type {
   AgencyVerificationLevel,
 } from "./agency-types";
 import { agencyRoleLabels } from "./agency-types";
+import { bumpStoreVersion, STORE_KEYS } from "./store-version";
 
 const STORAGE_KEY = "ishbor-agencies";
 const listeners = new Set<() => void>();
@@ -22,6 +23,7 @@ function invalidateCache() {
 
 function notify() {
   invalidateCache();
+  bumpStoreVersion(STORE_KEYS.agencies);
   listeners.forEach((l) => l());
 }
 

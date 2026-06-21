@@ -1,8 +1,8 @@
 /** Client analytics route — moved from analytics.client.tsx (TanStack `.client.*` conflict). */
 import { createFileRoute, Link } from "@tanstack/react-router";
 import React, { useState, useSyncExternalStore } from "react";
-import type { LucideIcon } from "lucide-react";
-import { FolderOpen, DollarSign, Users, Shield } from "lucide-react";
+import { FolderOpen } from "lucide-react";
+import { SimpleStatCard } from "@/components/site/simple-stat-card";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -61,11 +61,11 @@ function ClientAnalyticsPage() {
         />
       ) : (
       <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard icon={FolderOpen} label="Yaratilgan loyihalar" value={analytics.projectsCreated} />
-        <MetricCard icon={Users} label="Yollangan frilanserlar" value={analytics.freelancersHired} />
-        <MetricCard icon={DollarSign} label="Jami xarajat" value={`$${analytics.totalSpend.toLocaleString()}`} />
-        <MetricCard icon={Shield} label="Eskrou moliyalashtirilgan" value={`$${analytics.escrowFunded.toLocaleString()}`} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SimpleStatCard label="Yaratilgan loyihalar" value={String(analytics.projectsCreated)} />
+        <SimpleStatCard label="Yollangan frilanserlar" value={String(analytics.freelancersHired)} />
+        <SimpleStatCard label="Jami xarajat" value={`$${analytics.totalSpend.toLocaleString()}`} />
+        <SimpleStatCard label="Eskrou moliyalashtirilgan" value={`$${analytics.escrowFunded.toLocaleString()}`} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -100,15 +100,5 @@ function ClientAnalyticsPage() {
       </>
       )}
     </WorkspaceShell>
-  );
-}
-
-function MetricCard({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string | number }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Icon className="size-4 text-primary" />
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="font-display mt-1 text-2xl font-bold">{value}</div>
-    </div>
   );
 }

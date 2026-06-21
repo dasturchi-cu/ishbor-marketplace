@@ -18,6 +18,9 @@ Complete route registry. Generated from `src/routeTree.gen.ts` + route files.
 | `/welcome` | Auth | Post-signup | ftue-store | FTUE |
 | `/terms` | Public | Legal | — | — |
 | `/privacy` | Public | Legal | — | — |
+| `/help` | Public | Help center FAQ | — | Support |
+| `/status` | Public | System health | health.functions | Ops |
+| `/search` | Public | Unified marketplace search | marketplace.ts, stores | Discovery |
 | `/pricing` | Public | Plans | subscription-store | Monetization |
 
 ---

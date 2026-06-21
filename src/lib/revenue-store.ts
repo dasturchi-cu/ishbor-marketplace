@@ -5,6 +5,8 @@ import { getStoredApplications } from "./applications-store";
 import { getAllAnalyticsEvents, getEventsSince, sumEventValues } from "./analytics-events-store";
 import { getReferralState } from "./referral-store";
 import { SESSION_STORAGE_KEY } from "./auth";
+import { bumpStoreVersion, STORE_KEYS } from "./store-version";
+import { persistRead, persistWrite } from "./store-persist";
 
 const PLATFORM_FEE_RATE = 0.05;
 const STORAGE_KEY = "ishbor-revenue-log";
@@ -19,6 +21,7 @@ function invalidateLogCache() {
 
 function notify() {
   invalidateLogCache();
+  bumpStoreVersion(STORE_KEYS.revenue);
   listeners.forEach((l) => l());
 }
 
@@ -50,24 +53,18 @@ function readLog(): RevenueEntry[] {
     cachedLog = [];
     return cachedLog;
   }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      cachedLog = [];
-      return cachedLog;
-    }
-    const parsed = JSON.parse(raw) as unknown;
-    cachedLog = Array.isArray(parsed) ? (parsed as RevenueEntry[]) : [];
-    return cachedLog;
-  } catch {
-    cachedLog = [];
-    return cachedLog;
-  }
+  cachedLog = persistRead(STORAGE_KEY, []);
+  return cachedLog;
 }
 
 function writeLog(entries: RevenueEntry[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, 2000)));
+  try {
+    persistWrite(STORAGE_KEY, entries.slice(0, 2000));
+  } catch (error) {
+    console.error("[revenue-store] write failed", error);
+    return;
+  }
   notify();
 }
 

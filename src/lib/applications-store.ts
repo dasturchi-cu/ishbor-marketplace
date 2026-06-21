@@ -3,6 +3,7 @@ import type { Application } from "./mock-data";
 import { applications as mockApplications } from "./mock-data";
 
 import { getSession } from "./auth";
+import { persistRead, persistWrite } from "./store-persist";
 
 import { createOrder } from "./orders-store";
 
@@ -15,6 +16,8 @@ import { canSubmitProposal, recordProposalSubmitted, getProposalUsage } from "./
 const STORAGE_KEY = "ishbor-user-applications";
 const EMPTY_APPLICATIONS: Application[] = [];
 const listeners = new Set<() => void>();
+/** Prevents duplicate order creation from rapid double-clicks. */
+const acceptingIds = new Set<string>();
 
 let cachedApplications: Application[] | null = null;
 let cachedBySlug: Map<string, Application[]> | null = null;
@@ -49,31 +52,13 @@ export function subscribeApplications(listener: () => void) {
 
 
 function readStored(): Application[] {
-
   if (typeof window === "undefined") return EMPTY_APPLICATIONS;
-
-  try {
-
-    const raw = localStorage.getItem(STORAGE_KEY);
-
-    return raw ? (JSON.parse(raw) as Application[]) : EMPTY_APPLICATIONS;
-
-  } catch {
-
-    return EMPTY_APPLICATIONS;
-
-  }
-
+  return persistRead(STORAGE_KEY, EMPTY_APPLICATIONS);
 }
 
-
-
 function writeStored(apps: Application[]) {
-
   if (typeof window === "undefined") return;
-
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
-
+  persistWrite(STORAGE_KEY, apps);
 }
 
 
@@ -283,67 +268,52 @@ export function updateApplicationStatus(
 
 
 export function acceptApplication(id: string): { application: Application; orderId: string } | undefined {
+  if (acceptingIds.has(id)) return undefined;
 
   const stored = readStored();
-
   const idx = stored.findIndex((a) => a.id === id);
-
   if (idx === -1) return undefined;
-
-
 
   const app = stored[idx]!;
 
-  if (app.status === "accepted") return undefined;
-
-
-
-  const order = createOrder({
-
-    title: app.projectTitle,
-
-    client: app.client,
-
-    clientHue: app.clientHue,
-
-    clientSlug: app.clientSlug,
-
-    freelancer: app.freelancerName ?? "Frilanser",
-
-    freelancerHue: app.freelancerHue ?? 250,
-
-    freelancerUsername: app.freelancerUsername,
-
-    amount: app.proposalAmount ?? app.budget,
-
-    dueDate: app.deliveryTime,
-
-  });
-
-  createEscrowFromOrder(order);
-
-
-
-  const updated: Application = { ...app, status: "accepted", orderId: order.id };
-
-  const next = [...stored];
-
-  next[idx] = updated;
-
-  writeStored(next);
-
-  notify();
-
-  const session = getSession();
-  if (session) {
-    notifyOrderCreated(session.user.id, order.title, order.id);
-  }
-  if (app.freelancerUsername && session?.user.id) {
-    notifyProposalAccepted(session.user.id, app.projectTitle, order.id);
+  if (app.status === "accepted") {
+    return app.orderId ? { application: app, orderId: app.orderId } : undefined;
   }
 
-  return { application: updated, orderId: order.id };
+  acceptingIds.add(id);
+  try {
+    const order = createOrder({
+      title: app.projectTitle,
+      client: app.client,
+      clientHue: app.clientHue,
+      clientSlug: app.clientSlug,
+      freelancer: app.freelancerName ?? "Frilanser",
+      freelancerHue: app.freelancerHue ?? 250,
+      freelancerUsername: app.freelancerUsername,
+      amount: app.proposalAmount ?? app.budget,
+      dueDate: app.deliveryTime,
+    });
 
+    createEscrowFromOrder(order);
+
+    const updated: Application = { ...app, status: "accepted", orderId: order.id };
+    const next = [...stored];
+    next[idx] = updated;
+    writeStored(next);
+    notify();
+
+    const session = getSession();
+    if (session) {
+      notifyOrderCreated(session.user.id, order.title, order.id);
+    }
+    if (app.freelancerUsername && session?.user.id) {
+      notifyProposalAccepted(session.user.id, app.projectTitle, order.id);
+    }
+
+    return { application: updated, orderId: order.id };
+  } finally {
+    acceptingIds.delete(id);
+  }
 }
 
 

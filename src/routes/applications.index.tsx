@@ -6,7 +6,6 @@ import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge } from "@/components/site/trust";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
-import { ConversionFlowBanner, FREELANCER_HIRE_FLOW } from "@/components/site/conversion-flow";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireRole } from "@/lib/guards";
 import {
@@ -71,13 +70,6 @@ function ApplicationsPage() {
 
   return (
     <WorkspaceShell eyebrow="Frilanser ish maydoni" title="Mening arizalarim">
-      <ConversionFlowBanner
-        title="Ishga olinish"
-        steps={FREELANCER_HIRE_FLOW}
-        currentStep="application"
-        nextHint="Taklif holatini shu yerda kuzating. Qabul qilinganda mijoz eskrouni moliyalashtiradi va buyurtma boshlanadi."
-        className="mb-6"
-      />
       {user && <WorkspaceGuidance user={user} hideNextAction />}
       <div className="mobile-scroll-x flex gap-2 border-b border-border pb-3">
         {tabs.map((t) => (

@@ -20,6 +20,10 @@ import { applications as seedApplications } from "./mock-data";
 import type { Application } from "./mock-data";
 import { getAllEscrowWorkflows, releaseEscrowMilestone, openEscrowDispute, refundEscrowToClient, getEscrowByOrderId } from "./escrow-store";
 import { setUserVerified } from "./verified-users-store";
+import { syncAccountStatusFromAdmin } from "./auth";
+import { updateProjectStatus } from "./projects-store";
+import { updateServiceStatus } from "./services-store";
+import { blockDemoAccountServer } from "./api/auth.functions";
 
 const STORAGE_KEY = "ishbor-admin-data";
 const listeners = new Set<() => void>();
@@ -105,15 +109,30 @@ export function updateAdminUser(id: string, patch: Partial<AdminUser>): AdminUse
 }
 
 export function suspendAdminUser(id: string) {
-  return updateAdminUser(id, { status: "suspended" });
+  const user = updateAdminUser(id, { status: "suspended" });
+  if (user?.email) {
+    syncAccountStatusFromAdmin(user.email, "suspended");
+    void blockDemoAccountServer({ data: { email: user.email, blocked: true } });
+  }
+  return user;
 }
 
 export function activateAdminUser(id: string) {
-  return updateAdminUser(id, { status: "active" });
+  const user = updateAdminUser(id, { status: "active" });
+  if (user?.email) {
+    syncAccountStatusFromAdmin(user.email, "active");
+    void blockDemoAccountServer({ data: { email: user.email, blocked: false } });
+  }
+  return user;
 }
 
 export function banAdminUser(id: string) {
-  return updateAdminUser(id, { status: "banned" });
+  const user = updateAdminUser(id, { status: "banned" });
+  if (user?.email) {
+    syncAccountStatusFromAdmin(user.email, "banned");
+    void blockDemoAccountServer({ data: { email: user.email, blocked: true } });
+  }
+  return user;
 }
 
 export function verifyAdminUser(id: string) {
@@ -128,7 +147,13 @@ export function updateAdminProject(slug: string, patch: Partial<AdminProject>): 
   const projects = [...state.projects];
   projects[idx] = { ...projects[idx]!, ...patch };
   persist({ ...state, projects });
-  return projects[idx];
+  const updated = projects[idx]!;
+  if (patch.adminStatus === "suspended" || patch.adminStatus === "rejected") {
+    updateProjectStatus(slug, "closed");
+  } else if (patch.adminStatus === "approved") {
+    updateProjectStatus(slug, "published");
+  }
+  return updated;
 }
 
 export function updateAdminService(slug: string, patch: Partial<AdminService>): AdminService | undefined {
@@ -138,7 +163,13 @@ export function updateAdminService(slug: string, patch: Partial<AdminService>): 
   const services = [...state.services];
   services[idx] = { ...services[idx]!, ...patch };
   persist({ ...state, services });
-  return services[idx];
+  const updated = services[idx]!;
+  if (patch.adminStatus === "suspended" || patch.adminStatus === "rejected") {
+    updateServiceStatus(slug, "paused");
+  } else if (patch.adminStatus === "approved") {
+    updateServiceStatus(slug, "published");
+  }
+  return updated;
 }
 
 export function updateApplication(id: string, patch: Partial<Application>): Application | undefined {

@@ -5,7 +5,6 @@ import { Search, Bell, MessageSquare, Menu, X, LogOut, Briefcase, Plus, LayoutDa
 import { useState, useSyncExternalStore } from "react";
 
 import { Logo } from "./logo";
-import { pickSearchRoute } from "@/lib/marketplace";
 import { getTotalUnread, subscribeMessages } from "@/lib/messages-store";
 import { getUnreadCount, subscribeNotifications } from "@/lib/notifications-store";
 
@@ -175,8 +174,8 @@ export function SiteNav() {
     );
 
   const goSearch = (q: string) => {
-    const { to, search } = pickSearchRoute(q);
-    navigate({ to, search });
+    const trimmed = q.trim();
+    navigate({ to: "/search", search: { q: trimmed, type: "all", sort: "ranking_score" } });
     setOpen(false);
   };
 

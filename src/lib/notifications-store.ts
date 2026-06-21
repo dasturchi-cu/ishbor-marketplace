@@ -1,5 +1,6 @@
 import { notifications as seedNotifications } from "./mock-data";
 import { getSession } from "./auth";
+import { persistRead, persistWrite } from "./store-persist";
 
 const STORAGE_KEY = "ishbor-notifications";
 const listeners = new Set<() => void>();
@@ -40,20 +41,14 @@ export function subscribeNotifications(listener: () => void) {
 
 function readAll(): Record<string, AppNotification[]> {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as unknown;
-    if (Array.isArray(parsed)) return {};
-    return parsed as Record<string, AppNotification[]>;
-  } catch {
-    return {};
-  }
+  const parsed = persistRead<Record<string, AppNotification[]> | AppNotification[]>(STORAGE_KEY, {});
+  if (Array.isArray(parsed)) return {};
+  return parsed;
 }
 
 function writeAll(data: Record<string, AppNotification[]>) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  persistWrite(STORAGE_KEY, data);
 }
 
 function seedForUser(userId: string): AppNotification[] {

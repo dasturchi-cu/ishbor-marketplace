@@ -12,8 +12,10 @@ import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components
 
 import { GoogleButton } from "@/components/auth/google-button";
 
-import { loginWithCredentials, isAdminUser, type AuthUser } from "@/lib/auth";
+import { loginWithCredentials, isAdminUser, applyServerSession, type AuthUser } from "@/lib/auth";
 import { resetActiveRoleOnLogin, getActiveDashboardPath } from "@/lib/active-role-store";
+import { loginSession } from "@/lib/api/session.functions";
+import { checkClientLoginRateLimit, recordLoginAttempt } from "@/lib/rate-limit";
 
 import { requireGuest } from "@/lib/guards";
 
@@ -75,95 +77,103 @@ function LoginPage() {
     return getActiveDashboardPath();
   };
 
-  const demoLogin = (email: string) => {
-    const result = loginWithCredentials(email, "demo1234", true);
-    if (!result.ok) {
-      setError(result.error);
-      return;
-    }
-    toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
-    if (redirectTo) {
-      window.location.href = redirectTo;
-      return;
-    }
-    navigate({ to: postLoginPath(result.session.user) });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-
-    e.preventDefault();
-
+  const demoLogin = async (email: string) => {
     setLoading(true);
-
     setError("");
-
-    setTimeout(() => {
-
+    try {
       try {
-
-        const result = loginWithCredentials(email, password, remember);
-
-        if (!result.ok) {
-
-          setError(result.error);
-
+        const result = await loginSession({ data: { email, password: "demo1234", remember: true } });
+        if (result.ok) {
+          applyServerSession(result.session);
+          resetActiveRoleOnLogin(result.session.user);
+          toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
+          if (redirectTo) {
+            window.location.href = redirectTo;
+            return;
+          }
+          navigate({ to: postLoginPath(result.session.user) });
           return;
-
         }
-
-        toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
-
-        if (redirectTo) {
-
-          window.location.href = redirectTo;
-
-          return;
-
-        }
-
-        navigate({
-          to: postLoginPath(result.session.user),
-        });
-
-      } catch {
-
-        setError("Nimadir xato ketdi. Qayta urinib ko'ring.");
-
-      } finally {
-
-        setLoading(false);
-
+      } catch (serverError) {
+        console.warn("[login] demo server session failed, using local fallback", serverError);
       }
 
-    }, 400);
-
+      const fallback = loginWithCredentials(email, "demo1234", true);
+      if (!fallback.ok) {
+        setError(fallback.error);
+        return;
+      }
+      applyServerSession(fallback.session);
+      toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
+      if (redirectTo) {
+        window.location.href = redirectTo;
+        return;
+      }
+      navigate({ to: postLoginPath(fallback.session.user) });
+    } catch {
+      setError("Nimadir xato ketdi. Qayta urinib ko'ring.");
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
+    const rate = checkClientLoginRateLimit();
+    if (!rate.allowed) {
+      setError(`Juda ko'p urinish. ${rate.retryAfterMinutes} daqiqadan keyin qayta urinib ko'ring.`);
+      setLoading(false);
+      return;
+    }
 
-  const handleGoogle = () => {
+    try {
+      const result = await loginSession({ data: { email, password, remember } });
+      if (!result.ok) {
+        recordLoginAttempt();
+        setError(result.error);
+        return;
+      }
 
-    const result = loginWithCredentials("nargiza@ishbor.uz", "demo1234", remember);
+      applyServerSession(result.session);
+      resetActiveRoleOnLogin(result.session.user);
 
-    if (result.ok) {
-
-      toast.success("Google orqali kirdingiz");
+      toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
 
       if (redirectTo) {
-
         window.location.href = redirectTo;
-
         return;
-
       }
 
       navigate({ to: postLoginPath(result.session.user) });
-
+    } catch {
+      setError("Nimadir xato ketdi. Qayta urinib ko'ring.");
+    } finally {
+      setLoading(false);
     }
-
   };
 
-
+  const handleGoogle = async () => {
+    setLoading(true);
+    try {
+      const result = await loginSession({
+        data: { email: "nargiza@ishbor.uz", password: "demo1234", remember },
+      });
+      if (!result.ok) return;
+      applyServerSession(result.session);
+      resetActiveRoleOnLogin(result.session.user);
+      toast.success("Google orqali kirdingiz");
+      if (redirectTo) {
+        window.location.href = redirectTo;
+        return;
+      }
+      navigate({ to: postLoginPath(result.session.user) });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
 

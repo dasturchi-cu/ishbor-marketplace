@@ -157,7 +157,6 @@ const ROLE_SPECIFIC_PREFIXES: { prefix: string; role: WorkspaceRole; exactOnly?:
   { prefix: "/portfolio/create", role: "freelancer" },
   { prefix: "/portfolio/edit", role: "freelancer" },
   { prefix: "/agency/clients", role: "agency" },
-  { prefix: "/agencies/create", role: "agency" },
   { prefix: "/agencies/edit", role: "agency" },
 ];
 

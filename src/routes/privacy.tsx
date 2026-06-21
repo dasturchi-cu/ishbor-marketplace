@@ -15,10 +15,23 @@ function PrivacyPage() {
         <div className="eyebrow mb-2">Huquqiy</div>
         <h1 className="font-display text-3xl font-bold tracking-tight">Maxfiylik siyosati</h1>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-          Ishbor collects account information, project communications, and payment metadata to operate the
-          marketplace and protect escrow transactions. We do not sell personal data. Identity verification
-          documents are encrypted and used only for trust and compliance purposes.
+          Ishbor hisob ma'lumotlari, loyiha muloqotlari va to'lov metadatasini bozorni ishlatish hamda eskrou
+          tranzaksiyalarini himoya qilish uchun to'playdi. Shaxsiy ma'lumotlaringizni sotmaymiz. Shaxsni
+          tasdiqlash hujjatlari shifrlanadi va faqat ishonch hamda muvofiqlik maqsadida ishlatiladi.
         </p>
+        <ul className="mt-6 space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <li>
+            <strong className="text-foreground">Saqlash:</strong> ma'lumotlar xavfsiz serverlarda saqlanadi.
+          </li>
+          <li>
+            <strong className="text-foreground">Uchinchi tomon:</strong> to'lov provayderlari faqat tranzaksiya
+            uchun zarur ma'lumot oladi.
+          </li>
+          <li>
+            <strong className="text-foreground">Huquqlaringiz:</strong> ma'lumotlaringizni ko'rish yoki
+            o'chirishni so'rashingiz mumkin.
+          </li>
+        </ul>
         <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
           Ma'lumotlarni eksport qilish yoki o'chirishni so'rash uchun email yuboring{" "}
           <a href="mailto:privacy@ishbor.uz" className="font-medium text-primary hover:underline">

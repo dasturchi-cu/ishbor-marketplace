@@ -2,6 +2,7 @@ import { getSession } from "./auth";
 import { getReferralState } from "./referral-store";
 import { recordRevenueEntry } from "./revenue-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
+import { bumpStoreVersion, STORE_KEYS } from "./store-version";
 
 const STORAGE_KEY = "ishbor-credits-wallet";
 const listeners = new Set<() => void>();
@@ -29,6 +30,7 @@ let walletCache: Record<string, UserCreditsWallet> | null = null;
 const txSliceCache = new Map<string, CreditTransaction[]>();
 
 function notify() {
+  bumpStoreVersion(STORE_KEYS.credits);
   listeners.forEach((l) => l());
 }
 

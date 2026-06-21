@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useSyncExternalStore } from "react";
 import { Building2 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
@@ -127,9 +127,9 @@ function AgenciesPage() {
               title="Agentliklar topilmadi"
               description="Filtrlarni o'zgartiring yoki birinchi agentlikni yarating."
               action={
-                <a href="/agencies/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                <Link to="/agencies/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                   Agentlik yaratish
-                </a>
+                </Link>
               }
             />
           </div>

@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
 import { Sparkles, AlertTriangle, TrendingUp, Lightbulb } from "lucide-react";
 import { AdminShell } from "@/components/admin/shell";
 import { useAdminSearchOpen } from "@/components/admin/search";
@@ -7,6 +6,8 @@ import { computeFounderAiInsights } from "@/lib/ai-insights-store";
 import { subscribeRevenue } from "@/lib/revenue-store";
 import { subscribeAnalyticsEvents } from "@/lib/analytics-events-store";
 import { subscribeAgencies } from "@/lib/agency-store";
+import { useStoreVersion } from "@/hooks/use-store-version";
+import { STORE_KEYS } from "@/lib/store-version";
 
 export const Route = createFileRoute("/admin/ai")({
   head: () => ({ meta: [{ title: "AI Markaz — Ishbor Admin" }] }),
@@ -21,9 +22,9 @@ function severityColor(s: "opportunity" | "warning" | "critical") {
 
 function AdminAiCenterPage() {
   const { onSearchOpen } = useAdminSearchOpen();
-  useSyncExternalStore(subscribeRevenue, () => null, () => null);
-  useSyncExternalStore(subscribeAnalyticsEvents, () => null, () => null);
-  useSyncExternalStore(subscribeAgencies, () => null, () => null);
+  useStoreVersion(STORE_KEYS.revenue, subscribeRevenue);
+  useStoreVersion(STORE_KEYS.analyticsEvents, subscribeAnalyticsEvents);
+  useStoreVersion(STORE_KEYS.agencies, subscribeAgencies);
   const ai = computeFounderAiInsights(30);
 
   return (

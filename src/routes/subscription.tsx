@@ -22,8 +22,6 @@ import {
 
   getPlan,
 
-  getProposalUsage,
-
   subscribeSubscriptions,
 
   upgradePlan,
@@ -41,6 +39,7 @@ import {
 import { getCreditBalance, getCreditTransactions, subscribeCredits } from "@/lib/credits-store";
 
 import { ProBadge, EliteBadge } from "@/components/monetization/upsell-banner";
+import { PlanUsageSummary } from "@/components/monetization/plan-usage-summary";
 
 
 
@@ -125,11 +124,7 @@ function SubscriptionPage() {
 
 
   const sub = getSubscription(user.id);
-
   const plan = getPlan(user.id);
-
-  const usage = getProposalUsage(user.id);
-
   const balance = getCreditBalance(user.id);
 
   const txs = getCreditTransactions(user.id, 10);
@@ -244,37 +239,10 @@ function SubscriptionPage() {
 
           </div>
 
-
-
-          {usage.limit !== null && (
-
-            <div className="mt-4 rounded-lg bg-secondary/50 p-3">
-
-              <div className="text-xs text-muted-foreground">Oylik takliflar</div>
-
-              <div className="mt-1 font-mono text-lg font-semibold">
-
-                {usage.used} / {usage.limit}
-
-              </div>
-
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-border">
-
-                <div
-
-                  className="h-full rounded-full bg-primary"
-
-                  style={{ width: `${Math.min(100, (usage.used / usage.limit) * 100)}%` }}
-
-                />
-
-              </div>
-
-            </div>
-
-          )}
-
-
+          <div className="mt-5 border-t border-border pt-5">
+            <p className="mb-3 text-xs font-semibold text-muted-foreground">Oylik limitlar</p>
+            <PlanUsageSummary userId={user.id} variant="inline" className="border-0 pt-0" showUpgradeHint={plan.id === "free"} />
+          </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
 

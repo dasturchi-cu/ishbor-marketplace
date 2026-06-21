@@ -2,6 +2,7 @@ import { getSession } from "./auth";
 import { recordRevenueEntry } from "./revenue-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
 import { addNotification } from "./notifications-store";
+import { bumpStoreVersion, STORE_KEYS } from "./store-version";
 
 const STORAGE_KEY = "ishbor-subscriptions";
 const USAGE_KEY = "ishbor-subscription-usage";
@@ -85,6 +86,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
 type MonthlyUsage = { month: string; proposals: number };
 
 function notify() {
+  bumpStoreVersion(STORE_KEYS.subscriptions);
   listeners.forEach((l) => l());
 }
 

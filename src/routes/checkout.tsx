@@ -350,7 +350,8 @@ function CheckoutPage() {
             steps={presentation.flowSteps}
             currentStep="order"
             nextHint={presentation.confirmedHint}
-            className="mt-8 w-full text-left shadow-[0_8px_32px_-16px_oklch(0.546_0.185_257/0.12)]"
+            variant="compact"
+            className="mt-8 w-full text-left"
           />
         </div>
         <SiteFooter />
@@ -404,7 +405,8 @@ function CheckoutPage() {
             steps={presentation.flowSteps}
             currentStep={presentation.flowStep}
             nextHint={presentation.reviewHint}
-            className="mb-0 rounded-none border-0 bg-transparent shadow-none"
+            variant="compact"
+            className="mb-4"
           />
           <div className="border-t border-border px-3 py-3 sm:px-4">
             <CheckoutStepper step={step} />

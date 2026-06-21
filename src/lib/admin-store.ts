@@ -11,7 +11,10 @@ export type AuditEntry = {
   target?: string;
 };
 
-let auditLog: AuditEntry[] = [
+const STORAGE_KEY = "ishbor-audit-log";
+const MAX_ENTRIES = 200;
+
+const SEED: AuditEntry[] = [
   { id: "al1", who: "Sardor M.", what: "Nargiza Akhmedova tasdiqlashini tasdiqladi", when: "2 daqiqa oldin", category: "admin", target: "f1" },
   { id: "al2", who: "Tizim", what: "Eskrou to'ldirildi — Fintech App Redesign uchun $6,000", when: "12 daqiqa oldin", category: "escrow", target: "ew1" },
   { id: "al3", who: "Aisha K.", what: "Bosqich mablag'lari chiqarildi — Brand Identity $400", when: "1 soat oldin", category: "escrow", target: "ew2" },
@@ -23,9 +26,31 @@ let auditLog: AuditEntry[] = [
 ];
 
 const listeners = new Set<() => void>();
+let auditLog: AuditEntry[] | null = null;
 
 function notify() {
   listeners.forEach((fn) => fn());
+}
+
+function readPersisted(): AuditEntry[] {
+  if (typeof window === "undefined") return [...SEED];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as AuditEntry[];
+  } catch {
+    /* fall through */
+  }
+  return [...SEED];
+}
+
+function writePersisted(entries: AuditEntry[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_ENTRIES)));
+}
+
+function getLog(): AuditEntry[] {
+  if (!auditLog) auditLog = readPersisted();
+  return auditLog;
 }
 
 export function subscribeAudit(fn: () => void) {
@@ -34,7 +59,7 @@ export function subscribeAudit(fn: () => void) {
 }
 
 export function getAuditLog(): AuditEntry[] {
-  return [...auditLog];
+  return [...getLog()];
 }
 
 export function addAuditEntry(entry: Omit<AuditEntry, "id" | "when">) {
@@ -43,7 +68,8 @@ export function addAuditEntry(entry: Omit<AuditEntry, "id" | "when">) {
     id: `al-${Date.now()}`,
     when: "Hozirgina",
   };
-  auditLog = [newEntry, ...auditLog].slice(0, 200);
+  auditLog = [newEntry, ...getLog()].slice(0, MAX_ENTRIES);
+  writePersisted(auditLog);
   notify();
   return newEntry;
 }

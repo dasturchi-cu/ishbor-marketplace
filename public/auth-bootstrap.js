@@ -34,7 +34,7 @@
       "/my-services", "/services/create", "/applications", "/freelancers/manage",
       "/analytics/freelancer", "/dashboard/freelancer", "/portfolio/create", "/portfolio/edit", "/promotions",
     ];
-    var agencyOnly = ["/dashboard/agency", "/agency", "/agencies/create", "/agencies/edit"];
+    var agencyOnly = ["/dashboard/agency", "/agency", "/agencies/edit"];
     var dash =
       role === "freelancer" ? "/dashboard/freelancer" : role === "agency" ? "/dashboard/agency" : "/dashboard";
 

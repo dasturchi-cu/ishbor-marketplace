@@ -1,5 +1,6 @@
 import type { Order } from "./mock-data";
 import { orders as mockOrders } from "./mock-data";
+import { persistRead, persistWrite } from "./store-persist";
 import { recordConversionEvent } from "./conversion-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
 import { getEscrowByOrderId, releaseEscrowMilestone } from "./escrow-store";
@@ -29,17 +30,12 @@ export function subscribeOrders(listener: () => void) {
 
 function readStored(): Order[] {
   if (typeof window === "undefined") return EMPTY_ORDERS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Order[]) : EMPTY_ORDERS;
-  } catch {
-    return EMPTY_ORDERS;
-  }
+  return persistRead(STORAGE_KEY, EMPTY_ORDERS);
 }
 
 function writeStored(orders: Order[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+  persistWrite(STORAGE_KEY, orders);
 }
 
 function buildMerged(): Order[] {

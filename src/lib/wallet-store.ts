@@ -1,6 +1,7 @@
 import { transactions as seedTransactions } from "./mock-data";
 import { getAllEscrowWorkflows } from "./escrow-store";
 import { getSession } from "./auth";
+import { persistRead, persistWrite } from "./store-persist";
 
 const STORAGE_KEY = "ishbor-wallet";
 const listeners = new Set<() => void>();
@@ -49,17 +50,12 @@ export function subscribeWallet(listener: () => void) {
 
 function readAll(): Record<string, UserWallet> {
   if (typeof window === "undefined") return {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, UserWallet>) : {};
-  } catch {
-    return {};
-  }
+  return persistRead(STORAGE_KEY, {});
 }
 
 function writeAll(data: Record<string, UserWallet>) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  persistWrite(STORAGE_KEY, data);
 }
 
 function today() {

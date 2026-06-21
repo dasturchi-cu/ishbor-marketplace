@@ -23,9 +23,17 @@ export function ConversionFlowBanner({
   nextHint,
   className,
   variant = "default",
-}: ConversionFlowProps & { variant?: "default" | "sidebar" }) {
+}: ConversionFlowProps & { variant?: "default" | "sidebar" | "compact" }) {
   const currentIndex = steps.findIndex((s) => s.key === currentStep);
   const nextStep = steps[Math.min(currentIndex + 1, steps.length - 1)];
+
+  if (variant === "compact") {
+    return (
+      <p className={cn("text-sm leading-relaxed text-muted-foreground", className)}>
+        {nextHint}
+      </p>
+    );
+  }
 
   if (variant === "sidebar") {
     return (

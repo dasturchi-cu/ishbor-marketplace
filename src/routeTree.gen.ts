@@ -15,8 +15,10 @@ import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SubscriptionRouteImport } from './routes/subscription'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as RevenueRouteImport } from './routes/revenue'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -34,6 +36,7 @@ import { Route as MyServicesRouteImport } from './routes/my-services'
 import { Route as MyProjectsRouteImport } from './routes/my-projects'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as FreelancersRouteImport } from './routes/freelancers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EscrowRouteImport } from './routes/escrow'
@@ -146,6 +149,11 @@ const SubscriptionRoute = SubscriptionRouteImport.update({
   path: '/subscription',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -154,6 +162,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const ServicesRoute = ServicesRouteImport.update({
   id: '/services',
   path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SavedRoute = SavedRouteImport.update({
@@ -239,6 +252,11 @@ const MessagesRoute = MessagesRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FreelancersRoute = FreelancersRouteImport.update({
@@ -659,6 +677,7 @@ export interface FileRoutesByFullPath {
   '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/my-projects': typeof MyProjectsRoute
@@ -676,8 +695,10 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/revenue': typeof RevenueRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
   '/subscription': typeof SubscriptionRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -760,6 +781,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AnalyticsRouteWithChildren
   '/checkout': typeof CheckoutRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/my-projects': typeof MyProjectsRoute
@@ -773,7 +795,9 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/revenue': typeof RevenueRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
   '/subscription': typeof SubscriptionRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -862,6 +886,7 @@ export interface FileRoutesById {
   '/escrow': typeof EscrowRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/freelancers': typeof FreelancersRouteWithChildren
+  '/help': typeof HelpRoute
   '/login': typeof LoginRoute
   '/messages': typeof MessagesRoute
   '/my-projects': typeof MyProjectsRoute
@@ -879,8 +904,10 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/revenue': typeof RevenueRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/services': typeof ServicesRouteWithChildren
   '/settings': typeof SettingsRoute
+  '/status': typeof StatusRoute
   '/subscription': typeof SubscriptionRoute
   '/terms': typeof TermsRoute
   '/verify-email': typeof VerifyEmailRoute
@@ -972,6 +999,7 @@ export interface FileRouteTypes {
     | '/escrow'
     | '/forgot-password'
     | '/freelancers'
+    | '/help'
     | '/login'
     | '/messages'
     | '/my-projects'
@@ -989,8 +1017,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/revenue'
     | '/saved'
+    | '/search'
     | '/services'
     | '/settings'
+    | '/status'
     | '/subscription'
     | '/terms'
     | '/verify-email'
@@ -1073,6 +1103,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/checkout'
     | '/forgot-password'
+    | '/help'
     | '/login'
     | '/messages'
     | '/my-projects'
@@ -1086,7 +1117,9 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/revenue'
     | '/saved'
+    | '/search'
     | '/settings'
+    | '/status'
     | '/subscription'
     | '/terms'
     | '/verify-email'
@@ -1174,6 +1207,7 @@ export interface FileRouteTypes {
     | '/escrow'
     | '/forgot-password'
     | '/freelancers'
+    | '/help'
     | '/login'
     | '/messages'
     | '/my-projects'
@@ -1191,8 +1225,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/revenue'
     | '/saved'
+    | '/search'
     | '/services'
     | '/settings'
+    | '/status'
     | '/subscription'
     | '/terms'
     | '/verify-email'
@@ -1283,6 +1319,7 @@ export interface RootRouteChildren {
   EscrowRoute: typeof EscrowRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FreelancersRoute: typeof FreelancersRouteWithChildren
+  HelpRoute: typeof HelpRoute
   LoginRoute: typeof LoginRoute
   MessagesRoute: typeof MessagesRoute
   MyProjectsRoute: typeof MyProjectsRoute
@@ -1300,8 +1337,10 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   RevenueRoute: typeof RevenueRoute
   SavedRoute: typeof SavedRoute
+  SearchRoute: typeof SearchRoute
   ServicesRoute: typeof ServicesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
+  StatusRoute: typeof StatusRoute
   SubscriptionRoute: typeof SubscriptionRoute
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
@@ -1357,6 +1396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SubscriptionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -1369,6 +1415,13 @@ declare module '@tanstack/react-router' {
       path: '/services'
       fullPath: '/services'
       preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/saved': {
@@ -1488,6 +1541,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/freelancers': {
@@ -2350,6 +2410,7 @@ const rootRouteChildren: RootRouteChildren = {
   EscrowRoute: EscrowRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   FreelancersRoute: FreelancersRouteWithChildren,
+  HelpRoute: HelpRoute,
   LoginRoute: LoginRoute,
   MessagesRoute: MessagesRoute,
   MyProjectsRoute: MyProjectsRoute,
@@ -2367,8 +2428,10 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   RevenueRoute: RevenueRoute,
   SavedRoute: SavedRoute,
+  SearchRoute: SearchRoute,
   ServicesRoute: ServicesRouteWithChildren,
   SettingsRoute: SettingsRoute,
+  StatusRoute: StatusRoute,
   SubscriptionRoute: SubscriptionRoute,
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,

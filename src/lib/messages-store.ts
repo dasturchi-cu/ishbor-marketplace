@@ -1,5 +1,6 @@
 import { messages as seedConversations } from "./mock-data";
 import { getSession } from "./auth";
+import { persistRead, persistWrite } from "./store-persist";
 import { recordIncomingMessage, recordOutgoingReply } from "./response-metrics-store";
 
 const STORAGE_PREFIX = "ishbor-messages";
@@ -99,23 +100,19 @@ export function subscribeMessages(listener: () => void) {
 function readState(userId?: string): MessagesState | null {
   if (typeof window === "undefined") return null;
   const key = storageKey(userId);
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw) as MessagesState;
-    const legacy = localStorage.getItem(STORAGE_PREFIX);
-    if (legacy && userId) {
-      localStorage.setItem(key, legacy);
-      return JSON.parse(legacy) as MessagesState;
-    }
-    return null;
-  } catch {
-    return null;
+  const stored = persistRead<MessagesState | null>(key, null);
+  if (stored) return stored;
+  const legacy = persistRead<MessagesState | null>(STORAGE_PREFIX, null);
+  if (legacy && userId) {
+    persistWrite(key, legacy);
+    return legacy;
   }
+  return null;
 }
 
 function writeState(state: MessagesState, userId?: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(storageKey(userId), JSON.stringify(state));
+  persistWrite(storageKey(userId), state);
 }
 
 export function getMessagesState(): MessagesState {

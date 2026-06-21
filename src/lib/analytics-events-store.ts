@@ -1,4 +1,5 @@
 import { getSession } from "./auth";
+import { bumpStoreVersion, STORE_KEYS } from "./store-version";
 
 const STORAGE_KEY = "ishbor-analytics-events";
 const listeners = new Set<() => void>();
@@ -52,6 +53,7 @@ const distinctRecentCache = new Map<string, DistinctAnalyticsEvent[]>();
 function notify() {
   cache = null;
   distinctRecentCache.clear();
+  bumpStoreVersion(STORE_KEYS.analyticsEvents);
   listeners.forEach((l) => l());
 }
 

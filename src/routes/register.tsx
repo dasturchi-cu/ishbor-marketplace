@@ -7,6 +7,7 @@ import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/password-strength";
 import { saveOnboardingState, type UserType } from "@/lib/auth-constants";
+import { setPendingRegistrationPassword } from "@/lib/registration-store";
 import { loginWithCredentials } from "@/lib/auth";
 import { applyReferralCode } from "@/lib/referral-store";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ function RegisterPage() {
     if (!canSubmit) return;
     setLoading(true);
     saveOnboardingState({ userType, email, fullName: name });
+    setPendingRegistrationPassword(password);
     if (ref) {
       sessionStorage.setItem("ishbor-pending-ref", ref);
     }

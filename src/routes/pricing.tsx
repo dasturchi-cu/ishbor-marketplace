@@ -1,12 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSyncExternalStore } from "react";
 import { Check, Sparkles, ChevronLeft, ArrowRight, CreditCard, Building2, Bot } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { ConversionFlowBanner } from "@/components/site/conversion-flow";
+import { PlanUsageSummary } from "@/components/monetization/plan-usage-summary";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { getActiveDashboardPath } from "@/lib/active-role-store";
-import { PLANS, getSubscription, type PlanId } from "@/lib/subscription-store";
+import { PLANS, getSubscription, getProposalUsage, subscribeSubscriptions, type PlanId } from "@/lib/subscription-store";
+import { subscribeServices, getMyPublishedServices } from "@/lib/services-store";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({ meta: [{ title: "Narxlar — Ishbor" }] }),
@@ -84,6 +87,17 @@ function PricingPage() {
   const backLabel = isAuthenticated ? "Ish maydoniga qaytish" : "Bosh sahifa";
   const next = nextStepCopy(currentPlan, isAuthenticated);
 
+  useSyncExternalStore(
+    subscribeSubscriptions,
+    () => (user ? getProposalUsage(user.id).used : 0),
+    () => 0,
+  );
+  useSyncExternalStore(
+    subscribeServices,
+    () => (user ? getMyPublishedServices(user.id).length : 0),
+    () => 0,
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
@@ -105,7 +119,8 @@ function PricingPage() {
           steps={PRICING_FLOW}
           currentStep="compare"
           nextHint={next.hint}
-          className="mb-8"
+          variant="compact"
+          className="mb-6"
         />
 
         <div className="mb-10 text-center">
@@ -117,14 +132,26 @@ function PricingPage() {
         </div>
 
         <div className="mb-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <Link
-            to={next.primaryTo}
-            search={next.primarySearch}
-            className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-90 focus-ring sm:w-auto"
-          >
-            {next.primaryLabel}
-            <ArrowRight className="size-4" />
-          </Link>
+          {(currentPlan === "free" || !isAuthenticated) && (
+            <Link
+              to={next.primaryTo}
+              search={next.primarySearch}
+              className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-90 focus-ring sm:w-auto"
+            >
+              {next.primaryLabel}
+              <ArrowRight className="size-4" />
+            </Link>
+          )}
+          {currentPlan === "pro" && isAuthenticated && (
+            <Link
+              to="/subscription"
+              search={{ plan: "elite" }}
+              className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-90 focus-ring sm:w-auto"
+            >
+              Elite ga o&apos;tish
+              <ArrowRight className="size-4" />
+            </Link>
+          )}
           <Link
             to={backTo}
             className="touch-target inline-flex w-full items-center justify-center rounded-xl border border-border px-6 py-3 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:w-auto"
@@ -132,6 +159,10 @@ function PricingPage() {
             {backLabel}
           </Link>
         </div>
+
+        {isAuthenticated && user && (
+          <PlanUsageSummary userId={user.id} planId={currentPlan} className="mb-6" />
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {paidPlans.map((id) => {

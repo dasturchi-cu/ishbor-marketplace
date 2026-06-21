@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { Sparkles, TrendingUp, Eye, Zap } from "lucide-react";
+import { Eye, Zap } from "lucide-react";
+import { SimpleStatCard } from "@/components/site/simple-stat-card";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireRole } from "@/lib/guards";
@@ -99,10 +100,10 @@ function PromotionsPage() {
     >
       <UpsellBanner context="promotions" />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <StatCard icon={Sparkles} label="Ajratilgan xaridlar" value={String(performance.totalListings)} sub={`${performance.activeListings} faol`} />
-        <StatCard icon={TrendingUp} label="Kredit sarflangan" value={`${performance.creditsSpent.toLocaleString()} UZS`} sub="30 kun" />
-        <StatCard icon={Eye} label="Balans" value={`${balance.toLocaleString()} UZS`} sub={discount > 0 ? `${Math.round(discount * 100)}% chegirma` : "Ajratilgan ro'yxat uchun"} />
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <SimpleStatCard label="Ajratilgan xaridlar" value={String(performance.totalListings)} sub={`${performance.activeListings} faol`} />
+        <SimpleStatCard label="Kredit sarflangan" value={`${performance.creditsSpent.toLocaleString()} UZS`} sub="30 kun" />
+        <SimpleStatCard label="Balans" value={`${balance.toLocaleString()} UZS`} sub={discount > 0 ? `${Math.round(discount * 100)}% chegirma` : "Ajratilgan ro'yxat uchun"} />
       </div>
 
       <section className="mt-8">
@@ -202,17 +203,6 @@ function PromotionsPage() {
         )}
       </section>
     </WorkspaceShell>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Sparkles; label: string; value: string; sub: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <Icon className="size-4 text-primary" />
-      <div className="mt-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className="font-display mt-1 text-xl font-bold">{value}</div>
-      <div className="text-xs text-muted-foreground">{sub}</div>
-    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { LoadingSpinner } from "@/components/site/feedback";
@@ -36,13 +36,13 @@ export const Route = createFileRoute("/services/$slug")({
   component: ServiceDetail,
 });
 
-function resolveService(slug: string) {
-  const stored = getServiceBySlug(slug);
-  const raw = stored ?? services.find((x) => x.slug === slug);
+function resolveService(slug: string, stored?: ReturnType<typeof getServiceBySlug>) {
+  const storedService = stored ?? getServiceBySlug(slug);
+  const raw = storedService ?? services.find((x) => x.slug === slug);
   if (!raw) return null;
   const session = getSession();
-  const status = stored?.status ?? "published";
-  const isOwner = !!(session && stored?.ownerUserId === session.user.id);
+  const status = storedService?.status ?? "published";
+  const isOwner = !!(session && storedService?.ownerUserId === session.user.id);
   if (status !== "published" && !isOwner) return null;
   return {
     service: applyLiveServiceMetrics(enrichService(raw)),
@@ -54,11 +54,15 @@ function resolveService(slug: string) {
 function ServiceDetail() {
   const { slug } = Route.useParams();
   const hydrated = useClientHydrated();
-  const data = useSyncExternalStore(
+  const storedService = useSyncExternalStore(
     subscribeServices,
-    () => (hydrated ? resolveService(slug) : undefined),
-    () => undefined,
+    () => getServiceBySlug(slug),
+    () => services.find((x) => x.slug === slug),
   );
+  const data = useMemo(() => {
+    if (!hydrated) return undefined;
+    return resolveService(slug, storedService);
+  }, [hydrated, slug, storedService]);
   const { user } = useAuth();
 
   if (!hydrated || data === undefined) {
@@ -98,7 +102,10 @@ function ServiceDetailContent({
   similarServices: ReturnType<typeof getSimilarServices>;
   user: ReturnType<typeof useAuth>["user"];
 }) {
-  const defaultPkg = service.packages.find((p) => p.popular)?.tier.toLowerCase() ?? "premium";
+  const defaultPkg =
+    service.packages.find((p) => p.popular)?.tier.toLowerCase() ??
+    service.packages[0]?.tier.toLowerCase() ??
+    "essential";
   const isOwner = user?.username === service.sellerUsername;
 
   useEffect(() => {
@@ -312,7 +319,7 @@ function ServiceDetailContent({
               steps={SERVICE_ORDER_FLOW}
               currentStep="service"
               nextHint="Paketni tanlang va eskrou himoyasi bilan buyurtma bering."
-              variant="sidebar"
+              variant="compact"
             />
 
             {isOwner && (
