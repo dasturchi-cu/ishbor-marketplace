@@ -199,17 +199,22 @@ export function getClientChartData(_userId: string, range: 7 | 30 | 90) {
 
 export function getClientSpendChart(user: AuthUser, months = 6) {
   const clientSlug = user.companySlug;
-  const orders = readStoredOrders().filter((o) => o.status === "completed" && o.clientSlug === clientSlug);
-  const monthNames = ["Yan", "Fev", "Mar", "Aprel", "May", "Iyun", "Iyul", "Avg", "Sen", "Okt", "Noy", "Dek"];
+  const clientName = user.company ?? user.fullName;
+  const orders = readStoredOrders().filter(
+    (o) =>
+      (o.clientSlug === clientSlug || o.client === clientName) &&
+      o.status !== "cancelled" &&
+      (o.status === "completed" || o.escrowFunded),
+  );
+  const monthNames = ["Yan", "Fev", "Mar", "Apr", "May", "Iyun", "Iyul", "Avg", "Sen", "Okt", "Noy", "Dek"];
   const now = new Date();
   const result: { month: string; value: number }[] = [];
   for (let i = months - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const total = orders
       .filter((o) => {
-        if (!o.completedAt) return false;
-        const cd = new Date(o.completedAt);
-        return cd.getMonth() === d.getMonth() && cd.getFullYear() === d.getFullYear();
+        const bucket = o.completedAt ? new Date(o.completedAt) : new Date();
+        return bucket.getMonth() === d.getMonth() && bucket.getFullYear() === d.getFullYear();
       })
       .reduce((s, o) => s + o.amount, 0);
     result.push({ month: monthNames[d.getMonth()]!, value: total });

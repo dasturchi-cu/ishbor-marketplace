@@ -80,8 +80,11 @@ export function LiveActivityFeed() {
           id: e.id,
           text: formatActivity(e),
           time: timeAgo(e.timestamp),
+          live: true,
         }))
-      : FALLBACK;
+      : FALLBACK.map((f) => ({ ...f, live: false }));
+
+  const hasLive = events.length > 0;
 
   return (
     <section className="border-b border-border bg-surface/20 py-12 sm:py-16">
@@ -98,7 +101,10 @@ export function LiveActivityFeed() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <div key={item.id} className="flex items-start gap-3 rounded-xl border border-border bg-card p-4">
+            <div
+              key={item.id}
+              className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20 hover:shadow-sm"
+            >
               <div className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Activity className="size-4" />
               </div>
@@ -110,10 +116,21 @@ export function LiveActivityFeed() {
           ))}
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Haqiqiy tranzaksiyalar platformada amalga oshganda bu yerda ko'rinadi.{" "}
-          <Link to="/register" className="font-medium text-primary hover:underline">
-            Birinchi bo'ling
-          </Link>
+          {hasLive ? (
+            <>
+              Haqiqiy platforma faolligi.{" "}
+              <Link to="/projects" className="font-medium text-primary hover:underline">
+                Loyihalarni ko&apos;rish
+              </Link>
+            </>
+          ) : (
+            <>
+              Namuna faollik — ro&apos;yxatdan o&apos;tganingizda haqiqiy tranzaksiyalar ko&apos;rinadi.{" "}
+              <Link to="/register" className="font-medium text-primary hover:underline">
+                Birinchi bo&apos;ling
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </section>

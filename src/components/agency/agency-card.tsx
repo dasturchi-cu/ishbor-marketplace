@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MapPin, Users, Star, TrendingUp, Shield } from "lucide-react";
 import { GradientAvatar } from "@/components/site/avatar";
+import { EscrowShield } from "@/components/site/trust";
 import { AgencyVerificationBadge } from "./agency-verification-badge";
 import type { Agency } from "@/lib/agency-types";
 import type { AgencyMetrics } from "@/lib/agency-metrics-store";
@@ -19,7 +20,7 @@ export function AgencyCard({ agency, metrics, rankingScore }: AgencyCardProps) {
     <Link
       to="/agencies/$slug"
       params={{ slug: agency.slug }}
-      className="group flex flex-col rounded-2xl border border-border bg-card p-5 transition-default hover:border-primary/25 hover:shadow-md"
+      className="group flex flex-col rounded-2xl border border-border bg-card p-5 transition-default hover-lift hover:border-primary/25 hover:shadow-md active:scale-[0.995]"
     >
       <div className="flex items-start gap-3">
         {agency.logo ? (
@@ -33,6 +34,7 @@ export function AgencyCard({ agency, metrics, rankingScore }: AgencyCardProps) {
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate font-semibold group-hover:text-primary">{agency.name}</h3>
             <AgencyVerificationBadge level={agency.verificationLevel} />
+            <EscrowShield size="sm" className="!px-1.5 !py-0 !text-[8px]" />
           </div>
           <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{agency.description}</p>
         </div>

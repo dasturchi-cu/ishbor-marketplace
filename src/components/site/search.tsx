@@ -54,7 +54,7 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="rounded-2xl border border-border bg-surface p-2 shadow-[0_20px_60px_-20px_oklch(0.546_0.185_257/0.10)]">
+      <div className="liquid-glass-panel rounded-2xl p-2 shadow-[0_20px_60px_-20px_oklch(0.546_0.185_257/0.10)]">
         <div className="mx-auto mb-1.5 flex w-full max-w-xs items-center gap-1 rounded-lg bg-secondary p-0.5 sm:max-w-none sm:w-fit">
           {modes.map((m) => (
             <button
@@ -98,7 +98,7 @@ export function UniversalSearch({ defaultMode = "services" as "services" | "free
               setQ(p.query);
               submit(p.query);
             }}
-            className="touch-target shrink-0 rounded-lg border border-border bg-surface px-2.5 text-xs transition-default hover:border-primary/20 hover:text-foreground focus-ring"
+            className="touch-target shrink-0 rounded-lg liquid-glass-chip px-2.5 text-xs transition-default hover:border-primary/20 hover:text-foreground focus-ring"
           >
             {p.label}
           </button>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Globe, Github, Link2, Linkedin, Send } from "lucide-react";
+import { ProfileVideoEditor } from "@/components/profile/profile-video-editor";
 import { ProfileCompletionCard } from "@/components/trust/profile-completion-card";
 import { ProfilePreviewPanel } from "@/components/settings/profile-preview-panel";
 import { RecentActivityList } from "@/components/settings/recent-activity-list";
@@ -128,6 +129,15 @@ export function AccountTab({
           </div>
         </div>
       </SettingsSection>
+
+      {activeRole === "freelancer" && (
+        <SettingsSection
+          title="Video tanishtiruv"
+          description="Profil sahifangizda ko'rinadigan qisqa video — ishonchni oshiradi"
+        >
+          <ProfileVideoEditor userId={user.id} hue={user.avatarHue} />
+        </SettingsSection>
+      )}
 
       <SettingsSection title="Ijtimoiy havolalar" description="Ishonch va portfolio uchun ixtiyoriy">
         <div className="grid gap-5 sm:grid-cols-2">

@@ -43,7 +43,7 @@ export function ServiceGallery({ images, hue }: { images: ServiceGalleryImage[];
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-xl border border-white/20 bg-black/35 text-white backdrop-blur-sm opacity-0 transition-default group-hover:opacity-100 focus-ring"
+          className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-xl border border-white/20 bg-black/55 text-white opacity-0 transition-default group-hover:opacity-100 focus-ring"
           aria-label="Galereyani kengaytirish"
         >
           <Maximize2 className="size-4" />
@@ -77,7 +77,7 @@ export function ServiceGallery({ images, hue }: { images: ServiceGalleryImage[];
         typeof document !== "undefined" &&
         createPortal(
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm sm:p-8"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 sm:p-8"
             role="dialog"
             aria-modal="true"
             aria-label="Galereya"

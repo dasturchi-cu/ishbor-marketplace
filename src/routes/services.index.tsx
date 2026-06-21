@@ -9,6 +9,7 @@ import { usePageReady } from "@/hooks/use-page-ready";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { MarketplacePulseMini } from "@/components/site/marketplace-pulse-mini";
 import { filterServices, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { categories } from "@/lib/mock-data";
 import { Link } from "@tanstack/react-router";
@@ -76,7 +77,7 @@ function ServicesPage() {
           <MarketplaceToolbar
             placeholder="Xizmatlarni qidirish…"
             q={search.q ?? ""}
-            sort={search.sort ?? "newest"}
+            sort={search.sort ?? "ranking_score"}
             activeCategory={search.category}
             activeFilter={search.filter}
             categories={categories.map((c) => ({ key: c.slug, label: c.name, count: c.count }))}
@@ -85,6 +86,7 @@ function ServicesPage() {
             resultLabel="xizmat"
             onSearchChange={setSearch}
           />
+          <MarketplacePulseMini />
         </div>
       </div>
 

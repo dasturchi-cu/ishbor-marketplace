@@ -17,6 +17,7 @@ export function WorkspaceGuidance({ user, hideNextAction, variant = "compact" }:
     return (
       <div className="mb-6 space-y-3">
         {!hideNextAction && <NextActionCard user={user} />}
+        <ProgressStrip user={user} />
         <SmartWarningStack user={user} limit={1} />
       </div>
     );

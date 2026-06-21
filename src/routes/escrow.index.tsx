@@ -5,6 +5,8 @@ import { Lock, ChevronRight, ClipboardList, ShieldCheck } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 
 import { EmptyState, InlineBanner } from "@/components/site/feedback";
+import { PrimaryLink, SecondaryLink } from "@/components/ux/action-buttons";
+import { ESCROW_NEXT_STEP } from "@/lib/ux-constants";
 
 import { escrowWorkflows } from "@/lib/mock-data";
 
@@ -53,33 +55,12 @@ function EscrowListPage() {
       {escrowWorkflows.length === 0 ? (
 
         <EmptyState
-
           icon={Lock}
-
           title="Eskrou shartnomalar yo'q"
-
           description="Frilanserni yollaganingizda mablag'lar eskrou orqali himoyalanadi. Buyurtma yaratilgandan keyin shartnomalar shu yerda ko'rinadi."
-
           action={
-
-            <div className="flex flex-wrap justify-center gap-2">
-
-              <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-
-                Loyiha joylash
-
-              </Link>
-
-              <Link to="/orders" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:border-primary/30">
-
-                Buyurtmalarni ko'rish
-
-              </Link>
-
-            </div>
-
+            <PrimaryLink to="/projects/create">Loyiha joylash</PrimaryLink>
           }
-
         />
 
       ) : (
@@ -113,10 +94,11 @@ function EscrowListPage() {
                 <div className="mt-1 text-xs text-muted-foreground">{ew.client} · {ew.freelancer}</div>
 
                 <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/8 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-primary">
-
                   <Lock className="size-3" /> {escrowStatusLabels[ew.status] ?? ew.status}
-
                 </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {ESCROW_NEXT_STEP[ew.status] ?? "Batafsil ma'lumot uchun oching"}
+                </p>
 
               </div>
 

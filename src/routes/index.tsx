@@ -29,6 +29,7 @@ import { getPublishedAgencies } from "@/lib/agency-store";
 import { computeAgencyMetrics } from "@/lib/agency-metrics-store";
 import { recordConversionEvent } from "@/lib/conversion-store";
 import { LiveActivityFeed } from "@/components/site/live-activity-feed";
+import { MarketplacePulse } from "@/components/site/marketplace-pulse";
 import { FeeTransparencySection } from "@/components/site/fee-transparency-section";
 import { getLandingStats } from "@/lib/landing-stats";
 import { getPublishedProjects, subscribeProjects } from "@/lib/projects-store";
@@ -208,7 +209,7 @@ function Landing() {
           }}
         />
         <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
-          <div className="font-mono mx-auto mb-5 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-foreground backdrop-blur-sm sm:text-[10px] sm:tracking-[0.2em]">
+          <div className="font-mono mx-auto mb-5 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-lg surface-panel px-3 py-1.5 text-[9px] uppercase tracking-[0.16em] text-foreground sm:text-[10px] sm:tracking-[0.2em]">
             <span className="size-1.5 rounded-full bg-primary animate-pulse-subtle" />
             Toshkent · Olmaota · Bishkek · Dushanbe — jonli
           </div>
@@ -266,12 +267,44 @@ function Landing() {
       <section className="border-b border-border bg-surface/30 py-12 sm:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-8 text-center">
-            <div className="eyebrow mb-2">Ishbor nima?</div>
+            <div className="eyebrow mb-2">Nega Ishbor?</div>
             <h2 className="font-display mx-auto max-w-2xl text-balance text-2xl font-bold tracking-tight sm:text-3xl">
-              Markaziy Osiyo uchun ishonchli freelance marketplace
+              Fiverr va Upwork emas — Markaziy Osiyo uchun maxsus marketplace
             </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              Global platformalar mintaqaviy to&apos;lov, eskrou va tilni qamrab olmaydi. Ishbor shu bo&apos;shliqni to&apos;ldiradi.
+            </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="overflow-x-auto rounded-xl border border-border bg-card">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-border bg-elevated/50">
+                  <th className="px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Xususiyat</th>
+                  <th className="px-4 py-3 text-left font-semibold text-primary">Ishbor</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Fiverr</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Upwork</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Mahalliy to'lov (Humo, Uzcard)", "✓", "—", "—"],
+                  ["Eskrou har tranzaksiyada", "✓", "Cheklangan", "Connect + fee"],
+                  ["O'zbek tilida UX", "✓", "—", "—"],
+                  ["Markaziy Osiyo talenti", "✓", "Global", "Global"],
+                  ["24 soat nizo hal qilish", "✓", "—", "Haftalar"],
+                  ["Shaxs tasdiqlash + ishonch balli", "✓", "Asosan reyting", "Asosan reyting"],
+                ].map(([feature, ishbor, fiverr, upwork]) => (
+                  <tr key={feature} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-medium">{feature}</td>
+                    <td className="px-4 py-3 font-semibold text-primary">{ishbor}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{fiverr}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{upwork}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 q: "Ishbor nima?",
@@ -474,7 +507,7 @@ function Landing() {
             ].map((f) => (
               <div
                 key={f.title}
-                className="flex items-start gap-3.5 rounded-xl border border-white/8 bg-white/4 p-4 backdrop-blur-sm"
+                className="flex items-start gap-3.5 rounded-xl border border-white/10 bg-white/8 p-4"
               >
                 <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/12 text-primary">
                   <f.icon className="size-4" />
@@ -631,6 +664,8 @@ function Landing() {
       </section>
 
       <LiveActivityFeed />
+
+      <MarketplacePulse />
 
       <section className="border-b border-border bg-primary/5 py-10">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 text-center sm:px-6 md:flex-row md:text-left">

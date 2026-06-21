@@ -4,6 +4,9 @@ import { Clock, ChevronRight, ClipboardList } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { EMPTY_STATE_CTA } from "@/lib/ux-constants";
 import { EmptyState } from "@/components/site/feedback";
 import type { Order } from "@/lib/mock-data";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,20 +76,15 @@ function OrdersPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
+        <StandardEmptyState
           icon={ClipboardList}
           title={`${current.emptyLabel} buyurtmalar yo'q`}
           description="Ish yollagan yoki bajarganingizda buyurtmalar shu yerda paydo bo'ladi."
-          benefit="Eskrou himoyasi bilan har bir to'lov xavfsiz."
           action={
             activeRole === "client" ? (
-              <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                Loyiha joylash
-              </Link>
+              <PrimaryLink to="/projects/create">{EMPTY_STATE_CTA.clientProject.label}</PrimaryLink>
             ) : (
-              <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                Ish topish
-              </Link>
+              <PrimaryLink to="/projects">{EMPTY_STATE_CTA.freelancerWork.label}</PrimaryLink>
             )
           }
         />

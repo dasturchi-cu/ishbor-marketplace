@@ -7,6 +7,7 @@ import { CardSkeleton, EmptyState } from "@/components/site/feedback";
 import { freelancers } from "@/lib/mock-data";
 import { usePageReady } from "@/hooks/use-page-ready";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { MarketplacePulseMini } from "@/components/site/marketplace-pulse-mini";
 import { filterFreelancers, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -70,13 +71,14 @@ function FreelancersPage() {
           <MarketplaceToolbar
             placeholder="Iste'dod qidirish…"
             q={search.q ?? ""}
-            sort={search.sort ?? "newest"}
+            sort={search.sort ?? "ranking_score"}
             activeFilter={search.filter}
             chips={filterChips}
             resultCount={filtered.length}
             resultLabel="frilanser"
             onSearchChange={setSearch}
           />
+          <MarketplacePulseMini />
         </div>
       </div>
 

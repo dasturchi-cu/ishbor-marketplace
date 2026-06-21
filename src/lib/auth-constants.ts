@@ -14,13 +14,19 @@ export type AvailabilitySettings = {
   responseTime: string;
 };
 
+export type OnboardingPortfolioItem = {
+  title: string;
+  category: string;
+  coverImage?: string;
+};
+
 export type OnboardingState = {
   userType: UserType;
   email: string;
   fullName: string;
   skills: string[];
   categories: string[];
-  portfolio: { title: string; category: string }[];
+  portfolio: OnboardingPortfolioItem[];
   languages: LanguageEntry[];
   availability: AvailabilitySettings;
   company: string;

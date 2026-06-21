@@ -75,7 +75,10 @@ function YaratishPortfolioForm({
       return;
     }
     const item = savePortfolioDraft(input, ctx);
-    actionFeedback.draftSaved("Qoralama");
+    actionFeedback.draftSaved("Portfel qoralamasi", {
+      listHint: "Portfel → Qoralama",
+      onViewList: () => navigate({ to: "/portfolio", search: { tab: "draft" } }),
+    });
     navigate({ to: "/portfolio/edit/$slug", params: { slug: item.slug } });
   };
 

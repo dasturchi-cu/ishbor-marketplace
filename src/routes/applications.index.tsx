@@ -5,7 +5,11 @@ import { ChevronRight, Briefcase, Archive } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { ApplicationStatusBadge } from "@/components/site/trust";
-import { EmptyState, confirmDestructive } from "@/components/site/feedback";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { WaitingState } from "@/components/ux/waiting-state";
+import { APPLICATION_WAITING, EMPTY_STATE_CTA } from "@/lib/ux-constants";
+import { confirmDestructive } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireRole } from "@/lib/guards";
 import {
@@ -89,20 +93,17 @@ function ApplicationsPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
+        <StandardEmptyState
           icon={Briefcase}
           title={`${tabEmptyLabels[tab]} arizalar yo'q`}
           description={
             tab === "archived"
               ? "Rad etilgan arizalarni arxivlaganingizda ular shu yerda ko'rinadi."
-              : "Boshlash uchun loyihalarni ko'rib chiqing va taklif yuboring."
+              : EMPTY_STATE_CTA.freelancerWork.description
           }
-          benefit={tab !== "archived" ? "AI taklif yordamchisi professional matn va narx tavsiya qiladi." : undefined}
           action={
             tab === "archived" ? undefined : (
-              <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90">
-                Loyihalarni ko'rish
-              </Link>
+              <PrimaryLink to="/projects">{EMPTY_STATE_CTA.freelancerWork.label}</PrimaryLink>
             )
           }
         />
@@ -150,6 +151,15 @@ function ApplicationRow({ app, showArchive }: { app: Application; showArchive?: 
             <ApplicationStatusBadge status={app.status} />
             <span className="font-mono text-[10px] text-muted-foreground">Yuborilgan: {app.submittedAgo}</span>
           </div>
+          {app.status === "pending" && (
+            <WaitingState
+              compact
+              title={APPLICATION_WAITING.title}
+              eta={APPLICATION_WAITING.eta}
+              hint={APPLICATION_WAITING.hint}
+              className="mt-2"
+            />
+          )}
           {app.projectSlug && (
             <span className="mt-2 inline-block text-xs font-medium text-primary">
               Loyihani ko'rish →

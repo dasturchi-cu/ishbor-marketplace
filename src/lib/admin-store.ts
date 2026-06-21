@@ -55,7 +55,9 @@ function getLog(): AuditEntry[] {
 
 export function subscribeAudit(fn: () => void) {
   listeners.add(fn);
-  return () => listeners.delete(fn);
+  return () => {
+    listeners.delete(fn);
+  };
 }
 
 export function getAuditLog(): AuditEntry[] {

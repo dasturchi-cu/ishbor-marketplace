@@ -2,7 +2,7 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 
 import { Search, Bell, MessageSquare, Menu, X, LogOut, Briefcase, Plus, LayoutDashboard, FolderOpen, FileText, Building2 } from "lucide-react";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, useCallback } from "react";
 
 import { Logo } from "./logo";
 import { getTotalUnread, subscribeMessages } from "@/lib/messages-store";
@@ -10,57 +10,18 @@ import { getUnreadCount, subscribeNotifications } from "@/lib/notifications-stor
 
 import { ThemeToggle } from "./theme";
 
-import { GradientAvatar } from "./avatar";
-
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { getActiveDashboardPath } from "@/lib/active-role-store";
 
 import type { AuthUser } from "@/lib/auth";
-
-function NavProfileLink({ user }: { user: AuthUser }) {
-  const { activeRole } = useActiveRole();
-  const avatar = (
-    <GradientAvatar name={user.fullName} hue={user.avatarHue} size={32} />
-  );
-
-  if (activeRole === "freelancer" && user.username) {
-    return (
-      <Link
-        to="/freelancers/$username"
-        params={{ username: user.username }}
-        className="touch-target ml-0.5 hidden sm:inline-flex"
-      >
-        {avatar}
-      </Link>
-    );
-  }
-
-  if (user.companySlug) {
-    return (
-      <Link
-        to="/clients/$company"
-        params={{ company: user.companySlug }}
-        className="touch-target ml-0.5 hidden sm:inline-flex"
-      >
-        {avatar}
-      </Link>
-    );
-  }
-
-  return (
-    <Link to="/profile" className="touch-target ml-0.5 hidden sm:inline-flex">
-      {avatar}
-    </Link>
-  );
-}
-
-
+import { SearchCommandPalette, useSearchCommandShortcut } from "./search-command";
+import { UserMenu } from "./user-menu";
 
 function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; isAuthenticated: boolean }) {
   const { activeRole } = useActiveRole();
   const secondary =
-    "touch-target hidden items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground transition-default hover:border-primary/20 focus-ring sm:inline-flex";
+    "touch-target hidden items-center gap-1.5 rounded-lg liquid-glass-chip px-3 text-sm font-medium text-foreground transition-default hover:border-primary/20 focus-ring sm:inline-flex";
   const primary =
     "touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring sm:px-4";
 
@@ -144,6 +105,10 @@ export function SiteNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const openSearch = useCallback(() => setSearchOpen(true), []);
+  useSearchCommandShortcut(openSearch);
 
   const [mobileQ, setMobileQ] = useState("");
 
@@ -183,7 +148,7 @@ export function SiteNav() {
 
   return (
 
-    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
+    <header className="liquid-glass sticky top-0 z-50 border-b">
 
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 overflow-x-clip px-3 sm:gap-4 sm:px-6">
 
@@ -237,8 +202,8 @@ export function SiteNav() {
 
           <button
             type="button"
-            onClick={() => goSearch("")}
-            className="touch-target hidden items-center gap-2 rounded-lg border border-border bg-surface px-3 text-xs text-muted-foreground transition-default hover:border-primary/20 hover:text-foreground sm:flex focus-ring"
+            onClick={openSearch}
+            className="touch-target liquid-glass-chip hidden items-center gap-2 rounded-lg px-3 text-xs text-muted-foreground transition-default hover:border-primary/20 hover:text-foreground sm:flex focus-ring"
             aria-label="Bozor qidiruvi"
           >
 
@@ -262,7 +227,7 @@ export function SiteNav() {
 
               <Link
                 to="/messages"
-                className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 transition-default hover:text-foreground focus-ring"
+                className="touch-target liquid-glass-chip relative inline-flex items-center justify-center rounded-lg text-foreground/70 transition-default hover:text-foreground focus-ring"
                 aria-label={msgUnread > 0 ? `Xabarlar, ${msgUnread} ta o'qilmagan` : "Xabarlar"}
               >
                 <MessageSquare className="size-4" />
@@ -273,7 +238,7 @@ export function SiteNav() {
 
               <Link
                 to="/notifications"
-                className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 transition-default hover:text-foreground focus-ring"
+                className="touch-target liquid-glass-chip relative inline-flex items-center justify-center rounded-lg text-foreground/70 transition-default hover:text-foreground focus-ring"
                 aria-label={notifUnread > 0 ? `Bildirishnomalar, ${notifUnread} ta o'qilmagan` : "Bildirishnomalar"}
               >
                 <Bell className="size-4" />
@@ -282,7 +247,7 @@ export function SiteNav() {
                 )}
               </Link>
 
-              <NavProfileLink user={user!} />
+              <UserMenu user={user!} />
 
             </>
 
@@ -292,10 +257,10 @@ export function SiteNav() {
 
               <Link
                 to={dashboardPath}
-                className={`touch-target hidden items-center gap-1.5 rounded-lg border px-2.5 transition-default focus-ring sm:inline-flex ${
+                className={`touch-target liquid-glass-chip hidden items-center gap-1.5 rounded-lg px-2.5 transition-default focus-ring sm:inline-flex ${
                   pathname.startsWith("/dashboard")
-                    ? "border-primary/30 bg-primary/10 text-primary"
-                    : "border-border bg-surface text-foreground/70 hover:border-primary/20 hover:text-foreground"
+                    ? "border-primary/30 !bg-primary/10 text-primary"
+                    : "text-foreground/70 hover:border-primary/20 hover:text-foreground"
                 }`}
                 aria-label="Boshqaruv paneli"
               >
@@ -307,7 +272,7 @@ export function SiteNav() {
 
               <Link
                 to="/messages"
-                className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 transition-default hover:text-foreground focus-ring"
+                className="touch-target liquid-glass-chip relative inline-flex items-center justify-center rounded-lg text-foreground/70 transition-default hover:text-foreground focus-ring"
                 aria-label={msgUnread > 0 ? `Xabarlar, ${msgUnread} ta o'qilmagan` : "Xabarlar"}
               >
                 <MessageSquare className="size-4" />
@@ -318,7 +283,7 @@ export function SiteNav() {
 
               <Link
                 to="/notifications"
-                className="touch-target relative inline-flex items-center justify-center rounded-lg border border-border bg-surface text-foreground/70 transition-default hover:text-foreground focus-ring"
+                className="touch-target liquid-glass-chip relative inline-flex items-center justify-center rounded-lg text-foreground/70 transition-default hover:text-foreground focus-ring"
                 aria-label={notifUnread > 0 ? `Bildirishnomalar, ${notifUnread} ta o'qilmagan` : "Bildirishnomalar"}
               >
                 <Bell className="size-4" />
@@ -327,7 +292,7 @@ export function SiteNav() {
                 )}
               </Link>
 
-              <NavProfileLink user={user!} />
+              <UserMenu user={user!} />
 
             </>
 
@@ -381,7 +346,7 @@ export function SiteNav() {
 
           <button
 
-            className="touch-target inline-flex items-center justify-center rounded-lg border border-border bg-surface md:hidden transition-default focus-ring"
+            className="touch-target liquid-glass-chip inline-flex items-center justify-center rounded-lg md:hidden transition-default focus-ring"
 
             onClick={() => setOpen((o) => !o)}
 
@@ -401,11 +366,11 @@ export function SiteNav() {
 
       {open && (
 
-        <div className="border-t border-border bg-background md:hidden">
+        <div className="liquid-glass border-t md:hidden">
 
           <div className="mx-auto max-w-7xl space-y-1 px-3 py-3">
 
-            <div className="mb-2 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2.5">
+            <div className="mb-2 flex items-center gap-2 rounded-lg liquid-glass-chip px-3 py-2.5">
 
               <Search className="size-4 shrink-0 text-muted-foreground" />
 
@@ -510,6 +475,7 @@ export function SiteNav() {
 
       )}
 
+      <SearchCommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
 
   );

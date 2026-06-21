@@ -4,7 +4,8 @@ import { Search as SearchIcon } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { FreelancerCard, ServiceCard, ProjectCard } from "@/components/site/cards";
-import { EmptyState } from "@/components/site/feedback";
+import { EmptyState, LoadingSpinner } from "@/components/site/feedback";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { freelancers, services, projects } from "@/lib/mock-data";
 import { getAllServices } from "@/lib/services-store";
 import { getPublishedProjects } from "@/lib/projects-store";
@@ -16,6 +17,7 @@ import {
   pickSearchRoute,
   type SortOption,
 } from "@/lib/marketplace";
+import { POPULAR_SEARCHES, SEARCH_TIPS } from "@/lib/search-suggestions";
 
 type SearchType = "all" | "services" | "freelancers" | "projects";
 
@@ -59,9 +61,13 @@ function SearchPage() {
   const { q = "", type = "all", sort = "ranking_score" } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [input, setInput] = useState(q);
+  const hydrated = useClientHydrated();
 
-  const allServices = useMemo(() => getAllServices(), []);
-  const allProjects = useMemo(() => getPublishedProjects(), []);
+  const allServices = useMemo(() => (hydrated ? getAllServices() : services), [hydrated]);
+  const allProjects = useMemo(
+    () => (hydrated ? getPublishedProjects() : projects.filter((p) => !p.status || p.status === "published")),
+    [hydrated],
+  );
 
   const params = { q, category: "", sort, filter: "" };
 
@@ -95,7 +101,7 @@ function SearchPage() {
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-border bg-card px-4 py-3">
+          <div className="flex flex-1 items-center gap-2 rounded-xl liquid-glass-panel px-4 py-3">
             <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
             <input
               value={input}
@@ -115,7 +121,7 @@ function SearchPage() {
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 mobile-scroll-x flex gap-2 pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -130,29 +136,78 @@ function SearchPage() {
           ))}
         </div>
 
-        {q && (
-          <p className="mt-4 font-mono text-xs text-muted-foreground">
-            &quot;{q}&quot; bo&apos;yicha {total} ta natija
+        {q && total > 0 && (
+          <p className="mt-4 rounded-lg border border-success/20 bg-success/5 px-4 py-2.5 text-sm text-foreground">
+            <span className="font-semibold">{total} ta natija</span>
+            <span className="text-muted-foreground">
+              {" "}— &quot;{q}&quot; bo&apos;yicha
+              {serviceResults.length > 0 && ` ${serviceResults.length} xizmat`}
+              {freelancerResults.length > 0 && ` · ${freelancerResults.length} mutaxassis`}
+              {projectResults.length > 0 && ` · ${projectResults.length} loyiha`}
+            </span>
           </p>
         )}
 
-        {!q ? (
-          <EmptyState
-            className="mt-10"
-            icon={SearchIcon}
-            title="Qidiruvni boshlang"
-            description="Masalan: Figma, fintech, mobil dizayn yoki Next.js"
-          />
+        {q && total === 0 && (
+          <p className="mt-4 font-mono text-xs text-muted-foreground">
+            &quot;{q}&quot; bo&apos;yicha natija topilmadi
+          </p>
+        )}
+
+        {q && !hydrated ? (
+          <div className="mt-10 flex justify-center" aria-busy="true" aria-label="Qidiruv natijalari yuklanmoqda">
+            <LoadingSpinner size="md" />
+          </div>
+        ) : !q ? (
+          <div className="mt-10 space-y-6">
+            <EmptyState
+              icon={SearchIcon}
+              title="Qidiruvni boshlang"
+              description="Kalit so'z, ko'nikma yoki loyiha nomi kiriting — biz eng mos natijalarni ko'rsatamiz."
+              benefit={SEARCH_TIPS[0]}
+            />
+            <div>
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Mashhur qidiruvlar</p>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_SEARCHES.map((s) => (
+                  <button
+                    key={s.label}
+                    type="button"
+                    onClick={() => {
+                      setInput(s.query);
+                      submit(s.query);
+                    }}
+                    className="touch-target rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-default hover:border-primary/25 hover:bg-primary/5 active:scale-[0.98]"
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         ) : total === 0 ? (
           <EmptyState
             className="mt-10"
             icon={SearchIcon}
             title="Natija topilmadi"
             description="Boshqa kalit so'z yoki kategoriya bilan urinib ko'ring."
+            benefit={SEARCH_TIPS[1]}
             action={
-              <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              <Link to="/projects" className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground active:scale-[0.98]">
                 Barcha loyihalar
               </Link>
+            }
+            secondaryAction={
+              <button
+                type="button"
+                onClick={() => {
+                  setInput("");
+                  navigate({ search: { q: "", type, sort } });
+                }}
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Qidiruvni tozalash
+              </button>
             }
           />
         ) : (

@@ -11,7 +11,9 @@ import { GradientAvatar } from "@/components/site/avatar";
 
 import { OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 
-import { EmptyState } from "@/components/site/feedback";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { EMPTY_STATE_CTA } from "@/lib/ux-constants";
 
 import { SimpleStatCard } from "@/components/site/simple-stat-card";
 import type { EscrowWorkflow, Order, HiringLead } from "@/lib/mock-data";
@@ -24,6 +26,7 @@ import { getWallet, subscribeWallet } from "@/lib/wallet-store";
 import { getAllOrders, subscribeOrders } from "@/lib/orders-store";
 import { ClientRecommendations } from "@/components/site/personalized-recommendations";
 import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { DashboardActivityFeed } from "@/components/site/dashboard-activity-feed";
 import {
   buildHiringPipelineForClient,
   getClientLifetimeSpend,
@@ -188,13 +191,17 @@ function ClientDashboard() {
 
     >
 
-      {user && <WorkspaceGuidance user={user} />}
+      {user && <WorkspaceGuidance user={user} hideNextAction />}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SimpleStatCard label="Jami sarflangan" value={`$${lifetimeSpent.toLocaleString()}`} />
         <SimpleStatCard label="Eskrouda" value={`$${totalEscrow.toLocaleString()}`} sub={totalEscrow > 0 ? "Faol mablag'" : undefined} />
         <SimpleStatCard label="Mavjud balans" value={`$${availableBalance.toLocaleString()}`} />
         <SimpleStatCard label="Loyihalar" value={String(myProjects.length)} sub={pendingProposals.length > 0 ? `${pendingProposals.length} yangi taklif` : undefined} />
+      </div>
+
+      <div className="mt-6">
+        <DashboardActivityFeed />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -221,16 +228,12 @@ function ClientDashboard() {
               ))}
             </div>
           ) : (
-            <EmptyState
+            <StandardEmptyState
               compact
               icon={FolderOpen}
-              title="Hali loyihalar yo'q"
-              description="Birinchi loyihangizni joylang — frilanserlar taklif yuborishni boshlaydi."
-              action={
-                <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                  Loyiha joylash
-                </Link>
-              }
+              title={EMPTY_STATE_CTA.clientProject.title}
+              description={EMPTY_STATE_CTA.clientProject.description}
+              action={<PrimaryLink to="/projects/create">{EMPTY_STATE_CTA.clientProject.label}</PrimaryLink>}
             />
           )}
         </section>
@@ -258,20 +261,16 @@ function ClientDashboard() {
                 </div>
               </Link>
             )) : (
-              <EmptyState
+              <StandardEmptyState
                 compact
                 icon={ClipboardList}
                 title="Faol buyurtmalar yo'q"
                 description="Frilanserni yollaganingizdan keyin buyurtmalar shu yerda paydo bo'ladi."
                 action={
                   myProjects.length > 0 ? (
-                    <Link to="/my-projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                      Loyihalarim
-                    </Link>
+                    <PrimaryLink to="/my-projects">Loyihalarim</PrimaryLink>
                   ) : (
-                    <Link to="/projects/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                      Loyiha joylash
-                    </Link>
+                    <PrimaryLink to="/projects/create">{EMPTY_STATE_CTA.clientProject.label}</PrimaryLink>
                   )
                 }
               />

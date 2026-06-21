@@ -25,7 +25,7 @@ function AiLayout() {
     <AuthGate>
     <div className="min-h-screen bg-background">
       <SiteNav />
-      <div className="border-b border-border bg-card/80 backdrop-blur-sm">
+      <div className="border-b border-border bg-background">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:px-6">
           <div className="flex items-center gap-3">
             <Link

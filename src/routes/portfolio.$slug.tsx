@@ -154,7 +154,11 @@ function PortfolioDetailContent({
           <p className="mt-3 text-sm text-muted-foreground">
             Bu portfolio elementi hali ommaviy ko'rinmaydi.
           </p>
-          <Link to={`/freelancers/${rawItem.freelancerUsername}`} className="mt-6 inline-block text-primary hover:underline">
+          <Link
+            to="/freelancers/$username"
+            params={{ username: rawItem.freelancerUsername }}
+            className="mt-6 inline-block text-primary hover:underline"
+          >
             Frilanser profilini ko'rish
           </Link>
         </div>
@@ -217,7 +221,11 @@ function PortfolioDetailContent({
             <nav className="font-mono mb-4 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
               <Link to="/freelancers" className="hover:text-primary">Iste'dod</Link>
               <ChevronRight className="size-3 opacity-50" />
-              <Link to={`/freelancers/${item.freelancerUsername}`} params={{ username: item.freelancerUsername }} className="hover:text-primary">
+              <Link
+                to="/freelancers/$username"
+                params={{ username: item.freelancerUsername }}
+                className="hover:text-primary"
+              >
                 {item.freelancerName}
               </Link>
               <ChevronRight className="size-3 opacity-50" />
@@ -231,7 +239,7 @@ function PortfolioDetailContent({
                   <h1 className="font-display mt-2 text-2xl font-bold tracking-tight sm:text-3xl">{item.title}</h1>
                   <p className="mt-2 text-sm text-muted-foreground">Yakunlangan {completionLabel}</p>
                   <Link
-                    to={`/freelancers/${item.freelancerUsername}`}
+                    to="/freelancers/$username"
                     params={{ username: item.freelancerUsername }}
                     className="mt-4 inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm transition-default hover:border-primary/20"
                   >

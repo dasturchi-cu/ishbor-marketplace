@@ -22,7 +22,7 @@ export function SettingsSaveBar({
   if (!dirty && saveState === "idle") return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-[4.5rem] z-[60] border-t border-primary/15 bg-card/95 px-4 py-3 shadow-[0_-8px_32px_-12px_rgba(0,0,0,0.35)] backdrop-blur-md lg:sticky lg:bottom-0 lg:z-50 lg:rounded-t-2xl">
+    <div className="liquid-glass fixed inset-x-0 bottom-[4.5rem] z-[60] border-t border-primary/15 px-4 py-3 shadow-[0_-8px_32px_-12px_rgba(0,0,0,0.35)] lg:sticky lg:bottom-0 lg:z-50 lg:rounded-t-2xl">
       <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2 text-sm">
           {saveState === "saving" && (

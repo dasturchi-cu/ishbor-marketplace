@@ -9,7 +9,7 @@ import {
   Building2,
 } from "lucide-react";
 import type { AuthUser } from "./auth";
-import { getActiveRole } from "./active-role-store";
+import { getActiveRole, type WorkspaceRole } from "./active-role-store";
 import { enrichOnboardingPlan } from "./ai-onboarding-wizard";
 import { analyzePortfolio } from "./ai-portfolio-optimizer";
 import { getTrustCoachInsights } from "./ai-trust-coach";
@@ -27,14 +27,14 @@ export type AiFeature = {
   description: string;
   href: string;
   icon: LucideIcon;
-  roles: ("client" | "freelancer")[];
+  roles: WorkspaceRole[];
   statusLabel: string;
   status: AiFeatureStatus;
 };
 
-function resolveRole(user: AuthUser): "client" | "freelancer" {
+function resolveRole(user: AuthUser): WorkspaceRole {
   const agencies = getAgenciesForUser(user.id);
-  if (agencies.some((a) => a.ownerUserId === user.id)) return "client";
+  if (agencies.some((a) => a.ownerUserId === user.id)) return "agency";
   return getActiveRole();
 }
 

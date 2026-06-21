@@ -1,9 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, useSyncExternalStore } from "react";
-import { Plus, Pencil, Copy, Pause, Play, Trash2, Sparkles, BarChart3 } from "lucide-react";
+import { useState, useSyncExternalStore, useEffect } from "react";
+import { Plus, Pencil, Copy, Pause, Play, Trash2, Sparkles, BarChart3, Send } from "lucide-react";
 import { actionFeedback } from "@/lib/action-feedback";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
-import { EmptyState, confirmDestructive } from "@/components/site/feedback";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { confirmDestructive } from "@/components/site/feedback";
+import { EMPTY_STATE_CTA } from "@/lib/ux-constants";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireRole } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
@@ -33,6 +36,13 @@ export const Route = createFileRoute("/my-services")({
 
 const EMPTY_SERVICES: StoredService[] = [];
 
+function parseServiceTab(value: string): Tab {
+  if (value === "draft" || value === "paused" || value === "archived" || value === "published") {
+    return value;
+  }
+  return "published";
+}
+
 function MyServicesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +53,12 @@ function MyServicesPage() {
     () => (user ? getMyServices(user.id) : EMPTY_SERVICES),
     () => EMPTY_SERVICES,
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTab = params.get("tab");
+    if (urlTab) setTab(parseServiceTab(urlTab));
+  }, []);
 
   const filtered = services.filter((s) => {
     const status = s.status ?? "published";
@@ -85,13 +101,11 @@ function MyServicesPage() {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState
+        <StandardEmptyState
           icon={Sparkles}
-          title="Xizmatlar yo'q"
-          description="Birinchi xizmatingizni yarating va sotishni boshlang."
-          benefit="Tayyor paketlar mijozlarga tezroq qaror qilishga yordam beradi."
-          action={<Link to="/services/create" className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Xizmat yaratish</Link>}
-          secondaryAction={<Link to="/ai" className="text-sm font-medium text-primary hover:underline">AI markaz →</Link>}
+          title={EMPTY_STATE_CTA.services.title}
+          description={EMPTY_STATE_CTA.services.description}
+          action={<PrimaryLink to="/services/create">{EMPTY_STATE_CTA.services.label}</PrimaryLink>}
         />
       ) : (
         <div className="space-y-4">
@@ -133,13 +147,19 @@ function ServiceRow({
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <ActionBtn icon={Pencil} label="Tahrirlash" onClick={() => navigate({ to: "/services/create", search: { edit: s.slug } })} />
-          <ActionBtn icon={Copy} label="Nusxa" onClick={() => { duplicateService(s.slug); actionFeedback.created("Xizmat nusxasi"); onRefresh(); }} />
-          {s.status === "paused" ? (
-            <ActionBtn icon={Play} label="Faollashtirish" onClick={() => { updateServiceStatus(s.slug, "published"); actionFeedback.published("Xizmat"); onRefresh(); }} />
+          {(s.status ?? "published") === "draft" ? (
+            <ActionBtn icon={Send} label="Davom etish / E'lon qilish" onClick={() => navigate({ to: "/services/create", search: { edit: s.slug } })} />
           ) : (
-            <ActionBtn icon={Pause} label="To'xtatish" onClick={() => { updateServiceStatus(s.slug, "paused"); actionFeedback.saved("Xizmat", "To'xtatildi"); onRefresh(); }} />
+            <ActionBtn icon={Pencil} label="Tahrirlash" onClick={() => navigate({ to: "/services/create", search: { edit: s.slug } })} />
           )}
+          {(s.status ?? "published") !== "draft" && (
+            <ActionBtn icon={Copy} label="Nusxa" onClick={() => { duplicateService(s.slug); actionFeedback.created("Xizmat nusxasi"); onRefresh(); }} />
+          )}
+          {(s.status ?? "published") === "paused" ? (
+            <ActionBtn icon={Play} label="Faollashtirish" onClick={() => { updateServiceStatus(s.slug, "published"); actionFeedback.published("Xizmat"); onRefresh(); }} />
+          ) : (s.status ?? "published") === "published" ? (
+            <ActionBtn icon={Pause} label="To'xtatish" onClick={() => { updateServiceStatus(s.slug, "paused"); actionFeedback.saved("Xizmat", "To'xtatildi"); onRefresh(); }} />
+          ) : null}
           <ActionBtn icon={Trash2} label="O'chirish" onClick={() => {
             if (!confirmDestructive(`"${s.title}" xizmatini o'chirishni tasdiqlaysizmi?`)) return;
             if (deleteService(s.slug)) { actionFeedback.deleted("Xizmat"); onRefresh(); }

@@ -106,6 +106,7 @@ function ServiceDetailContent({
     service.packages.find((p) => p.popular)?.tier.toLowerCase() ??
     service.packages[0]?.tier.toLowerCase() ??
     "essential";
+  const storedRecord = getServiceBySlug(service.slug);
   const isOwner = user?.username === service.sellerUsername;
 
   useEffect(() => {
@@ -325,8 +326,8 @@ function ServiceDetailContent({
             {isOwner && (
               <FeaturedPurchaseCard
                 target={{ type: "service", slug: service.slug, title: service.title }}
-                featured={isFeaturedActive(service.featured, service.featuredUntil)}
-                featuredUntil={service.featuredUntil}
+                featured={isFeaturedActive(storedRecord?.featured, storedRecord?.featuredUntil)}
+                featuredUntil={storedRecord?.featuredUntil}
               />
             )}
 
@@ -373,7 +374,7 @@ function ServiceDetailContent({
       <SiteFooter />
 
       {!isOwner && (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t border-border bg-card/95 p-3 backdrop-blur-md lg:hidden">
+        <div className="liquid-glass fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t p-3 lg:hidden">
           <ClientCheckoutLink
             search={{
               type: "service" as const,

@@ -96,7 +96,10 @@ function TahrirlashPortfolioForm({
       return;
     }
     savePortfolioDraft(input, ctx, slug);
-    actionFeedback.draftSaved("Qoralama");
+    actionFeedback.draftSaved("Portfel qoralamasi", {
+      listHint: "Portfel → Qoralama",
+      onViewList: () => navigate({ to: "/portfolio", search: { tab: "draft" } }),
+    });
   };
 
   const handlePublish = () => {
@@ -128,7 +131,7 @@ function TahrirlashPortfolioForm({
             onChange={setInput}
             onSaveDraft={handleSaveDraft}
             onPublish={handlePublish}
-            isTahrirlash
+            isEdit
             isValid={!!isValid}
           />
         </div>

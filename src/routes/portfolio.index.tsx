@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import { actionFeedback } from "@/lib/action-feedback";
 import {
   Plus,
@@ -12,7 +12,10 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
-import { EmptyState, confirmDestructive } from "@/components/site/feedback";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { confirmDestructive } from "@/components/site/feedback";
+import { EMPTY_STATE_CTA } from "@/lib/ux-constants";
 import { PortfolioAnalyticsWidget } from "@/components/portfolio/portfolio-analytics-widget";
 import { PortfolioCover } from "@/components/portfolio/portfolio-preview-card";
 import { FreelancerOnlyGate } from "@/components/portfolio/freelancer-only-gate";
@@ -72,6 +75,11 @@ function PortfolioDashboardPage() {
   );
 }
 
+function parsePortfolioTab(value: string): (typeof filterTabs)[number]["key"] {
+  if (value === "draft" || value === "published" || value === "archived") return value;
+  return "all";
+}
+
 function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<typeof useAuth>["user"]> }) {
   const [tab, setTab] = useState<(typeof filterTabs)[number]["key"]>("all");
   const ownerId = user.id;
@@ -80,6 +88,12 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
     () => getMyPortfolios(ownerId),
     () => EMPTY,
   );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTab = params.get("tab");
+    if (urlTab) setTab(parsePortfolioTab(urlTab));
+  }, []);
 
   const filtered =
     tab === "all" ? items : items.filter((p) => p.status === tab);
@@ -125,35 +139,18 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
       </div>
 
       {items.length === 0 ? (
-        <EmptyState
+        <StandardEmptyState
           icon={FolderOpen}
-          title="Eng yaxshi ishingizni mijozlarga ko'rsating"
-          description="Keys stadiyalar, metrikalar va loyiha havolalari bilan professional portfolio yarating."
-          benefit="Portfolio bilan ishonch balli +8 ga oshadi va qabul qilinish 2× ko'proq."
-          action={
-            <Link
-              to="/portfolio/create"
-              className="touch-target rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
-            >
-              Portfel yaratish
-            </Link>
-          }
-          secondaryAction={
-            <Link to="/ai/portfolio-optimizer" className="text-sm font-medium text-primary hover:underline">
-              AI bilan optimallashtirish
-            </Link>
-          }
+          title={EMPTY_STATE_CTA.portfolio.title}
+          description={EMPTY_STATE_CTA.portfolio.description}
+          action={<PrimaryLink to="/portfolio/create">{EMPTY_STATE_CTA.portfolio.label}</PrimaryLink>}
         />
       ) : filtered.length === 0 ? (
-        <EmptyState
+        <StandardEmptyState
           icon={FolderOpen}
           title={`${filterTabs.find((t) => t.key === tab)?.label} elementlar yo'q`}
           description="Boshqa filtrni sinab ko'ring yoki yangi portfolio elementi yarating."
-          action={
-            <Link to="/portfolio/create" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-              Portfel yaratish
-            </Link>
-          }
+          action={<PrimaryLink to="/portfolio/create">Portfel yaratish</PrimaryLink>}
         />
       ) : (
         <>

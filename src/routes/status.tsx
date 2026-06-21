@@ -4,6 +4,7 @@ import { Activity, Database, Server } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { LoadingSpinner } from "@/components/site/feedback";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { getHealth } from "@/lib/api/health.functions";
 import { getApiMode } from "@/lib/api-mode";
 import { ApiError, callServerFn, isOffline } from "@/lib/api-client";
@@ -19,14 +20,16 @@ export const Route = createFileRoute("/status")({
 });
 
 function StatusPage() {
+  const hydrated = useClientHydrated();
   const { data, isLoading, error, refetch, dataUpdatedAt, isFetching } = useQuery({
     queryKey: ["health"],
     queryFn: () => callServerFn(() => getHealth(), { label: "getHealth" }),
     refetchInterval: 30_000,
     retry: 2,
+    enabled: hydrated,
   });
 
-  const offline = isOffline();
+  const offline = hydrated && isOffline();
   const errorMessage =
     error instanceof ApiError
       ? error.message
@@ -56,8 +59,8 @@ function StatusPage() {
           </div>
         )}
 
-        {isLoading && !data ? (
-          <div className="mt-10 flex justify-center">
+        {(!hydrated || (isLoading && !data)) ? (
+          <div className="mt-10 flex justify-center" aria-busy="true" aria-label="Tizim holati yuklanmoqda">
             <LoadingSpinner size="md" />
           </div>
         ) : errorMessage ? (

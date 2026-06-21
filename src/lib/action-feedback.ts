@@ -7,9 +7,17 @@ export const actionFeedback = {
       ? toast.success(`${label} saqlandi`, { description })
       : toast.success(`${label} saqlandi`),
 
-  draftSaved: (label = "Qoralama") =>
+  draftSaved: (
+    label = "Qoralama",
+    options?: { listHint?: string; onViewList?: () => void },
+  ) =>
     toast.success(`${label} saqlandi`, {
-      description: "Istalgan vaqtda davom etishingiz mumkin.",
+      description: options?.listHint
+        ? `${options.listHint} bo'limida saqlangan. Keyinroq davom etib joylashingiz mumkin.`
+        : "Keyinroq davom etib joylashingiz mumkin.",
+      action: options?.onViewList
+        ? { label: "Qoralamalarni ko'rish", onClick: options.onViewList }
+        : undefined,
     }),
 
   created: (label: string, description?: string) =>

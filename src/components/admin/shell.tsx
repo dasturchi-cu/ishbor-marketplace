@@ -260,7 +260,7 @@ export function AdminShell({
 
         <main className="min-w-0">
 
-          <div className="sticky top-16 z-40 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur-lg sm:px-6 lg:px-8">
+          <div className="sticky top-16 z-40 flex items-center gap-3 border-b border-border bg-background px-4 py-3 sm:px-6 lg:px-8">
 
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
 

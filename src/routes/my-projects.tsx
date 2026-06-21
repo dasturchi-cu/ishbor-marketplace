@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore, useState } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import { actionFeedback } from "@/lib/action-feedback";
 import {
   Plus,
@@ -10,8 +10,8 @@ import {
   Pencil,
   XCircle,
   Users,
-  ChevronRight,
   Eye,
+  Send,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
@@ -55,6 +55,13 @@ const filterTabs = [
 
 const EMPTY_PROJECTS: Project[] = [];
 
+function parseTab(value: string): (typeof filterTabs)[number]["key"] {
+  if (value === "draft" || value === "published" || value === "paused" || value === "closed") {
+    return value;
+  }
+  return "all";
+}
+
 function MyProjectsPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<(typeof filterTabs)[number]["key"]>("all");
@@ -65,10 +72,18 @@ function MyProjectsPage() {
     () => EMPTY_PROJECTS,
   );
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTab = params.get("tab");
+    if (urlTab) setTab(parseTab(urlTab));
+  }, []);
+
   const filtered =
     tab === "all"
       ? projects
       : projects.filter((p) => (p.status ?? "published") === tab);
+
+  const draftCount = projects.filter((p) => p.status === "draft").length;
 
   return (
     <WorkspaceShell
@@ -84,6 +99,21 @@ function MyProjectsPage() {
       }
     >
       {user && <WorkspaceGuidance user={user} hideNextAction />}
+
+      {draftCount > 0 && tab !== "draft" && (
+        <div className="mb-5 flex flex-col gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-foreground">
+            <span className="font-semibold">{draftCount} ta qoralama</span> saqlangan — davom etib joylashingiz mumkin.
+          </p>
+          <button
+            type="button"
+            onClick={() => setTab("draft")}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+          >
+            Qoralamalarni ko&apos;rish
+          </button>
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-2">
         {filterTabs.map((t) => (
@@ -209,7 +239,15 @@ function ProjectRow({ project: p }: { project: Project }) {
           >
             <Eye className="size-3.5" /> Ko'rish
           </Link>
-          {status !== "closed" && (
+          {status === "draft" ? (
+            <Link
+              to="/projects/create"
+              search={{ edit: p.slug }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/25 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary hover:border-primary/40"
+            >
+              <Send className="size-3.5" /> Davom etish / Joylash
+            </Link>
+          ) : status !== "closed" ? (
             <Link
               to="/projects/create"
               search={{ edit: p.slug }}
@@ -217,7 +255,7 @@ function ProjectRow({ project: p }: { project: Project }) {
             >
               <Pencil className="size-3.5" /> Tahrirlash
             </Link>
-          )}
+          ) : null}
           {status === "published" || status === "paused" ? (
             <button
               type="button"

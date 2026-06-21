@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 type RegisterSearch = {
   type?: UserType;
   ref?: string;
+  redirect?: string;
 };
 
 export const Route = createFileRoute("/register")({
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/register")({
     const result: RegisterSearch = {};
     if (search.type === "client" || search.type === "freelancer") result.type = search.type;
     if (typeof search.ref === "string") result.ref = search.ref;
+    if (typeof search.redirect === "string") result.redirect = search.redirect;
     return result;
   },
   head: () => ({

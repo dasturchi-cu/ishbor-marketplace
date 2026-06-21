@@ -25,7 +25,9 @@ function notify() {
 
 export function subscribeCallHistory(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 function readAll(): CallRecord[] {

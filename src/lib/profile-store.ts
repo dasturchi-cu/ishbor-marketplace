@@ -25,6 +25,16 @@ const STORAGE_KEY = "ishbor-user-profiles";
 const listeners = new Set<() => void>();
 let cache: Map<string, UserProfile> | null = null;
 
+export type ProfileVideoIntro = {
+  /** YouTube, Vimeo yoki to'g'ridan-to'g'ri video URL */
+  url?: string;
+  /** Yuklangan video (data URL) */
+  fileUrl?: string;
+  /** Muqova rasm (data URL) */
+  posterUrl?: string;
+  duration?: string;
+};
+
 export type UserProfile = {
   userId: string;
   username?: string;
@@ -39,6 +49,7 @@ export type UserProfile = {
   teamSize?: string;
   hiringGoals: string[];
   onboardingComplete: boolean;
+  videoIntro?: ProfileVideoIntro;
   updatedAt: string;
 };
 
@@ -79,6 +90,27 @@ export function getUserProfile(userId: string): UserProfile | null {
   return cache.get(userId) ?? null;
 }
 
+export function getProfileByUsername(username: string): UserProfile | null {
+  if (!cache) cache = new Map(Object.entries(readAll()));
+  for (const profile of cache.values()) {
+    if (profile.username === username) return profile;
+  }
+  const all = readAll();
+  for (const profile of Object.values(all)) {
+    if (profile.username === username) return profile;
+  }
+  return null;
+}
+
+export function saveProfileVideoIntro(userId: string, videoIntro: ProfileVideoIntro | undefined): UserProfile {
+  const session = getSession();
+  const patch: Partial<UserProfile> = { videoIntro };
+  if (session?.user.id === userId && session.user.username) {
+    patch.username = session.user.username;
+  }
+  return saveUserProfile(userId, patch);
+}
+
 export function saveUserProfile(userId: string, patch: Partial<UserProfile>): UserProfile {
   const existing = getUserProfile(userId);
   const next: UserProfile = {
@@ -95,6 +127,7 @@ export function saveUserProfile(userId: string, patch: Partial<UserProfile>): Us
     teamSize: patch.teamSize ?? existing?.teamSize,
     hiringGoals: patch.hiringGoals ?? existing?.hiringGoals ?? [],
     onboardingComplete: patch.onboardingComplete ?? existing?.onboardingComplete ?? false,
+    videoIntro: patch.videoIntro !== undefined ? patch.videoIntro : existing?.videoIntro,
     updatedAt: new Date().toISOString(),
   };
   if (!cache) cache = new Map();
@@ -185,6 +218,7 @@ export function persistOnboardingPortfolios(userId: string): number {
     const input = createEmptyFormInput(250 + i * 20);
     input.title = item.title.trim();
     input.category = item.category.trim() || input.category;
+    if (item.coverImage?.trim()) input.coverImage = item.coverImage.trim();
     input.description = `${item.title} — onboarding orqali yaratilgan portfolio namunasi.`;
     input.objectives = "Mijoz ehtiyojlarini qondirish va natijani ko'rsatish.";
     publishPortfolio(input, {

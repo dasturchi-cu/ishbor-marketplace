@@ -14,22 +14,25 @@ import {
   FileText,
   Image as ImageIcon,
   MoreHorizontal,
-  Smile,
   DollarSign,
   Archive,
   Inbox,
 } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
-import { EmptyState, confirmDestructive } from "@/components/site/feedback";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { confirmDestructive } from "@/components/site/feedback";
+import { useActiveRole } from "@/hooks/use-active-role";
 import { GradientAvatar } from "@/components/site/avatar";
-import { EmojiPickerModal, FileAttachModal, SendOfferModal, EscrowActionModal } from "@/components/site/modals";
+import { FileAttachModal, SendOfferModal, EscrowActionModal } from "@/components/site/modals";
+import { MessageEmojiPicker } from "@/components/messages/emoji-picker";
+import { MessageTrustChip } from "@/components/trust/trust-summary";
 import { CallModal } from "@/components/messages/call-modal";
 import { freelancers, escrowWorkflows } from "@/lib/mock-data";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { downloadTextFile } from "@/lib/export-utils";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
-import { useActiveRole } from "@/hooks/use-active-role";
 import { ensureClientRoleForCheckout, buildCheckoutRedirectPath } from "@/lib/client-checkout";
 import { createOrder } from "@/lib/orders-store";
 import { createEscrowFromOrder } from "@/lib/escrow-store";
@@ -234,7 +237,6 @@ function MessagesPage() {
   const [showList, setShowList] = useState(true);
   const [activeId, setActiveId] = useState(getActiveConversationId);
   const [searchQuery, setSearchQuery] = useState("");
-  const [emojiOchish, setEmojiOchish] = useState(false);
   const [fileOchish, setFileOchish] = useState(false);
   const [offerOchish, setOfferOchish] = useState(false);
   const [escrowOchish, setEscrowOchish] = useState(false);
@@ -380,19 +382,16 @@ function MessagesPage() {
   if (!hasAnyConversations) {
     return (
       <WorkspaceShell eyebrow="Kirish qutisi" title="Xabarlar">
-        <EmptyState
+        <StandardEmptyState
           icon={Inbox}
           title="Hali suhbatlar yo'q"
-          description="Frilanser yoki mijoz bilan bog'laning — takliflar va eskrou yangiliklari shu yerda ko'rinadi."
+          description="Buyurtma yoki loyiha bo'yicha frilanser/mijoz bilan bog'laning."
           action={
-            <div className="flex flex-wrap justify-center gap-2">
-              <Link to="/freelancers" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                Frilanser topish
-              </Link>
-              <Link to="/projects" className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:border-primary/30">
-                Loyihalarni ko'rish
-              </Link>
-            </div>
+            activeRole === "client" ? (
+              <PrimaryLink to="/freelancers">Frilanser topish</PrimaryLink>
+            ) : (
+              <PrimaryLink to="/projects">Loyihalarni ko'rish</PrimaryLink>
+            )
           }
         />
       </WorkspaceShell>
@@ -550,6 +549,7 @@ function MessagesPage() {
                 <GradientAvatar name={participant.name} hue={participant.hue} size={36} />
                 <div className="min-w-0">
                   <div className="truncate text-sm font-semibold">{participant.name}</div>
+                  <MessageTrustChip username={participant.username} />
                   <div className="font-mono flex items-center gap-1.5 text-[10px] text-success">
                     <span className="size-1.5 rounded-full bg-success" />
                     {activeConversation.online ? "Onlayn" : "Oflayn"}{" "}
@@ -589,7 +589,7 @@ function MessagesPage() {
                 >
                   <MoreHorizontal className="size-4" />
                   {menuOchish && (
-                    <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-border bg-card py-1 shadow-lg">
+                    <div className="liquid-glass-panel absolute right-0 top-full z-10 mt-1 w-40 rounded-lg py-1 shadow-lg">
                       {inboxTab === "archived" || activeConversation.archived ? (
                         <button
                           onClick={handleUnarchiveConversation}
@@ -693,8 +693,8 @@ function MessagesPage() {
             </div>
 
             {/* Composer */}
-            <div className="border-t border-border p-2 sm:p-3">
-              <div className="rounded-xl border border-border bg-background transition-default focus-within:border-primary/30">
+            <div className="border-t border-border p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-3">
+              <div className="liquid-glass rounded-xl transition-default focus-within:border-primary/30">
                 <div className="flex items-center gap-2 px-3 pt-2 sm:pt-3">
                   <input
                     value={input}
@@ -719,28 +719,22 @@ function MessagesPage() {
                   <div className="flex items-center gap-0.5">
                     <button
                       onClick={() => setFileOchish(true)}
-                      className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring"
+                      className="touch-target liquid-glass-chip inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:text-foreground focus-ring"
                       aria-label="Fayl biriktirish"
                     >
                       <Paperclip className="size-4" />
                     </button>
                     <button
                       onClick={() => setFileOchish(true)}
-                      className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring"
+                      className="touch-target liquid-glass-chip inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:text-foreground focus-ring"
                       aria-label="Rasm biriktirish"
                     >
                       <ImageIcon className="size-4" />
                     </button>
-                    <button
-                      onClick={() => setEmojiOchish(true)}
-                      className="touch-target inline-flex items-center justify-center rounded-lg text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring"
-                      aria-label="Emoji qo'shish"
-                    >
-                      <Smile className="size-4" />
-                    </button>
+                    <MessageEmojiPicker onSelect={(e) => setInput((v) => v + e)} />
                     <button
                       onClick={() => setOfferOchish(true)}
-                      className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring"
+                      className="touch-target liquid-glass-chip inline-flex items-center gap-1.5 rounded-lg border border-dashed px-2.5 text-xs font-medium text-muted-foreground transition-default hover:border-primary/30 hover:text-primary focus-ring"
                     >
                       <DollarSign className="size-3" />
                       <span className="hidden sm:inline">Taklif yuborish</span>
@@ -767,7 +761,6 @@ function MessagesPage() {
         </div>
       </div>
 
-      <EmojiPickerModal open={emojiOchish} onClose={() => setEmojiOchish(false)} onSelect={(e) => setInput((v) => v + e)} />
       <FileAttachModal
         open={fileOchish}
         onClose={() => setFileOchish(false)}

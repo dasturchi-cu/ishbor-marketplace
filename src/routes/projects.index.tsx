@@ -9,6 +9,7 @@ import { usePageReady } from "@/hooks/use-page-ready";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
+import { MarketplacePulseMini } from "@/components/site/marketplace-pulse-mini";
 import { filterProjects, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { getPublishedProjects, subscribeProjects } from "@/lib/projects-store";
 import { useAuth } from "@/hooks/use-auth";
@@ -110,13 +111,14 @@ function ProjectsPage() {
           <MarketplaceToolbar
             placeholder="Loyihalarni qidirish…"
             q={search.q ?? ""}
-            sort={search.sort ?? "newest"}
+            sort={search.sort ?? "ranking_score"}
             activeCategory={search.category}
             categories={projectCategories}
             resultCount={filtered.length}
             resultLabel="loyiha"
             onSearchChange={setSearch}
           />
+          <MarketplacePulseMini />
         </div>
       </div>
 

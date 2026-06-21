@@ -14,7 +14,9 @@ import { GradientAvatar } from "@/components/site/avatar";
 
 import { ApplicationStatusBadge, OrderStatusBadge, EscrowFundedBadge } from "@/components/site/trust";
 
-import { EmptyState } from "@/components/site/feedback";
+import { StandardEmptyState } from "@/components/ux/standard-empty-state";
+import { PrimaryLink } from "@/components/ux/action-buttons";
+import { EMPTY_STATE_CTA } from "@/lib/ux-constants";
 
 import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
 
@@ -23,6 +25,7 @@ import { subscribeOrders, readStoredOrders } from "@/lib/orders-store";
 import { getReviewsForFreelancer, subscribeReviews } from "@/lib/reviews-store";
 import { FreelancerRecommendations } from "@/components/site/personalized-recommendations";
 import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { DashboardActivityFeed } from "@/components/site/dashboard-activity-feed";
 import { SimpleStatCard } from "@/components/site/simple-stat-card";
 
 import { getAllApplications, subscribeApplications } from "@/lib/applications-store";
@@ -130,13 +133,17 @@ function FreelancerDashboard() {
 
     >
 
-      {user && <WorkspaceGuidance user={user} />}
+      {user && <WorkspaceGuidance user={user} hideNextAction />}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SimpleStatCard label="Daromad (30 kun)" value={earnings30 > 0 ? `$${earnings30.toLocaleString()}` : "$0"} />
         <SimpleStatCard label="Faol buyurtmalar" value={String(activeOrdersCount)} />
         <SimpleStatCard label="Arizalar" value={String(applicationCount)} sub={applicationCount > 0 ? `${winRate}% qabul` : undefined} />
         <SimpleStatCard label="Reyting" value={ratingDisplay} sub={reviewCount > 0 ? `${reviewCount} sharh` : undefined} />
+      </div>
+
+      <div className="mt-6">
+        <DashboardActivityFeed />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -168,16 +175,12 @@ function FreelancerDashboard() {
                 </div>
               </Link>
             )) : (
-              <EmptyState
+              <StandardEmptyState
                 compact
                 icon={Package}
-                title="Faol buyurtmalar yo'q"
-                description="Taklifingiz qabul qilinganda buyurtma shu yerda boshlanadi."
-                action={
-                  <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                    Ish topish
-                  </Link>
-                }
+                title={EMPTY_STATE_CTA.freelancerOrders.title}
+                description={EMPTY_STATE_CTA.freelancerOrders.description}
+                action={<PrimaryLink to="/projects">{EMPTY_STATE_CTA.freelancerOrders.label}</PrimaryLink>}
               />
             )}
           </div>
@@ -212,16 +215,12 @@ function FreelancerDashboard() {
                 </div>
               </Link>
             )) : (
-              <EmptyState
+              <StandardEmptyState
                 compact
                 icon={FileText}
-                title="Hali arizalar yo'q"
-                description="Loyihalarga taklif yuboring."
-                action={
-                  <Link to="/projects" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                    Loyihalarni ko'rish
-                  </Link>
-                }
+                title={EMPTY_STATE_CTA.freelancerWork.title}
+                description={EMPTY_STATE_CTA.freelancerWork.description}
+                action={<PrimaryLink to="/projects">{EMPTY_STATE_CTA.freelancerWork.label}</PrimaryLink>}
               />
             )}
           </div>

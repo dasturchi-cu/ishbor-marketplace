@@ -16,7 +16,12 @@ function AdminAuditPage() {
   const [logs, setLogs] = useState<AuditEntry[]>(getAuditLog());
   const [category, setCategory] = useState("all");
 
-  useEffect(() => subscribeAudit(() => setLogs(getAuditLog())), []);
+  useEffect(() => {
+    const unsub = subscribeAudit(() => setLogs(getAuditLog()));
+    return () => {
+      unsub();
+    };
+  }, []);
 
   const filtered = category === "all" ? logs : logs.filter((l) => l.category === category);
 

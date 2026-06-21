@@ -51,13 +51,13 @@ export function SmartMatchPanel(props: FreelancerPanelProps | ProjectPanelProps)
         </div>
       ) : (
         <ul className="mt-4 space-y-2">
-          {items.map((item, i) =>
-            props.variant === "freelancers" ? (
-              <FreelancerRow key={item.username} freelancer={item as SmartMatch<Freelancer>} rank={i + 1} />
-            ) : (
-              <ProjectRow key={item.slug} project={item as SmartMatch<Project>} rank={i + 1} />
-            ),
-          )}
+          {props.variant === "freelancers"
+            ? (props.items as SmartMatch<Freelancer>[]).map((item, i) => (
+                <FreelancerRow key={item.username} freelancer={item} rank={i + 1} />
+              ))
+            : (props.items as SmartMatch<Project>[]).map((item, i) => (
+                <ProjectRow key={item.slug} project={item} rank={i + 1} />
+              ))}
         </ul>
       )}
 

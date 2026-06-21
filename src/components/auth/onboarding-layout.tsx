@@ -18,11 +18,12 @@ export function OnboardingLayout({ children, title, subtitle, stepId, showProgre
   const state = loadOnboardingState();
   const steps = getOnboardingSteps(state.userType);
   const currentIndex = steps.findIndex((s) => s.id === stepId);
+  const completionPercent = Math.round(((currentIndex + 1) / steps.length) * 100);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="liquid-glass sticky top-0 z-10 border-b">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
           <Link to="/" className="transition-default hover:opacity-80">
             <Logo />
@@ -34,6 +35,18 @@ export function OnboardingLayout({ children, title, subtitle, stepId, showProgre
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         {showProgress && (
         <div className="mb-10">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              Profil sozlash
+            </span>
+            <span className="font-mono text-sm font-semibold text-primary">{completionPercent}%</span>
+          </div>
+          <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${completionPercent}%` }}
+            />
+          </div>
           <div className="flex items-center gap-1 sm:gap-2">
             {steps.map((step, i) => (
               <div key={step.id} className="flex flex-1 items-center gap-1 sm:gap-2">
@@ -72,8 +85,13 @@ export function OnboardingLayout({ children, title, subtitle, stepId, showProgre
             ))}
           </div>
           <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-primary sm:hidden">
-            {currentIndex + 1}-qadam / {steps.length} — {steps[currentIndex]?.label}
+            {currentIndex + 1}-qadam / {steps.length} — {steps[currentIndex]?.label} · {completionPercent}%
           </p>
+          {currentIndex < steps.length - 1 && steps[currentIndex + 1] && (
+            <p className="mt-3 rounded-lg border border-primary/15 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+              Keyingi qadam: <span className="font-semibold text-foreground">{steps[currentIndex + 1]!.label}</span>
+            </p>
+          )}
         </div>
         )}
 
@@ -117,7 +135,7 @@ export function OnboardingNav({
         type="button"
         onClick={onContinue}
         disabled={disabled}
-        className="touch-target inline-flex items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="touch-target inline-flex items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {continueLabel}
       </button>

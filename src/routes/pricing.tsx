@@ -131,6 +131,7 @@ function PricingPage() {
           </p>
         </div>
 
+        {currentPlan !== "elite" ? (
         <div className="mb-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           {(currentPlan === "free" || !isAuthenticated) && (
             <Link
@@ -159,6 +160,17 @@ function PricingPage() {
             {backLabel}
           </Link>
         </div>
+        ) : (
+          <div className="mb-8 flex justify-center">
+            <Link
+              to="/subscription"
+              search={{ plan: undefined }}
+              className="touch-target inline-flex items-center justify-center rounded-xl border border-border px-6 py-3 text-sm font-medium transition-default hover:border-primary/20 focus-ring"
+            >
+              Obunani boshqarish
+            </Link>
+          </div>
+        )}
 
         {isAuthenticated && user && (
           <PlanUsageSummary userId={user.id} planId={currentPlan} className="mb-6" />
@@ -227,6 +239,45 @@ function PricingPage() {
             );
           })}
         </div>
+
+        <section className="mt-12 rounded-2xl border border-border bg-card p-5 sm:p-8">
+          <div className="mb-6 text-center">
+            <div className="eyebrow mb-2">Nega Ishbor?</div>
+            <h2 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
+              Global platformalar bilan solishtiring
+            </h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
+              Ishbor rejasi — faqat funksiyalar emas, mintaqaviy ishonch va to&apos;lov ham.
+            </p>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="border-b border-border bg-elevated/50">
+                  <th className="px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Xususiyat</th>
+                  <th className="px-4 py-3 text-left font-semibold text-primary">Ishbor</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Fiverr</th>
+                  <th className="px-4 py-3 text-left text-muted-foreground">Upwork</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["Mahalliy to'lov", "✓", "—", "—"],
+                  ["Eskrou himoyasi", "✓", "Cheklangan", "Connect + fee"],
+                  ["O'zbek tilida UX", "✓", "—", "—"],
+                  ["Ishonch balli tizim", "✓", "Reyting", "Reyting"],
+                ].map(([feature, ishbor, fiverr, upwork]) => (
+                  <tr key={feature} className="border-b border-border last:border-0">
+                    <td className="px-4 py-3 font-medium">{feature}</td>
+                    <td className="px-4 py-3 font-semibold text-primary">{ishbor}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{fiverr}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{upwork}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <section className="mt-10 rounded-2xl border border-border bg-card p-5 sm:p-6">
           <h2 className="font-display text-lg font-semibold">Boshqa imkoniyatlar</h2>

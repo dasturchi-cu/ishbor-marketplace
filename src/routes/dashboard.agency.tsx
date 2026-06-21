@@ -9,6 +9,7 @@ import {
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState, confirmDestructive } from "@/components/site/feedback";
 import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { DashboardActivityFeed } from "@/components/site/dashboard-activity-feed";
 import { SimpleStatCard } from "@/components/site/simple-stat-card";
 import { AgencyVerificationBadge } from "@/components/agency/agency-verification-badge";
 import { AgencyInvitePicker } from "@/components/agency/agency-invite-picker";
@@ -229,6 +230,10 @@ function AgencyDashboardContent({
         <SimpleStatCard label="Jamoa foydalanishi" value={`${dash.teamUtilization}%`} />
       </div>
 
+      <div className="mt-6">
+        <DashboardActivityFeed />
+      </div>
+
       {canInvite && (
         <section className="mt-8 rounded-xl border border-border bg-card p-5">
           <h2 className="font-display font-semibold">Jamoa boshqaruvi</h2>
@@ -272,7 +277,7 @@ function AgencyDashboardContent({
                       <button
                         type="button"
                         onClick={() => {
-                          if (!confirmDestructive(`${m.name} jamoadan olib tashlansinmi?`)) return;
+                          if (!confirmDestructive(`${m.fullName} jamoadan olib tashlansinmi?`)) return;
                           const r = removeMember(agency.slug, m.userId);
                           if ("error" in r) toast.error(r.error);
                           else { toast.success("Olib tashlandi"); onRefresh(); }

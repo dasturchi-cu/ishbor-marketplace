@@ -239,8 +239,8 @@ function SubscriptionPage() {
 
           </div>
 
-          <div className="mt-5 border-t border-border pt-5">
-            <p className="mb-3 text-xs font-semibold text-muted-foreground">Oylik limitlar</p>
+          <div className="mb-3 border-b border-border px-4 py-3 sm:px-5">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Oylik limitlar</p>
             <PlanUsageSummary userId={user.id} variant="inline" className="border-0 pt-0" showUpgradeHint={plan.id === "free"} />
           </div>
 

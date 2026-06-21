@@ -34,7 +34,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
       <button
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+        className="liquid-glass-overlay absolute inset-0"
         onClick={onClose}
         aria-label="Modalni yopish"
       />
@@ -43,7 +43,7 @@ export function Modal({
         role="dialog"
         aria-modal
         aria-labelledby="modal-title"
-        className="relative z-10 w-full max-w-md rounded-t-2xl border border-border bg-card p-5 shadow-xl sm:rounded-2xl"
+        className="liquid-glass-panel relative z-10 w-full max-w-md rounded-t-2xl p-5 sm:rounded-2xl"
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -61,36 +61,7 @@ export function Modal({
   );
 }
 
-const emojis = ["👍", "🙏", "✅", "🎉", "💡", "🔥", "👋", "😊", "🚀", "💰", "📎", "⭐"];
-
-export function EmojiPickerModal({
-  open,
-  onClose,
-  onSelect,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onSelect: (emoji: string) => void;
-}) {
-  return (
-    <Modal open={open} onClose={onClose} title="Emoji qo'shish" description="Xabaringiz uchun emoji tanlang.">
-      <div className="grid grid-cols-6 gap-2">
-        {emojis.map((e) => (
-          <button
-            key={e}
-            onClick={() => {
-              onSelect(e);
-              onClose();
-            }}
-            className="touch-target rounded-lg border border-border py-2 text-xl transition-default hover:border-primary/20 hover:bg-secondary/50"
-          >
-            {e}
-          </button>
-        ))}
-      </div>
-    </Modal>
-  );
-}
+export { EmojiPickerModal } from "@/components/messages/emoji-picker";
 
 export function FileAttachModal({
   open,

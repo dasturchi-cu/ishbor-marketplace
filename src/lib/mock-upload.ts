@@ -60,3 +60,58 @@ export function reorderArray<T>(arr: T[], from: number, to: number): T[] {
   next.splice(to, 0, item);
   return next;
 }
+
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
+
+export type UploadedVideo = {
+  id: string;
+  url: string;
+  name: string;
+  size: number;
+  duration?: string;
+};
+
+function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export function createMockVideoUpload(file: File): Promise<UploadedVideo> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("video/")) {
+      reject(new Error("Faqat video fayl yuklash mumkin"));
+      return;
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      reject(new Error("Video 25 MB dan kichik bo'lishi kerak"));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result as string;
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        resolve({
+          id: `vid-${Date.now()}`,
+          url,
+          name: file.name,
+          size: file.size,
+          duration: Number.isFinite(video.duration) ? formatDuration(video.duration) : undefined,
+        });
+      };
+      video.onerror = () => {
+        resolve({
+          id: `vid-${Date.now()}`,
+          url,
+          name: file.name,
+          size: file.size,
+        });
+      };
+      video.src = url;
+    };
+    reader.onerror = () => reject(new Error("Videoni o'qib bo'lmadi"));
+    reader.readAsDataURL(file);
+  });
+}

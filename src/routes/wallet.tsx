@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
-import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, Lock, CreditCard, Building2, Banknote, Download, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock, Crown, Sparkles, Receipt, Share2, Bell } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Plus, ShieldCheck, CreditCard, Building2, Banknote, Download, ChevronRight, CircleAlert as AlertCircle, CircleCheck as CheckCircle2, Clock } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { GradientAvatar } from "@/components/site/avatar";
 import { EscrowShield } from "@/components/site/trust";
-import { InlineBanner, EmptyState } from "@/components/site/feedback";
+import { EmptyState } from "@/components/site/feedback";
 import { DepositModal, WithdrawModal } from "@/components/site/modals";
 import { escrowItems } from "@/lib/mock-data";
 import { AuthGate } from "@/components/auth/auth-gate";
@@ -23,6 +23,8 @@ import {
   type TxFilter,
   type WalletTransaction,
 } from "@/lib/wallet-store";
+import { primaryActionClass, secondaryActionClass } from "@/components/ux/action-buttons";
+import { WALLET_PENDING_ETA } from "@/lib/ux-constants";
 import { downloadTextFile, toCsvRow } from "@/lib/export-utils";
 
 export const Route = createFileRoute("/wallet")({
@@ -42,18 +44,6 @@ const txFilterLabels: Record<TxFilter, string> = {
 const txFilters: TxFilter[] = ["All", "Incoming", "Outgoing", "Fees", "Escrow"];
 
 const EMPTY_PAYMENT_METHODS: StoredPaymentMethod[] = [];
-
-const categoryFilters = ["All", "deposit", "withdrawal", "order", "escrow", "fee", "milestone"] as const;
-
-const categoryFilterLabels: Record<(typeof categoryFilters)[number], string> = {
-  All: "Barchasi",
-  deposit: "Depozit",
-  withdrawal: "Yechib olish",
-  order: "Buyurtma",
-  escrow: "Eskrou",
-  fee: "To'lov",
-  milestone: "Bosqich",
-};
 
 const statusLabels: Record<string, string> = {
   Yakunlangan: "Yakunlangan",
@@ -102,7 +92,6 @@ function WalletPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [txFilter, setTxFilter] = useState<TxFilter>("All");
-  const [categoryFilter, setCategoryFilter] = useState<(typeof categoryFilters)[number]>("All");
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
@@ -118,11 +107,7 @@ function WalletPage() {
     () => EMPTY_PAYMENT_METHODS,
   );
 
-  const filteredTx = (wallet?.transactions ?? []).filter((t) => {
-    const kindOk = filterTransactions([t], txFilter).length > 0;
-    const catOk = categoryFilter === "All" || t.category === categoryFilter;
-    return kindOk && catOk;
-  });
+  const filteredTx = (wallet?.transactions ?? []).filter((t) => filterTransactions([t], txFilter).length > 0);
 
   const totalEscrow = wallet?.escrow ?? escrowItems.reduce((s, e) => s + e.amount, 0);
   const available = wallet?.available ?? 0;
@@ -172,59 +157,64 @@ function WalletPage() {
       title="Hamyon"
       actions={
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <button onClick={() => setWithdrawOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-default hover:border-primary/20 focus-ring sm:flex-none">
+          <button
+            onClick={() => setWithdrawOpen(true)}
+            className={`${secondaryActionClass} flex-1 sm:flex-none`}
+          >
             Yechib olish
           </button>
-          <button onClick={() => setDepositOpen(true)} className="touch-target inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring sm:flex-none">
-            <Plus className="size-4" /> To'ldirish
+          <button
+            onClick={() => setDepositOpen(true)}
+            className={`${primaryActionClass} flex-1 sm:flex-none`}
+          >
+            <Plus className="size-4" /> To&apos;ldirish
           </button>
         </div>
       }
     >
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="relative col-span-full overflow-hidden rounded-2xl bg-foreground p-5 text-background sm:col-span-2 sm:p-6">
+        <div className="relative col-span-full overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-[0_8px_32px_-8px_oklch(0.546_0.185_257/0.4)] sm:col-span-2 sm:p-6">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-30"
-            style={{ background: "radial-gradient(closest-side, oklch(0.67 0.175 257), transparent)" }}
+            className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-25"
+            style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.35), transparent)" }}
           />
           <div
             aria-hidden
-            className="pointer-events-none absolute -bottom-8 -left-8 size-40 rounded-full opacity-20"
-            style={{ background: "radial-gradient(closest-side, oklch(0.67 0.175 257), transparent)" }}
+            className="pointer-events-none absolute -bottom-10 -left-10 size-44 rounded-full opacity-20"
+            style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.22), transparent)" }}
           />
           <div className="relative">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-background/50">
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary-foreground/60">
                   Mavjud balans
                 </div>
                 <div className="font-display mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                   ${Number(whole).toLocaleString()}
-                  <span className="text-2xl text-background/50 sm:text-3xl">.{cents}</span>
+                  <span className="text-2xl text-primary-foreground/50 sm:text-3xl">.{cents}</span>
                 </div>
-                <div className="mt-1 text-sm text-background/50">
-                  = {Math.round(available * 12500).toLocaleString()} UZS
+                <div className="mt-1 text-sm text-primary-foreground/60">
+                  ≈ {Math.round(available * 12500).toLocaleString()} UZS
                 </div>
               </div>
-              <div className="inline-flex size-10 items-center justify-center rounded-xl bg-background/10">
-                <ShieldCheck className="size-5 text-background" />
+              <div className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                <ShieldCheck className="size-5 text-primary-foreground" />
               </div>
             </div>
-            <div className="mt-6 grid grid-cols-1 gap-4 border-t border-white/10 pt-4 sm:mt-8 sm:grid-cols-3 sm:pt-5">
+            <div className="mt-6 grid grid-cols-3 gap-4 border-t border-white/15 pt-4 sm:mt-8 sm:pt-5">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Eskrouda</div>
-                <div className="font-display mt-1 text-xl font-bold" style={{ color: "oklch(0.7 0.175 257)" }}>
-                  ${totalEscrow.toLocaleString()}
-                </div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-primary-foreground/55">Eskrouda</div>
+                <div className="font-display mt-1 text-lg font-bold sm:text-xl">${totalEscrow.toLocaleString()}</div>
               </div>
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Umumiy topilgan</div>
-                <div className="font-display mt-1 text-xl font-bold">${lifetime.toLocaleString()}</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-primary-foreground/55">Topilgan</div>
+                <div className="font-display mt-1 text-lg font-bold sm:text-xl">${lifetime.toLocaleString()}</div>
               </div>
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-background/50">Kutilmoqda</div>
-                <div className="font-display mt-1 text-xl font-bold">${pending.toLocaleString()}</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-primary-foreground/55">Kutilmoqda</div>
+                <div className="font-display mt-1 text-lg font-bold sm:text-xl">${pending.toLocaleString()}</div>
+                <div className="mt-0.5 text-[10px] text-primary-foreground/50">{WALLET_PENDING_ETA}</div>
               </div>
             </div>
           </div>
@@ -273,73 +263,13 @@ function WalletPage() {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Link to="/pricing" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
-          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Receipt className="size-4" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Tariflar</div>
-            <div className="text-xs text-muted-foreground">Rejalarni solishtirish</div>
-          </div>
-        </Link>
-        <Link to="/subscription" search={{ plan: undefined }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
-          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Crown className="size-4" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Obuna</div>
-            <div className="text-xs text-muted-foreground">Reja va kreditlar</div>
-          </div>
-        </Link>
-        <Link to="/promotions" className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
-          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Sparkles className="size-4" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Rivojlantirish</div>
-            <div className="text-xs text-muted-foreground">Profil va xizmatni ko'tarish</div>
-          </div>
-        </Link>
-      </div>
-
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
-        <Link to="/settings" search={{ tab: "referral" }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
-          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Share2 className="size-4" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Referral dasturi</div>
-            <div className="text-xs text-muted-foreground">Do'stlarni taklif qiling</div>
-          </div>
-        </Link>
-        <Link to="/settings" search={{ tab: "alerts" }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
-          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Bell className="size-4" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Ish ogohlantirishlari</div>
-            <div className="text-xs text-muted-foreground">Yangi loyiha xabarlari</div>
-          </div>
-        </Link>
-        <Link to="/settings" search={{ tab: "verification" }} className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition-default hover:border-primary/20">
-          <div className="inline-flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <ShieldCheck className="size-4" />
-          </div>
-          <div>
-            <div className="text-sm font-semibold">Shaxsni tasdiqlash</div>
-            <div className="text-xs text-muted-foreground">Ishonch darajasini oshiring</div>
-          </div>
-        </Link>
-      </div>
-
-      <section className="mt-6 rounded-2xl border border-primary/20 bg-card overflow-hidden">
-        <div className="flex items-center justify-between border-b border-primary/10 bg-primary/5 px-5 py-4">
+      <section className="mt-6 rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
             <EscrowShield size="md" />
-            <h2 className="font-display text-base font-bold">Eskrou</h2>
+            <h2 className="text-sm font-semibold">Eskrou</h2>
           </div>
-          <span className="font-mono text-xs text-primary">${totalEscrow.toLocaleString()} himoyalangan</span>
+          <Link to="/escrow" className="text-xs font-medium text-primary hover:underline">Barchasi</Link>
         </div>
         <div className="grid gap-0 divide-y divide-border sm:divide-x sm:divide-y-0 sm:grid-cols-3">
           {escrowItems.map((e) => (
@@ -373,15 +303,7 @@ function WalletPage() {
         </div>
       </section>
 
-      <InlineBanner variant="info" icon={ShieldCheck} className="mt-4">
-        <span className="font-semibold">Bank darajasidagi himoya.</span>{" "}
-        <span className="text-muted-foreground">
-          Barcha mablag'lar eskrou himoyasida va Ipoteka-bankdagi ajratilgan hisoblarda saqlanadi.
-          Yechib olishlar 2FA orqali tasdiqlanadi.
-        </span>
-      </InlineBanner>
-
-      <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-card">
+      <section className="mt-6 overflow-hidden rounded-xl border border-border bg-card">
         <div className="border-b border-border px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -406,38 +328,20 @@ function WalletPage() {
             </div>
           </div>
 
-          <div className="mt-4 space-y-3">
-            <div className="mobile-scroll-x flex max-w-full gap-1 rounded-lg border border-border bg-background p-1">
-              {txFilters.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setTxFilter(f)}
-                  className={`touch-target shrink-0 rounded-md px-3 py-2 text-xs font-medium transition-default focus-ring ${
-                    txFilter === f
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                  }`}
-                >
-                  {txFilterLabels[f]}
-                </button>
-              ))}
-            </div>
-
-            <div className="mobile-scroll-x flex max-w-full flex-nowrap gap-1.5 sm:flex-nowrap">
-              {categoryFilters.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCategoryFilter(c)}
-                  className={`touch-target shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-default focus-ring ${
-                    categoryFilter === c
-                      ? "border-primary/25 bg-primary/8 text-primary"
-                      : "border-border bg-background text-muted-foreground hover:border-primary/20 hover:text-foreground"
-                  }`}
-                >
-                  {categoryFilterLabels[c]}
-                </button>
-              ))}
-            </div>
+          <div className="mt-4 mobile-scroll-x flex max-w-full gap-1 rounded-lg border border-border bg-background p-1">
+            {txFilters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setTxFilter(f)}
+                className={`touch-target shrink-0 rounded-md px-3 py-2 text-xs font-medium transition-default focus-ring ${
+                  txFilter === f
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                }`}
+              >
+                {txFilterLabels[f]}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -445,19 +349,27 @@ function WalletPage() {
           <div className="p-6">
             <EmptyState
               icon={Banknote}
-              title="Tranzaksiyalar topilmadi"
-              description="Filtrlarni o'zgartiring yoki hamyonni to'ldiring."
+              title={txFilter === "All" ? "Tranzaksiyalar yo'q" : "Tranzaksiyalar topilmadi"}
+              description={
+                txFilter === "All"
+                  ? "Hamyonni to'ldiring yoki birinchi buyurtmangizni boshlang."
+                  : "Filtrlarni o'zgartiring yoki hamyonni to'ldiring."
+              }
               compact
               action={
-                <button
-                  onClick={() => {
-                    setTxFilter("All");
-                    setCategoryFilter("All");
-                  }}
-                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition-default hover:border-primary/20"
-                >
-                  Filtrlarni tozalash
-                </button>
+                txFilter === "All" ? (
+                  <button type="button" onClick={() => setDepositOpen(true)} className={primaryActionClass}>
+                    Hamyonni to&apos;ldirish
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setTxFilter("All")}
+                    className={secondaryActionClass}
+                  >
+                    Filtrlarni tozalash
+                  </button>
+                )
               }
             />
           </div>
@@ -488,7 +400,7 @@ function WalletPage() {
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         <TxStatusBadge status={t.status} />
                         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {categoryFilterLabels[t.category as keyof typeof categoryFilterLabels] ?? t.category}
+                          {t.category}
                         </span>
                         <span className="font-mono text-[10px] text-muted-foreground">{formatTxDate(t.date)}</span>
                       </div>
@@ -530,7 +442,7 @@ function WalletPage() {
                       </td>
                       <td className="px-5 py-3.5">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                          {categoryFilterLabels[t.category as keyof typeof categoryFilterLabels] ?? t.category}
+                          {t.category}
                         </span>
                       </td>
                       <td

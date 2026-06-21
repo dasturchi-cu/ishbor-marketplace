@@ -1,15 +1,21 @@
 /** Client analytics route — moved from analytics.client.tsx (TanStack `.client.*` conflict). */
 import { createFileRoute, Link } from "@tanstack/react-router";
-import React, { useState, useSyncExternalStore } from "react";
-import { FolderOpen } from "lucide-react";
-import { SimpleStatCard } from "@/components/site/simple-stat-card";
+import { useState, useSyncExternalStore } from "react";
+import { DollarSign, FolderOpen, Shield, Users } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { EmptyState } from "@/components/site/feedback";
 import { ProtectedGate } from "@/components/auth/protected-gate";
+import {
+  AnalyticsActivityChart,
+  AnalyticsChartCard,
+  AnalyticsRangeToggle,
+  AnalyticsSpendChart,
+  AnalyticsStatCard,
+} from "@/components/analytics/analytics-charts";
 import { requireRole } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { getClientAnalytics, getClientChartData, getClientSpendChart } from "@/lib/analytics-utils";
-import { subscribeAnalyticsEvents, getAllAnalyticsEvents } from "@/lib/analytics-events-store";
+import { getWeeklyBuckets, subscribeAnalyticsEvents, getAllAnalyticsEvents } from "@/lib/analytics-events-store";
 
 export const Route = createFileRoute("/analytics/client")({
   beforeLoad: requireRole(["client"]),
@@ -29,26 +35,22 @@ function ClientAnalyticsPage() {
 
   if (!user) return null;
   const analytics = getClientAnalytics(user, range);
-  const activityChart = getClientChartData(user.id, range);
+  const activityChart =
+    range === 90
+      ? getWeeklyBuckets(["project_created", "proposal_received", "order_created", "escrow_funded"], 13).map(
+          (d) => ({ label: d.label, value: d.value }),
+        )
+      : getClientChartData(user.id, range);
   const spendChart = getClientSpendChart(user);
-  const maxActivity = Math.max(...activityChart.map((d) => d.value), 1);
-  const maxSpend = Math.max(...spendChart.map((d) => d.value), 1);
+  const hasData = analytics.projectsCreated > 0 || analytics.totalSpend > 0 || analytics.freelancersHired > 0;
 
   return (
     <WorkspaceShell
       eyebrow="Analitika markazi"
       title="Mijoz analitikasi"
-      actions={
-        <div className="flex flex-wrap gap-2">
-          {([7, 30, 90] as const).map((r) => (
-            <button key={r} type="button" onClick={() => setRange(r)} className={`rounded-lg px-3 py-1.5 text-xs font-medium ${range === r ? "bg-primary text-primary-foreground" : "border border-border"}`}>
-              {r} kun
-            </button>
-          ))}
-        </div>
-      }
+      actions={<AnalyticsRangeToggle value={range} onChange={setRange} />}
     >
-      {analytics.projectsCreated === 0 && analytics.totalSpend === 0 ? (
+      {!hasData ? (
         <EmptyState
           icon={FolderOpen}
           title="Hali analitika ma'lumotlari yo'q"
@@ -60,44 +62,77 @@ function ClientAnalyticsPage() {
           }
         />
       ) : (
-      <>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <SimpleStatCard label="Yaratilgan loyihalar" value={String(analytics.projectsCreated)} />
-        <SimpleStatCard label="Yollangan frilanserlar" value={String(analytics.freelancersHired)} />
-        <SimpleStatCard label="Jami xarajat" value={`$${analytics.totalSpend.toLocaleString()}`} />
-        <SimpleStatCard label="Eskrou moliyalashtirilgan" value={`$${analytics.escrowFunded.toLocaleString()}`} />
-      </div>
+        <div className="space-y-6">
+          <div className="relative overflow-hidden rounded-2xl bg-primary p-5 text-primary-foreground shadow-[0_8px_32px_-8px_oklch(0.546_0.185_257/0.4)] sm:p-6">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-25"
+              style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.35), transparent)" }}
+            />
+            <div className="relative flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary-foreground/60">
+                  Jami xarajat
+                </div>
+                <div className="font-display mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  ${analytics.totalSpend.toLocaleString()}
+                </div>
+                <div className="mt-1 text-sm text-primary-foreground/65">
+                  ≈ {Math.round(analytics.totalSpend * 12500).toLocaleString()} UZS · {range} kun davri
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-primary-foreground/55">Eskrou</div>
+                  <div className="font-display mt-0.5 text-lg font-bold">${analytics.escrowFunded.toLocaleString()}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-widest text-primary-foreground/55">Takroriy</div>
+                  <div className="font-display mt-0.5 text-lg font-bold">{analytics.repeatFreelancerRate}%</div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="font-display font-semibold">Yollash faolligi</h3>
-          <div className="mt-4 overflow-x-auto">
-          <div className="flex h-36 min-w-[480px] items-end gap-1">
-            {activityChart.map((d) => (
-              <div key={d.date} className="flex flex-1 flex-col items-center gap-1">
-                <div className="w-full rounded-t bg-primary/80" style={{ height: `${Math.max(4, (d.value / maxActivity) * 120)}px` }} />
-                <span className="font-mono text-[8px] text-muted-foreground">{d.label}</span>
-              </div>
-            ))}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <AnalyticsStatCard label="Yaratilgan loyihalar" value={String(analytics.projectsCreated)} icon={FolderOpen} />
+            <AnalyticsStatCard
+              label="Yollangan frilanserlar"
+              value={String(analytics.freelancersHired)}
+              icon={Users}
+              accent
+            />
+            <AnalyticsStatCard
+              label="Jami xarajat"
+              value={`$${analytics.totalSpend.toLocaleString()}`}
+              icon={DollarSign}
+            />
+            <AnalyticsStatCard
+              label="Eskrou moliyalashtirilgan"
+              value={`$${analytics.escrowFunded.toLocaleString()}`}
+              icon={Shield}
+            />
           </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <AnalyticsChartCard title="Yollash faolligi" subtitle={`So'nggi ${range} kun — loyiha, taklif va buyurtmalar`}>
+              <AnalyticsActivityChart data={activityChart} range={range} />
+            </AnalyticsChartCard>
+            <AnalyticsChartCard title="Xarajat dinamikasi" subtitle="Oylik eskrou va yakunlangan buyurtmalar">
+              <AnalyticsSpendChart data={spendChart} />
+            </AnalyticsChartCard>
           </div>
+
+          {analytics.proposalsReceived > 0 && (
+            <div className="rounded-2xl border border-border bg-card px-5 py-4 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{analytics.proposalsReceived}</span> ta taklif qabul qilindi ·
+              o&apos;rtacha yollash{" "}
+              <span className="font-semibold text-foreground">
+                {analytics.averageHireTime > 0 ? `$${analytics.averageHireTime.toLocaleString()}` : "—"}
+              </span>
+            </div>
+          )}
         </div>
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h3 className="font-display font-semibold">Xarajat dinamikasi</h3>
-          <div className="mt-4 overflow-x-auto">
-          <div className="flex h-36 min-w-[320px] items-end gap-2">
-            {spendChart.map((d) => (
-              <div key={d.month} className="flex flex-1 flex-col items-center gap-1">
-                <span className="font-mono text-[9px]">${d.value}</span>
-                <div className="w-full rounded-t bg-primary" style={{ height: `${Math.max(4, (d.value / maxSpend) * 100)}px` }} />
-                <span className="font-mono text-[8px] text-muted-foreground">{d.month}</span>
-              </div>
-            ))}
-          </div>
-          </div>
-        </div>
-      </div>
-      </>
       )}
     </WorkspaceShell>
   );

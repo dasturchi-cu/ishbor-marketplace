@@ -10,7 +10,7 @@ import {
   Clock,
   BookOpen,
 } from "lucide-react";
-import { getOnboardingSteps, loadOnboardingState } from "@/lib/auth-constants";
+import { getOnboardingSteps, getFirstOnboardingPath, loadOnboardingState } from "@/lib/auth-constants";
 import { persistOnboardingToProfile, persistOnboardingPortfolios } from "@/lib/profile-store";
 import { getSession } from "@/lib/auth";
 import { Logo } from "@/components/site/logo";
@@ -38,6 +38,8 @@ function WelcomePage() {
   const state = loadOnboardingState();
   const firstName = state.fullName.split(" ")[0] || "do'st";
   const steps = getOnboardingSteps(state.userType);
+  const firstStepPath = getFirstOnboardingPath(state.userType);
+  const firstStepLabel = steps[0]?.label ?? "Profilingizni sozlang";
   const isComplete = setup === "complete";
   const isClient = state.userType === "client";
   const dashboardPath = isClient ? "/dashboard" : "/dashboard/freelancer";
@@ -64,7 +66,7 @@ function WelcomePage() {
         }}
       />
 
-      <header className="relative z-10 flex items-center justify-between border-b border-border/80 bg-background/80 px-4 py-4 backdrop-blur-sm sm:px-6">
+      <header className="liquid-glass relative z-10 flex items-center justify-between border-b px-4 py-4 sm:px-6">
         <Link to="/" className="transition-default hover:opacity-80">
           <Logo />
         </Link>
@@ -142,10 +144,10 @@ function WelcomePage() {
                 <>
                   <button
                     type="button"
-                    onClick={() => navigate({ to: "/onboarding" })}
+                    onClick={() => navigate({ to: firstStepPath })}
                     className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.35)] transition-default hover:opacity-95 focus-ring"
                   >
-                    Profilingizni sozlang
+                    {firstStepLabel} — boshlash
                     <ArrowRight className="size-4" />
                   </button>
                   <div className="grid grid-cols-2 gap-3">
@@ -171,7 +173,7 @@ function WelcomePage() {
 
           {/* Steps preview */}
           {!isComplete && (
-            <div className="mt-5 overflow-hidden rounded-2xl border border-border bg-card/80 p-5 backdrop-blur-sm sm:p-6">
+            <div className="surface-card mt-5 overflow-hidden rounded-2xl p-5 sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   {isClient ? (
@@ -204,7 +206,12 @@ function WelcomePage() {
                     <div className="min-w-0 flex-1 pt-0.5">
                       <p className="text-sm font-medium text-foreground">{step.label}</p>
                       {i === 0 && (
-                        <p className="mt-0.5 text-xs text-muted-foreground">Birinchi qadam — hozir boshlang</p>
+                        <Link
+                          to={firstStepPath}
+                          className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          Hozir boshlash <ArrowRight className="size-3" />
+                        </Link>
                       )}
                     </div>
                   </li>

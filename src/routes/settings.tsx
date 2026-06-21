@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Search, ChevronLeft } from "lucide-react";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
@@ -12,14 +12,6 @@ import {
   type SettingsSectionId,
 } from "@/components/settings/settings-nav";
 import { AccountTab } from "@/components/settings/tabs/account-tab";
-import { SecurityTab } from "@/components/settings/tabs/security-tab";
-import { NotificationsTab } from "@/components/settings/tabs/notifications-tab";
-import { JobAlertsTab } from "@/components/settings/tabs/job-alerts-tab";
-import { ReferralTab } from "@/components/settings/tabs/referral-tab";
-import { AppearanceTab } from "@/components/settings/tabs/appearance-tab";
-import { LanguageTab } from "@/components/settings/tabs/language-tab";
-import { PaymentMethodsTab } from "@/components/settings/tabs/payment-tab";
-import { VerificationTab } from "@/components/settings/tabs/verification-tab";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { ProtectedGate } from "@/components/auth/protected-gate";
@@ -37,6 +29,31 @@ import {
 import { computeProfileCompletionPercent } from "@/lib/profile-store";
 import { computeSecurityScore } from "@/lib/security-store";
 import { computeVerificationScore } from "@/lib/verification-settings-store";
+
+const SecurityTab = lazy(() =>
+  import("@/components/settings/tabs/security-tab").then((m) => ({ default: m.SecurityTab })),
+);
+const NotificationsTab = lazy(() =>
+  import("@/components/settings/tabs/notifications-tab").then((m) => ({ default: m.NotificationsTab })),
+);
+const JobAlertsTab = lazy(() =>
+  import("@/components/settings/tabs/job-alerts-tab").then((m) => ({ default: m.JobAlertsTab })),
+);
+const ReferralTab = lazy(() =>
+  import("@/components/settings/tabs/referral-tab").then((m) => ({ default: m.ReferralTab })),
+);
+const AppearanceTab = lazy(() =>
+  import("@/components/settings/tabs/appearance-tab").then((m) => ({ default: m.AppearanceTab })),
+);
+const LanguageTab = lazy(() =>
+  import("@/components/settings/tabs/language-tab").then((m) => ({ default: m.LanguageTab })),
+);
+const PaymentMethodsTab = lazy(() =>
+  import("@/components/settings/tabs/payment-tab").then((m) => ({ default: m.PaymentMethodsTab })),
+);
+const VerificationTab = lazy(() =>
+  import("@/components/settings/tabs/verification-tab").then((m) => ({ default: m.VerificationTab })),
+);
 
 const coreSections = [
   "Hisob",
@@ -56,6 +73,18 @@ const moreSections = [
 const sections = [...coreSections, ...moreSections] as const;
 
 type Section = (typeof sections)[number];
+
+function LazyTab({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<TabSpinner />}>{children}</Suspense>;
+}
+
+function TabSpinner() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <LoadingSpinner />
+    </div>
+  );
+}
 
 const TAB_ALIASES: Record<string, Section> = {
   account: "Hisob",
@@ -334,20 +363,50 @@ function SettingsPage() {
                 {active === "Hisob" && (
                   <AccountTab user={user} onDirtyChange={handleAccountDirty} saveVersion={accountSaveVersion} />
                 )}
-                {active === "Xavfsizlik" && <SecurityTab userId={user.id} />}
-                {active === "Bildirishnomalar" && <NotificationsTab userId={user.id} />}
-                {active === "Ogohlantirishlar" && <JobAlertsTab userId={user.id} />}
-                {active === "Taklif dasturi" && <ReferralTab userId={user.id} />}
-                {active === "Ko'rinish" && <AppearanceTab userId={user.id} />}
-                {active === "Til" && <LanguageTab userId={user.id} />}
-                {active === "To'lov usullari" && (
-                  <PaymentMethodsTab
-                    userId={user.id}
-                    openAddOnMount={search.pay === "add" && !payAddConsumed}
-                    onAddOpened={() => setPayAddConsumed(true)}
-                  />
+                {active === "Xavfsizlik" && (
+                  <LazyTab>
+                    <SecurityTab userId={user.id} />
+                  </LazyTab>
                 )}
-                {active === "Shaxsni tasdiqlash" && <VerificationTab userId={user.id} />}
+                {active === "Bildirishnomalar" && (
+                  <LazyTab>
+                    <NotificationsTab userId={user.id} />
+                  </LazyTab>
+                )}
+                {active === "Ogohlantirishlar" && (
+                  <LazyTab>
+                    <JobAlertsTab userId={user.id} />
+                  </LazyTab>
+                )}
+                {active === "Taklif dasturi" && (
+                  <LazyTab>
+                    <ReferralTab userId={user.id} />
+                  </LazyTab>
+                )}
+                {active === "Ko'rinish" && (
+                  <LazyTab>
+                    <AppearanceTab userId={user.id} />
+                  </LazyTab>
+                )}
+                {active === "Til" && (
+                  <LazyTab>
+                    <LanguageTab userId={user.id} />
+                  </LazyTab>
+                )}
+                {active === "To'lov usullari" && (
+                  <LazyTab>
+                    <PaymentMethodsTab
+                      userId={user.id}
+                      openAddOnMount={search.pay === "add" && !payAddConsumed}
+                      onAddOpened={() => setPayAddConsumed(true)}
+                    />
+                  </LazyTab>
+                )}
+                {active === "Shaxsni tasdiqlash" && (
+                  <LazyTab>
+                    <VerificationTab userId={user.id} />
+                  </LazyTab>
+                )}
               </>
             )}
           </div>

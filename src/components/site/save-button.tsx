@@ -26,7 +26,7 @@ export function SaveButton({
         toggle();
       }}
       className={`inline-flex ${btnSize} items-center justify-center rounded-full transition-default focus-ring ${
-        saved ? "bg-primary text-primary-foreground" : "bg-black/30 text-white hover:bg-black/50 backdrop-blur-sm"
+        saved ? "bg-primary text-primary-foreground" : "bg-black/50 text-white hover:bg-black/65"
       } ${className}`}
       aria-label={saved ? "Saqlashni bekor qilish" : "Saqlash"}
     >

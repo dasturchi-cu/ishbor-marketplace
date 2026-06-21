@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import type { UserType } from "@/lib/auth-constants";
+import type { WorkspaceRole } from "@/lib/active-role-store";
 import { getActiveDashboardPath } from "@/lib/active-role-store";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { useAuth } from "@/hooks/use-auth";
@@ -12,7 +12,7 @@ export function RoleGate({
   roles,
   children,
 }: {
-  roles: UserType[];
+  roles: WorkspaceRole[];
   children: ReactNode;
 }) {
   const { isAuthenticated } = useAuth();

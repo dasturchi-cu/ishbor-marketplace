@@ -1,4 +1,5 @@
-import type { Project, ProjectFormInput } from "./mock-data";
+import type { Project } from "./mock-data";
+import type { ProjectFormInput } from "./projects-store";
 
 const GARBAGE_PATTERNS = [
   /^asd+$/i,

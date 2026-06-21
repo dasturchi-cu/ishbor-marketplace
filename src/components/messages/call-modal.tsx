@@ -51,7 +51,10 @@ export function CallModal({
   useEffect(() => {
     if (!open) return;
     refreshHistory();
-    return subscribeCallHistory(refreshHistory);
+    const unsub = subscribeCallHistory(refreshHistory);
+    return () => {
+      unsub();
+    };
   }, [open, refreshHistory]);
 
   useEffect(() => {

@@ -9,6 +9,7 @@ import { getClient, getClientProjects, getClientReviews } from "@/lib/mock-data"
 import { getClientPublicMetrics } from "@/lib/analytics-utils";
 import { computeClientReputation } from "@/lib/reputation-store";
 import { ReputationBadge } from "@/components/reputation/reputation-badge";
+import { ClientTrustBanner } from "@/components/trust/trust-summary";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 
 export const Route = createFileRoute("/clients/$company")({
@@ -87,7 +88,11 @@ function ClientProfilePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <ClientTrustBanner slug={client.slug} name={client.name} verified={client.verified} />
+      </div>
+
+      <div className="mx-auto max-w-7xl space-y-10 px-4 py-4 sm:px-6 sm:py-10">
         <section>
           <h2 className="font-display text-lg font-semibold">Open projects</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">

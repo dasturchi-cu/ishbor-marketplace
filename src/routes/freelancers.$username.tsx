@@ -46,6 +46,7 @@ import { getPublishedPortfoliosByUsername, subscribePortfolios } from "@/lib/por
 import type { PortfolioItem } from "@/lib/portfolio-types";
 import { computeSuccessScore, computeResponseRate, formatResponseTime } from "@/lib/growth-metrics";
 import { ReputationBadge } from "@/components/reputation/reputation-badge";
+import { ProfileTrustBanner } from "@/components/trust/trust-summary";
 import { computeFreelancerReputation } from "@/lib/reputation-store";
 import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import { useClientCheckout } from "@/hooks/use-client-checkout";
@@ -55,6 +56,8 @@ import { recordProfileView, recordContactClick, getEntityEventCount } from "@/li
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
 import { isProfileFeatured } from "@/lib/featured-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
+import { ProfileVideoEditor } from "@/components/profile/profile-video-editor";
+import { getProfileByUsername, getUserProfile, subscribeProfiles } from "@/lib/profile-store";
 
 const EMPTY_PROJECTS: never[] = [];
 const EMPTY_PORTFOLIO: PortfolioItem[] = [];
@@ -117,6 +120,31 @@ function FreelancerProfile() {
   );
 
   const isOwnProfile = user?.username === f.username;
+  const storedProfile = useSyncExternalStore(
+    subscribeProfiles,
+    () =>
+      isOwnProfile && user
+        ? getUserProfile(user.id)
+        : getProfileByUsername(f.username),
+    () => null,
+  );
+  const videoIntro = useMemo(() => {
+    const stored = storedProfile?.videoIntro;
+    if (stored?.url || stored?.fileUrl) {
+      return {
+        url: stored.url,
+        fileUrl: stored.fileUrl,
+        posterUrl: stored.posterUrl,
+        duration: stored.duration ?? f.videoIntro?.duration ?? "—",
+        isDemo: false,
+      };
+    }
+    if (f.videoIntro && !isOwnProfile) {
+      return { duration: f.videoIntro.duration, isDemo: true };
+    }
+    return null;
+  }, [storedProfile?.videoIntro, f.videoIntro, isOwnProfile]);
+  const showVideoColumn = isOwnProfile || !!videoIntro;
   const liveSuccess = useMemo(() => computeSuccessScore(f.username), [f.username]);
   const liveResponse = useMemo(() => computeResponseRate(f.username), [f.username]);
   const liveEarned = useMemo(
@@ -217,8 +245,8 @@ function FreelancerProfile() {
             />
             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
             <div className="absolute left-5 right-5 top-5 flex flex-wrap items-start justify-between gap-3 sm:left-6 sm:right-6">
-              <LevelBadge level={f.level} className="border border-white/20 bg-white/15 text-white backdrop-blur-md" />
-              <div className="font-mono rounded-full border border-white/15 bg-black/10 px-3 py-1 text-[10px] uppercase tracking-widest text-white/90 backdrop-blur-sm">
+              <LevelBadge level={f.level} className="border border-white/25 bg-black/45 text-white" />
+              <div className="font-mono rounded-full border border-white/20 bg-black/45 px-3 py-1 text-[10px] uppercase tracking-widest text-white/90">
                 A'zo bo'lgan sana: {f.memberSince}
               </div>
             </div>
@@ -316,6 +344,14 @@ function FreelancerProfile() {
           </div>
         </div>
 
+        <ProfileTrustBanner
+          username={f.username}
+          identityVerified={f.identityVerified}
+          rating={f.rating}
+          reviewCount={f.reviews}
+          className="mt-6"
+        />
+
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
           <div className="space-y-6 min-w-0">
             <div className="flex flex-wrap gap-2 border-b border-border pb-1">
@@ -341,14 +377,33 @@ function FreelancerProfile() {
             {activeTab === "about" && (
               <div className="space-y-8">
                 <section className="overflow-hidden rounded-2xl border border-border bg-card">
-                  <div className="grid gap-0 lg:grid-cols-[1fr_300px]">
+                  <div className={`grid gap-0 ${showVideoColumn ? "lg:grid-cols-[1fr_300px]" : ""}`}>
                     <div className="p-6 sm:p-8">
                       <h2 className="font-display text-xl font-bold tracking-tight">Haqida</h2>
                       <p className="mt-4 max-w-prose text-base leading-relaxed text-foreground/85">{f.bio}</p>
                     </div>
-                    {f.videoIntro && (
+                    {showVideoColumn && (
                       <div className="border-t border-border lg:border-l lg:border-t-0">
-                        <VideoIntro name={f.name} hue={f.hue} duration={f.videoIntro.duration} />
+                        {isOwnProfile && user && (
+                          <div className="border-b border-border p-4 sm:p-5">
+                            <ProfileVideoEditor
+                              userId={user.id}
+                              hue={f.hue}
+                              compact={!!videoIntro}
+                            />
+                          </div>
+                        )}
+                        {videoIntro && (
+                          <VideoIntro
+                            name={f.name}
+                            hue={f.hue}
+                            duration={videoIntro.duration}
+                            url={videoIntro.url}
+                            fileUrl={videoIntro.fileUrl}
+                            posterUrl={videoIntro.posterUrl}
+                            isDemo={videoIntro.isDemo}
+                          />
+                        )}
                       </div>
                     )}
                   </div>

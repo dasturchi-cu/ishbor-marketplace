@@ -176,7 +176,7 @@ function RootComponent() {
         position="top-center"
         toastOptions={{
           classNames: {
-            toast: "font-sans border border-border bg-card text-foreground shadow-lg",
+            toast: "font-sans liquid-glass-panel text-foreground",
             title: "font-semibold text-sm",
             description: "text-muted-foreground text-xs",
             success: "border-success/20",

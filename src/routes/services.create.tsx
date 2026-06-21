@@ -100,13 +100,23 @@ function CreateServicePage() {
   };
 
   const handleDraft = () => {
-    const input = buildInput();
-    if (!input) {
-      actionFeedback.error("Sarlavha, tavsif va narx to'ldirilishi shart.");
+    if (!title.trim()) {
+      actionFeedback.error("Qoralama saqlash uchun sarlavha talab qilinadi.");
       return;
     }
+    const input: ServiceFormInput = {
+      title: title.trim(),
+      category,
+      description: description.trim(),
+      price: Number(price) || 0,
+      delivery: delivery.trim() || "7 kun",
+      included: included.split("\n").map((l) => l.trim()).filter(Boolean),
+    };
     const s = saveServiceDraft(input, ctx, edit);
-    actionFeedback.draftSaved("Qoralama");
+    actionFeedback.draftSaved("Xizmat qoralamasi", {
+      listHint: "Mening xizmatlarim → Qoralama",
+      onViewList: () => navigate({ to: "/my-services", search: { tab: "draft" } }),
+    });
     navigate({ to: "/services/create", search: { edit: s.slug } });
   };
 

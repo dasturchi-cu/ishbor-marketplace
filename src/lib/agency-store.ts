@@ -499,7 +499,7 @@ export function seedDemoAgencyIfNeeded(userId: string): Agency | null {
     name: "Ishbor Studio",
     description: "Platform demo agentligi — jamoa, CRM va portfolio boshqaruvi.",
     foundedYear: 2024,
-    teamSize: "6-10",
+    teamSize: 8,
     specializations: ["Branding", "Development", "Strategy"],
     languages: ["O'zbek", "Rus", "Ingliz"],
     location: "Tashkent, Uzbekistan",

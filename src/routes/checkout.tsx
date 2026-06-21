@@ -25,6 +25,8 @@ import { recordServiceOrder } from "@/lib/analytics-utils";
 import { recordAnalyticsEvent } from "@/lib/analytics-events-store";
 import { getAllServices } from "@/lib/services-store";
 import { computeSuccessScore } from "@/lib/growth-metrics";
+import { StickyMobileCta } from "@/components/ux/sticky-mobile-cta";
+import { primaryActionClass } from "@/components/ux/action-buttons";
 
 type CheckoutSearch = {
   type?: "service" | "hire" | "order";
@@ -392,7 +394,7 @@ function CheckoutPage() {
     <div className="min-h-screen bg-background">
       <SiteNav />
 
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 pb-28 sm:px-6 lg:pb-8">
         <nav className="font-mono mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
           <button onClick={() => window.history.back()} className="touch-target flex items-center gap-1 transition-default hover:text-foreground">
             <ChevronLeft className="size-3" /> Orqaga
@@ -536,6 +538,27 @@ function CheckoutPage() {
           </aside>
         </div>
       </div>
+
+      <StickyMobileCta
+        label="Jami to'lov"
+        amount={`$${(total + platformFee).toLocaleString()}`}
+        action={
+          step === "review" ? (
+            <button type="button" onClick={() => setStep("payment")} className={primaryActionClass}>
+              To&apos;lovga o&apos;tish
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleConfirmPayment}
+              disabled={paying}
+              className={primaryActionClass}
+            >
+              {paying ? "…" : "To'lash"}
+            </button>
+          )
+        }
+      />
 
       <SiteFooter />
     </div>

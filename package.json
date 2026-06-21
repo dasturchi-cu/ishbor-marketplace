@@ -63,6 +63,7 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "^8.6.0",
+    "emoji-picker-react": "^4.19.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.575.0",
     "postgres": "^3.4.9",
@@ -101,9 +102,9 @@
     "jsdom": "^29.1.1",
     "nitro": "3.0.260603-beta",
     "prettier": "^3.7.3",
+    "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "tsx": "^4.20.3",
     "vite": "^8.0.16",
     "vitest": "^4.1.9"
   }

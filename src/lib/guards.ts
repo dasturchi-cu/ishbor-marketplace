@@ -1,7 +1,7 @@
 import { redirect } from "@tanstack/react-router";
-import type { UserType } from "./auth-constants";
-import { getSession, isAdminUser } from "./auth";
+import type { WorkspaceRole } from "./active-role-store";
 import { getActiveRole, getActiveDashboardPath } from "./active-role-store";
+import { getSession, isAdminUser } from "./auth";
 
 type GuardContext = {
   location: { href: string; pathname: string; search?: string | Record<string, unknown> };
@@ -59,7 +59,7 @@ export function requireGuest(ctx: GuardContext) {
   }
 }
 
-export function requireRole(roles: UserType[]) {
+export function requireRole(roles: WorkspaceRole[]) {
   return (ctx: GuardContext) => {
     if (typeof window === "undefined") return;
     const session = getSession();

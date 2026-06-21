@@ -27,6 +27,9 @@ import {
 import { getSession } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { freelancers } from "@/lib/mock-data";
+import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
+import { PageBreadcrumb } from "@/components/ux/page-breadcrumb";
+import { PrimaryLink, SecondaryLink, primaryActionClass } from "@/components/ux/action-buttons";
 import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import { useClientCheckout } from "@/hooks/use-client-checkout";
 import { isFeaturedActive } from "@/lib/featured-store";
@@ -233,19 +236,12 @@ function ProjectDetailContent({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link
-                to="/my-projects"
-                className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold transition-default hover:border-primary/20"
-              >
-                <FolderOpen className="size-3.5" /> Mening loyihalarim
-              </Link>
-              <Link
-                to="/projects/create"
-                search={{ edit: p.slug }}
-                className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-default hover:opacity-90"
-              >
+              <a href="#project-proposals" className={`${primaryActionClass} text-xs`}>
+                Takliflarni ko&apos;rish
+              </a>
+              <SecondaryLink to="/projects/create" search={{ edit: p.slug }} className="text-xs">
                 <Pencil className="size-3.5" /> Tahrirlash
-              </Link>
+              </SecondaryLink>
             </div>
           </div>
         )}
@@ -257,11 +253,13 @@ function ProjectDetailContent({
             featuredUntil={p.featuredUntil}
           />
         )}
-        <nav className="font-mono mb-6 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
-          <Link to="/projects">Loyihalar</Link>
-          <span>/</span>
-          <span>{p.category}</span>
-        </nav>
+        <PageBreadcrumb
+          items={[
+            { label: "Loyihalar", to: "/projects" },
+            { label: p.category },
+            { label: p.title },
+          ]}
+        />
 
         <ConversionFlowBanner
           title="Frilanserni yollash yo'li"
@@ -300,7 +298,7 @@ function ProjectDetailContent({
                   <div className="flex items-center gap-2">
                     <GradientAvatar name={p.client} hue={p.clientHue} size={32} rounded="rounded-lg" />
                     <span className="font-medium text-foreground">{p.client}</span>
-                    {p.clientTasdiqlangan && (
+                    {p.clientVerified && (
                       <span className="inline-flex items-center gap-1 text-success">
                         <CheckCircle2 className="size-3.5" /> Tasdiqlangan
                       </span>
@@ -356,7 +354,7 @@ function ProjectDetailContent({
             </ProjectSection>
             <section>
               {isOwner ? (
-                <section className="overflow-hidden rounded-2xl border border-border bg-card transition-default hover:border-primary/20">
+                <section id="project-proposals" className="overflow-hidden rounded-2xl border border-border bg-card transition-default hover:border-primary/20">
                   <div className="border-b border-border px-5 py-4 sm:px-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
@@ -384,9 +382,9 @@ function ProjectDetailContent({
                         <div className="grid size-14 place-items-center rounded-2xl border border-border bg-surface text-muted-foreground">
                           <FileText className="size-6" />
                         </div>
-                        <h3 className="font-display mt-4 text-base font-semibold">Hali takliflar yo'q</h3>
+                        <h3 className="font-display mt-4 text-base font-semibold">Hali takliflar yo&apos;q</h3>
                         <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-                          Frilanserlar loyihangizni ko'rib chiqganda takliflar shu yerda paydo bo'ladi. Iste'dod jalb qilish uchun loyihangizni ulashing.
+                          Frilanserlar odatda 24–48 soat ichida taklif yuboradi. Kutayotganda loyiha tavsifini yangilashingiz mumkin.
                         </p>
                       </div>
                     ) : (
@@ -584,10 +582,10 @@ function ProjectDetailContent({
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="font-display text-sm font-bold">{p.client}</span>
-                      {p.clientTasdiqlangan && <CheckCircle2 className="size-4 text-success" />}
+                      {p.clientVerified && <CheckCircle2 className="size-4 text-success" />}
                     </div>
                     <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {p.clientTasdiqlangan ? "Tasdiqlangan mijoz" : "Mijoz"}
+                      {p.clientVerified ? "Tasdiqlangan mijoz" : "Mijoz"}
                     </div>
                   </div>
                 </div>

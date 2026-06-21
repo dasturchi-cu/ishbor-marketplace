@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { AuthTrustStrip } from "@/components/site/auth-trust-strip";
 import { Logo } from "@/components/site/logo";
 import { ThemeToggle } from "@/components/site/theme";
 
@@ -36,6 +37,8 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
           {footer && (
             <div className="mt-6 text-center text-sm text-muted-foreground">{footer}</div>
           )}
+
+          <AuthTrustStrip className="mt-8" />
         </div>
       </main>
     </div>

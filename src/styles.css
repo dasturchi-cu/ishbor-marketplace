@@ -357,10 +357,55 @@
     }
   }
 
-  /* Glass card effect */
-  .glass {
-    backdrop-filter: blur(12px) saturate(1.2);
-    background-color: color-mix(in oklab, var(--color-card) 80%, transparent);
+  /*
+   * Liquid Glass — floating chrome only:
+   * navbar, search, notifications, user menu, modals, floating bars.
+   * Do NOT use on cards, dashboard panels, forms, or tables.
+   */
+  .liquid-glass {
+    -webkit-backdrop-filter: blur(16px) saturate(1.35);
+    backdrop-filter: blur(16px) saturate(1.35);
+    background-color: color-mix(in oklab, var(--color-background) 76%, transparent);
+    border-color: color-mix(in oklab, var(--color-border) 85%, transparent);
+  }
+
+  .liquid-glass-panel {
+    -webkit-backdrop-filter: blur(20px) saturate(1.45);
+    backdrop-filter: blur(20px) saturate(1.45);
+    background-color: color-mix(in oklab, var(--color-card) 84%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-border) 90%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-foreground) 4%, transparent),
+      0 16px 48px -16px color-mix(in oklab, var(--color-foreground) 10%, transparent);
+  }
+
+  .liquid-glass-overlay {
+    -webkit-backdrop-filter: blur(6px) saturate(1.1);
+    backdrop-filter: blur(6px) saturate(1.1);
+    background-color: color-mix(in oklab, var(--color-background) 58%, transparent);
+  }
+
+  .liquid-glass-chip {
+    -webkit-backdrop-filter: blur(10px) saturate(1.25);
+    backdrop-filter: blur(10px) saturate(1.25);
+    background-color: color-mix(in oklab, var(--color-surface) 90%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-border) 88%, transparent);
+  }
+
+  /* Professional SaaS surfaces — Stripe / Linear / Vercel style */
+  .surface-card {
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+  }
+
+  .surface-panel {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .surface-elevated {
+    background-color: var(--color-elevated);
+    border: 1px solid var(--color-border);
   }
 
   /* Transition defaults — Linear-style */
@@ -388,6 +433,18 @@
     transition-timing-function: var(--ease-out-expo);
     &:hover {
       transform: translateY(-2px);
+    }
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .press-scale {
+    transition-property: transform, opacity;
+    transition-duration: 150ms;
+    transition-timing-function: var(--ease-out-expo);
+    &:active {
+      transform: scale(0.98);
     }
   }
 }
