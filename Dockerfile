@@ -3,7 +3,8 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# --omit=optional: skip wasm/native optional bindings that differ per platform
+RUN npm ci --omit=optional
 
 COPY . .
 RUN npm run build
