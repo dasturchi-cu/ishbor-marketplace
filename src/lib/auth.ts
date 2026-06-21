@@ -137,6 +137,24 @@ function notify() {
   listeners.forEach((l) => l());
 }
 
+function isValidAuthSession(session: unknown): session is AuthSession {
+  if (!session || typeof session !== "object") return false;
+  const candidate = session as AuthSession;
+  return (
+    typeof candidate.user?.id === "string" &&
+    typeof candidate.user?.email === "string" &&
+    typeof candidate.user?.fullName === "string"
+  );
+}
+
+function clearStoredSession(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(SESSION_STORAGE_KEY);
+  sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  cachedRaw = null;
+  cachedSession = null;
+}
+
 function readStorage(): AuthSession | null {
   if (typeof window === "undefined") return null;
   try {
@@ -152,11 +170,15 @@ function readStorage(): AuthSession | null {
       return cachedSession ?? null;
     }
     cachedRaw = raw;
-    cachedSession = JSON.parse(raw) as AuthSession;
+    const parsed = JSON.parse(raw) as AuthSession;
+    if (!isValidAuthSession(parsed)) {
+      clearStoredSession();
+      return null;
+    }
+    cachedSession = parsed;
     return cachedSession;
   } catch {
-    cachedRaw = null;
-    cachedSession = null;
+    clearStoredSession();
     return null;
   }
 }
@@ -213,7 +235,7 @@ export function getCurrentUser(): AuthUser | null {
 }
 
 export function isAuthenticated(): boolean {
-  return !!getSession();
+  return isValidAuthSession(getSession());
 }
 
 export function loginWithCredentials(
@@ -313,6 +335,13 @@ export function getDefaultDashboard(userType: UserType): string {
 
 export function isAdminUser(user?: AuthUser | null): boolean {
   return !!user?.isAdmin;
+}
+
+/** Shorthand demo emails — e.g. "admin" → admin@ishbor.uz */
+export function normalizeLoginEmail(email: string): string {
+  const trimmed = email.trim().toLowerCase();
+  if (trimmed === "admin") return "admin@ishbor.uz";
+  return trimmed;
 }
 
 /** Demo hisoblar — jamoa taklifida tanlash uchun. */

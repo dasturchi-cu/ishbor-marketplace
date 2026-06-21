@@ -44,7 +44,7 @@ export function SuccessMetrics({
         <div
           key={m.label}
           className={cn(
-            "group flex flex-col justify-between bg-card px-4 py-4 transition-default hover:bg-secondary/30",
+            "group flex flex-col justify-between bg-card px-4 py-4 premium-list-row hover:bg-secondary/30",
             m.highlight && "bg-primary/[0.04] hover:bg-primary/[0.07]",
           )}
         >

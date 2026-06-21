@@ -140,6 +140,52 @@ export function toggleSavedSearchAlert(userId: string, id: string, enabled: bool
   });
 }
 
+export function saveMarketplaceSearch(
+  userId: string,
+  input: {
+    q: string;
+    type: SavedSearchAlert["type"];
+    category?: string;
+    filter?: string;
+  },
+): SavedSearchAlert | { error: string } {
+  const query = input.q.trim();
+  if (!query && !input.category) {
+    return { error: "Qidiruv so'zini yoki kategoriyani tanlang" };
+  }
+
+  const alerts = getUserAlerts(userId);
+  const duplicate = alerts.savedSearches.some(
+    (s) =>
+      s.type === input.type &&
+      s.query === query &&
+      (s.category ?? "") === (input.category ?? "") &&
+      (s.filter ?? "") === (input.filter ?? ""),
+  );
+  if (duplicate) {
+    return { error: "Bu qidiruv allaqachon saqlangan" };
+  }
+
+  const label = query ? `"${query}"` : input.category ?? "Saqlangan qidiruv";
+  return addSavedSearchAlert(userId, {
+    label,
+    type: input.type,
+    query,
+    category: input.category,
+    filter: input.filter,
+  });
+}
+
+function markSavedSearchNotified(userId: string, searchId: string): void {
+  const alerts = getUserAlerts(userId);
+  persist(userId, {
+    ...alerts,
+    savedSearches: alerts.savedSearches.map((s) =>
+      s.id === searchId ? { ...s, lastNotifiedAt: new Date().toISOString() } : s,
+    ),
+  });
+}
+
 export type NewListingPayload = {
   title: string;
   slug: string;
@@ -215,6 +261,7 @@ export function checkSavedSearchAlerts(payload: NewListingPayload): number {
           priority: "normal",
           href: payload.href,
         });
+        markSavedSearchNotified(userId, search.id);
         notified++;
       }
     }

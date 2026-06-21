@@ -3,10 +3,10 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export const primaryActionClass =
-  "touch-target inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] transition-default hover:opacity-95 focus-ring";
+  "touch-target send-btn-ready premium-press-flat inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)] hover:opacity-95 focus-ring";
 
 export const secondaryActionClass =
-  "touch-target inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-default hover:border-primary/20 focus-ring";
+  "touch-target premium-press inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:border-primary/20 focus-ring";
 
 export const textActionClass = "text-sm font-medium text-primary hover:underline";
 

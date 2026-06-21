@@ -4,9 +4,11 @@ import { AdminSearch } from "@/components/admin/search";
 import { AdminSearchProvider } from "@/components/admin/search-context";
 import { AdminOnlyGate } from "@/components/admin/admin-only-gate";
 import { requireAdmin } from "@/lib/guards";
+import { PRIVATE_ROUTE_META } from "@/lib/seo";
 
 export const Route = createFileRoute("/admin")({
   beforeLoad: requireAdmin,
+  head: () => PRIVATE_ROUTE_META,
   component: AdminLayout,
 });
 

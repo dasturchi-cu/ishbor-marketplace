@@ -80,7 +80,7 @@ function ApplicationsPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`touch-target shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-default ${
+            className={`touch-target shrink-0 premium-tab rounded-lg px-3 py-1.5 text-sm font-medium ${
               tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50"
             }`}
           >

@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Check, ArrowRight, Heart, Share2, MessageSquare } from "lucide-react";
 import { EscrowShield } from "@/components/site/trust";
 import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import type { ServicePackage } from "@/lib/mock-data";
 import { formatPackageTier } from "@/lib/project-validation";
 import { useSaved } from "@/hooks/use-saved";
+import { shareEntity } from "@/lib/share-analytics";
+import { messagesPath } from "@/lib/messages-routing";
 
 export function PackageCard({
   packages,
   serviceSlug,
+  sellerUsername,
   queuePosition,
 }: {
   packages: ServicePackage[];
@@ -17,25 +20,30 @@ export function PackageCard({
   sellerUsername?: string;
   queuePosition: number;
 }) {
-  const navigate = useNavigate();
   const popularIndex = packages.findIndex((p) => p.popular);
   const [selected, setSelected] = useState(popularIndex >= 0 ? popularIndex : 0);
   const { saved, toggle } = useSaved("service", serviceSlug);
   const pkg = packages[selected]!;
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/services/${serviceSlug}`;
-    if (navigator.share) {
-      await navigator.share({ title: formatPackageTier(pkg.tier), url });
-      return;
+    try {
+      await shareEntity({
+        entity: "service",
+        entityId: serviceSlug,
+        title: formatPackageTier(pkg.tier),
+        url: `${window.location.origin}/services/${serviceSlug}`,
+        onCopied: async () => {
+          const { toast } = await import("sonner");
+          toast.success("Havola nusxalandi");
+        },
+      });
+    } catch {
+      /* user cancelled share */
     }
-    await navigator.clipboard.writeText(url);
-    const { toast } = await import("sonner");
-    toast.success("Havola nusxalandi");
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-[0_20px_60px_-24px_oklch(0.546_0.185_257/0.22)]">
+    <div id="order-packages" className="overflow-hidden rounded-2xl border border-primary/20 bg-card shadow-[0_20px_60px_-24px_oklch(0.546_0.185_257/0.22)] scroll-mt-24">
       <div className="grid grid-cols-3 border-b border-border bg-secondary/40">
         {packages.map((p, i) => (
           <button
@@ -107,13 +115,12 @@ export function PackageCard({
           Davom etish (${pkg.price.toLocaleString()}) <ArrowRight className="size-4" />
         </ClientCheckoutLink>
 
-        <button
-          type="button"
-          onClick={() => navigate({ to: "/messages" })}
+        <Link
+          {...messagesPath(sellerUsername)}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface py-3 text-sm font-semibold transition-default hover:border-primary/25 focus-ring"
         >
           <MessageSquare className="size-4" /> Sotuvchi bilan bog'lanish
-        </button>
+        </Link>
 
         <div className="flex items-center justify-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
           <button
@@ -141,10 +148,9 @@ export function PackageCard({
 
 export function PackageComparison({
   packages,
-  serviceSlug,
 }: {
   packages: ServicePackage[];
-  serviceSlug: string;
+  serviceSlug?: string;
 }) {
   const allFeatures = [...new Set(packages.flatMap((p) => p.features))];
 
@@ -170,20 +176,6 @@ export function PackageComparison({
                     Mashhur
                   </span>
                 )}
-                <ClientCheckoutLink
-                  search={{
-                    type: "service" as const,
-                    service: serviceSlug,
-                    package: p.tier.toLowerCase() as "essential" | "premium" | "enterprise",
-                  }}
-                  className={`mt-3 inline-flex w-full max-w-[140px] items-center justify-center rounded-lg px-3 py-2 text-xs font-semibold transition-default focus-ring ${
-                    p.popular
-                      ? "bg-primary text-primary-foreground hover:opacity-95"
-                      : "border border-border bg-background hover:border-primary/25"
-                  }`}
-                >
-                  Tanlash
-                </ClientCheckoutLink>
               </th>
             ))}
           </tr>

@@ -2,9 +2,12 @@ import type { Freelancer, Project, Service } from "./mock-data";
 import type { StoredService } from "./services-store";
 import { isFeaturedActive } from "./featured-store";
 import { computeFreelancerReputation } from "./reputation-store";
-import { computeSuccessScore, computeResponseRate } from "./growth-metrics";
+import { computeSuccessScore, computeResponseRate, getFreelancerLevel } from "./growth-metrics";
 import { getAverageRating } from "./reviews-store";
 import { rankFreelancers, rankServices, rankProjects } from "./ranking-store";
+import { combineSearchScore } from "./marketplace-signals";
+import { matchesQuery, textMatchScore } from "./search-match";
+import { recordAnalyticsEvent } from "./analytics-events-store";
 
 export type SortOption =
   | "newest"
@@ -66,7 +69,7 @@ const PROJECT_KEYWORDS = ["loyiha", "project", "shartnoma", "ish topish", "freel
 /** Route nav/hero search to the most relevant marketplace tab. */
 export function pickSearchRoute(q: string): { to: SearchDestination; search: MarketplaceSearch } {
   const trimmed = q.trim();
-  const base: MarketplaceSearch = { sort: "newest", category: "", filter: "" };
+  const base: MarketplaceSearch = { sort: "ranking_score", category: "", filter: "" };
   if (!trimmed) return { to: "/projects", search: { ...base, q: "" } };
 
   const lower = trimmed.toLowerCase();
@@ -79,9 +82,30 @@ export function pickSearchRoute(q: string): { to: SearchDestination; search: Mar
   return { to: "/freelancers", search: { ...base, q: trimmed } };
 }
 
-function matchesQuery(text: string, q: string) {
-  if (!q.trim()) return true;
-  return text.toLowerCase().includes(q.trim().toLowerCase());
+/** Record search query for analytics and future suggestions. */
+export function recordSearchQuery(query: string, resultCount: number, type?: string): void {
+  const trimmed = query.trim();
+  if (!trimmed) return;
+  recordAnalyticsEvent({
+    type: "search_query",
+    entityId: trimmed,
+    value: resultCount,
+    meta: type ? { type } : undefined,
+  });
+}
+
+function applyHybridRelevance<T extends { rankingScore?: number }>(
+  items: T[],
+  q: string,
+  getText: (item: T) => string,
+): T[] {
+  if (!q.trim()) return items;
+  return [...items].sort((a, b) => {
+    const sa = combineSearchScore(textMatchScore(getText(a), q), a.rankingScore ?? 0);
+    const sb = combineSearchScore(textMatchScore(getText(b), q), b.rankingScore ?? 0);
+    if (sb !== sa) return sb - sa;
+    return (b.rankingScore ?? 0) - (a.rankingScore ?? 0);
+  });
 }
 
 export function filterServices(items: StoredService[], search: MarketplaceSearch): StoredService[] {
@@ -95,7 +119,9 @@ export function filterServices(items: StoredService[], search: MarketplaceSearch
       (s) =>
         matchesQuery(s.title, q) ||
         matchesQuery(s.seller, q) ||
-        matchesQuery(s.category, q),
+        matchesQuery(s.sellerUsername ?? "", q) ||
+        matchesQuery(s.category, q) ||
+        (s.description ? matchesQuery(s.description, q) : false),
     );
   }
   if (category) {
@@ -112,7 +138,14 @@ export function filterServices(items: StoredService[], search: MarketplaceSearch
     result = result.filter((s) => s.rating >= 4.95);
   }
 
-  return sortServices(result, search.sort ?? "ranking_score");
+  const sorted = sortServices(result, search.sort ?? "ranking_score");
+  if (q.trim()) {
+    const ranked = rankServices(sorted);
+    return applyHybridRelevance(ranked, q, (s) =>
+      `${s.title} ${s.seller} ${s.sellerUsername ?? ""} ${s.category} ${s.description ?? ""}`,
+    ).map(({ rankingScore: _, ...s }) => s);
+  }
+  return sorted;
 }
 
 export function sortServices(items: StoredService[], sort: SortOption): StoredService[] {
@@ -126,8 +159,13 @@ export function sortServices(items: StoredService[], sort: SortOption): StoredSe
     case "ranking_score":
       return rankServices(withFeatured).map(({ rankingScore: _, ...s }) => s);
     case "rating":
-    case "trust_score":
       return withFeatured.sort((a, b) => b.rating - a.rating);
+    case "trust_score":
+      return withFeatured.sort(
+        (a, b) =>
+          computeFreelancerReputation(b.sellerUsername).trustScore -
+          computeFreelancerReputation(a.sellerUsername).trustScore,
+      );
     case "success_score":
       return withFeatured.sort((a, b) => {
         const sa = computeSuccessScore(a.sellerUsername).score;
@@ -172,7 +210,7 @@ export function filterFreelancers(items: Freelancer[], search: MarketplaceSearch
     );
   }
   if (filter === "top-rated") {
-    result = result.filter((f) => f.level === "Top Rated" || f.rating >= 4.95);
+    result = result.filter((f) => getFreelancerLevel(f.username) === "Top Rated");
   } else if (filter === "available") {
     result = result.filter((f) => f.available);
   } else if (filter === "under-50") {
@@ -185,7 +223,14 @@ export function filterFreelancers(items: Freelancer[], search: MarketplaceSearch
     result = result.filter((f) => computeFreelancerReputation(f.username).trustScore >= 70);
   }
 
-  return sortFreelancers(result, search.sort ?? "ranking_score");
+  const sorted = sortFreelancers(result, search.sort ?? "ranking_score");
+  if (q.trim()) {
+    const ranked = rankFreelancers(sorted);
+    return applyHybridRelevance(ranked, q, (f) =>
+      `${f.name} ${f.title} ${f.username} ${f.skills.join(" ")} ${f.city}`,
+    ).map(({ rankingScore: _, ...f }) => f);
+  }
+  return sorted;
 }
 
 export function sortFreelancers(items: Freelancer[], sort: SortOption): Freelancer[] {
@@ -251,7 +296,14 @@ export function filterProjects(items: Project[], search: MarketplaceSearch): Pro
     );
   }
 
-  return sortProjects(result, search.sort ?? "ranking_score");
+  const sorted = sortProjects(result, search.sort ?? "ranking_score");
+  if (q.trim()) {
+    const ranked = rankProjects(sorted);
+    return applyHybridRelevance(ranked, q, (p) =>
+      `${p.title} ${p.client} ${p.category} ${p.skills.join(" ")}`,
+    ).map(({ rankingScore: _, ...p }) => p);
+  }
+  return sorted;
 }
 
 export function sortProjects(items: Project[], sort: SortOption): Project[] {

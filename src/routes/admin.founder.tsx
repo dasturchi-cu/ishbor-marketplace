@@ -11,6 +11,8 @@ import { getAllAgencies, subscribeAgencies } from "@/lib/agency-store";
 import { computeFounderAgencyMetrics } from "@/lib/agency-metrics-store";
 import { computeFounderAiInsights } from "@/lib/ai-insights-store";
 import { getAllAnalyticsEvents, subscribeAnalyticsEvents } from "@/lib/analytics-events-store";
+import { getActiveUserMetrics, getMarketplaceHealthSummary } from "@/lib/business-metrics";
+import { getShareMetrics, getGlobalReferralMetrics } from "@/lib/share-referral-metrics";
 import { subscribeCredits } from "@/lib/credits-store";
 import { TrendingUp, DollarSign, Users, Shield, Gift, RefreshCw, Star, Layers, CreditCard, Flame, Building2 } from "lucide-react";
 import { useStoreVersion } from "@/hooks/use-store-version";
@@ -52,6 +54,10 @@ function FounderDashboardPage() {
   const health = computeMarketplaceHealth(30);
   const events = getAllAnalyticsEvents();
   const featuredCount = events.filter((e) => e.type === "featured_purchase").length;
+  const activeUsers = getActiveUserMetrics();
+  const healthSummary = getMarketplaceHealthSummary();
+  const shareMetrics = getShareMetrics();
+  const referralMetrics = getGlobalReferralMetrics();
 
   const trustHealth: "healthy" | "watch" | "critical" =
     overview.completedOrders >= 3 ? "healthy" : overview.totalOrders >= 1 ? "watch" : "critical";
@@ -75,6 +81,10 @@ function FounderDashboardPage() {
         <FounderCard icon={RefreshCw} label="Mijoz qaytishi" value={`${health.clientRetention}%`} sub={`Frilanser ${health.freelancerRetention}%`} />
         <FounderCard icon={Star} label="Sharh darajasi" value={`${health.reviewRate}%`} sub="Yakunlangan buyurtmalar" />
         <FounderCard icon={Users} label="Takror yollash" value={`${health.repeatHireRate}%`} sub="Takror mijozlar" />
+        <FounderCard icon={Users} label="DAU / WAU / MAU" value={`${activeUsers.dau} / ${activeUsers.wau} / ${activeUsers.mau}`} sub={`MAU ${activeUsers.mauTrend >= 0 ? "+" : ""}${activeUsers.mauTrend}% · DAU ${activeUsers.dauTrend >= 0 ? "+" : ""}${activeUsers.dauTrend}%`} />
+        <FounderCard icon={Users} label="Faol frilanser / mijoz" value={`${activeUsers.activeFreelancers} / ${activeUsers.activeClients}`} sub="7 kunlik faollik" />
+        <FounderCard icon={TrendingUp} label="Konversiya (7 kun)" value={`${activeUsers.conversionRate}%`} sub={`${activeUsers.totalEvents7d} hodisa`} />
+        <FounderCard icon={Layers} label="Bozor sog'ligi" value={`${healthSummary.healthScore}/100`} sub={`Taklif/talab ${healthSummary.supplyDemandRatio} · ${healthSummary.orderVelocity7d} buyurtma/7k`} />
         <FounderCard icon={Shield} label="Faol e'lonlar" value={health.activeListings} sub={`${overview.totalProjects} loyiha · ${overview.totalServices} xizmat`} />
         <FounderCard icon={Gift} label="Ajratilgan ro'yxat xaridlari" value={featuredCount} sub="Kredit monetizatsiyasi" />
         <FounderCard icon={CreditCard} label="Oylik takrorlanuvchi daromad" value={`${monetization.mrr.toLocaleString()} UZS`} sub={`Foydalanuvchi daromadi ${monetization.arpu.toLocaleString()} UZS`} />
@@ -83,6 +93,8 @@ function FounderDashboardPage() {
         <FounderCard icon={Building2} label="Agentliklar" value={agencyMetrics.publishedAgencies} sub={`${agencyMetrics.totalAgencies} jami · ${agencyMetrics.teamGrowth} yangi a'zo`} />
         <FounderCard icon={DollarSign} label="Agentlik GMV" value={`$${agencyMetrics.agencyGmv.toLocaleString()}`} sub={`Daromad $${agencyMetrics.agencyRevenue.toLocaleString()}`} />
         <FounderCard icon={Users} label="Agentlik qaytishi" value={`${agencyMetrics.agencyRetention}%`} sub={`${agencyVerificationLabels.verified} ${agencyMetrics.verifiedCount} · ${agencyVerificationLabels.premium} ${agencyMetrics.premiumCount}`} />
+        <FounderCard icon={Gift} label="Ulashish (7 kun)" value={shareMetrics.totalShares7d} sub={`30 kun: ${shareMetrics.totalShares30d} · kanal: ${Object.keys(shareMetrics.byChannel).length}`} />
+        <FounderCard icon={RefreshCw} label="Referral konversiya" value={`${referralMetrics.conversionRate}%`} sub={`${referralMetrics.completedReferrals}/${referralMetrics.totalReferrals} yakunlangan`} />
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3">

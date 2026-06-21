@@ -8,10 +8,14 @@
     "types": ["vite/client"],
 
     /* Bundler mode */
+    "baseUrl": ".",
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
 
     /* Linting */
     "skipLibCheck": true,

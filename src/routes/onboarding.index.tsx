@@ -32,6 +32,10 @@ function OnboardingTypePage() {
       title="Ishbor'dan qanday foydalanasiz?"
       subtitle="Hisob turini tanlang. Keyinroq boshqa rolni ham qo'shishingiz mumkin."
     >
+      <div className="mb-6 rounded-xl border border-border bg-secondary/30 px-4 py-3 text-sm leading-relaxed text-muted-foreground">
+        <span className="font-semibold text-foreground">Ishbor nima?</span>{" "}
+        Tekshirilgan frilanserlar bilan xavfsiz ish maydoni — loyiha joylang yoki ish toping, to&apos;lov eskrouda himoyalangan.
+      </div>
       <div className="space-y-3">
         <UserTypeCard
           type="client"

@@ -1,14 +1,29 @@
-import { Lock, BadgeCheck, ShieldCheck } from "lucide-react";
+import { Lock, BadgeCheck, ShieldCheck, Globe, Clock } from "lucide-react";
 
-const items = [
+const authItems = [
   { icon: Lock, label: "Eskrou himoyasi" },
   { icon: BadgeCheck, label: "Tasdiqlangan mutaxassislar" },
   { icon: ShieldCheck, label: "Mahalliy to'lovlar" },
 ];
 
-export function AuthTrustStrip({ className = "" }: { className?: string }) {
+const landingItems = [
+  { icon: ShieldCheck, label: "Humo · Uzcard" },
+  { icon: Lock, label: "Eskrou himoyasi" },
+  { icon: Globe, label: "O'zbek interfeys" },
+  { icon: Clock, label: "24 soat nizo" },
+  { icon: BadgeCheck, label: "Ishonch balli" },
+];
+
+export function AuthTrustStrip({
+  className = "",
+  variant = "auth",
+}: {
+  className?: string;
+  variant?: "auth" | "landing";
+}) {
+  const items = variant === "landing" ? landingItems : authItems;
   return (
-    <div className={`flex flex-wrap items-center justify-center gap-3 sm:gap-4 ${className}`}>
+    <div className={`flex flex-wrap items-center justify-center gap-2 sm:gap-3 ${className}`}>
       {items.map((item) => (
         <span
           key={item.label}

@@ -44,9 +44,9 @@ export function AsyncBoundary({
   if (loading) {
     return (
       loadingFallback ?? (
-        <div className="flex min-h-[200px] items-center justify-center gap-2 text-muted-foreground">
+        <div className="premium-empty-state flex min-h-[200px] flex-col items-center justify-center gap-3 text-muted-foreground">
           <LoadingSpinner />
-          <span>Yuklanmoqda…</span>
+          <span className="text-sm">Yuklanmoqda…</span>
         </div>
       )
     );
@@ -54,7 +54,7 @@ export function AsyncBoundary({
 
   if (message) {
     return (
-      <div className="flex flex-col items-center gap-4 py-12 text-center">
+      <div className="premium-empty-state flex flex-col items-center gap-4 py-12 text-center">
         <InlineBanner variant="error" className="max-w-md">
           {message}
         </InlineBanner>

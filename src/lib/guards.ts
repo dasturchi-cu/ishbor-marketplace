@@ -1,7 +1,7 @@
 import { redirect } from "@tanstack/react-router";
 import type { WorkspaceRole } from "./active-role-store";
 import { getActiveRole, getActiveDashboardPath } from "./active-role-store";
-import { getSession, isAdminUser } from "./auth";
+import { getSession } from "./auth";
 
 type GuardContext = {
   location: { href: string; pathname: string; search?: string | Record<string, unknown> };
@@ -37,6 +37,8 @@ function resolvePostLoginPath(ctx: GuardContext): string {
   } catch {
     /* ignore */
   }
+  const session = getSession();
+  if (session && session.user.isAdmin) return "/admin";
   return getActiveDashboardPath(getActiveRole());
 }
 
@@ -54,9 +56,18 @@ export function requireAuth(ctx: GuardContext) {
 export function requireGuest(ctx: GuardContext) {
   if (typeof window === "undefined") return;
   const session = getSession();
-  if (session) {
-    throw redirect({ to: resolvePostLoginPath(ctx) });
+  if (!session) return;
+  try {
+    const url = new URL(ctx.location.href, "http://localhost");
+    if (url.searchParams.get("switch") === "1") return;
+  } catch {
+    /* ignore */
   }
+  const search = ctx.location.search;
+  if (search && typeof search === "object" && "switch" in search && search.switch === "1") {
+    return;
+  }
+  throw redirect({ to: resolvePostLoginPath(ctx) });
 }
 
 export function requireRole(roles: WorkspaceRole[]) {
@@ -82,10 +93,10 @@ export function requireAdmin(ctx: GuardContext) {
   if (!session) {
     throw redirect({
       to: "/login",
-      search: { redirect: loginRedirectPath(ctx) },
+      search: { redirect: loginRedirectPath(ctx), switch: "1" },
     });
   }
-  if (!isAdminUser(session.user)) {
+  if (!session.user.isAdmin) {
     throw redirect({ to: getActiveDashboardPath(getActiveRole()) });
   }
 }

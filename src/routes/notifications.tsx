@@ -29,10 +29,47 @@ import {
   dismissNotification,
   type AppNotification,
 } from "@/lib/notifications-store";
+import { buildPageMeta } from "@/lib/seo";
+
+const PRIORITY_ORDER: Record<AppNotification["priority"], number> = {
+  high: 0,
+  normal: 1,
+  low: 2,
+};
+
+function sortNotifications(items: AppNotification[]): AppNotification[] {
+  return [...items].sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+}
+
+function notificationTier(n: AppNotification): "critical" | "important" | "informational" {
+  if (n.priority === "high" || n.kind === "escrow" || n.kind === "payment") return "critical";
+  if (n.kind === "proposal" || n.kind === "order" || n.kind === "review" || n.kind === "message") {
+    return "important";
+  }
+  return "informational";
+}
+
+const TIER_LABELS: Record<ReturnType<typeof notificationTier>, string> = {
+  critical: "Muhim",
+  important: "Asosiy",
+  informational: "Ma'lumot",
+};
+
+function groupByTier(items: AppNotification[]) {
+  const groups: Record<ReturnType<typeof notificationTier>, AppNotification[]> = {
+    critical: [],
+    important: [],
+    informational: [],
+  };
+  for (const item of items) {
+    groups[notificationTier(item)].push(item);
+  }
+  return groups;
+}
 
 export const Route = createFileRoute("/notifications")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: "Bildirishnomalar — Ishbor" }] }),
+  head: () => buildPageMeta({ title: "Bildirishnomalar — Ishbor", noindex: true }),
   component: NotificationsPage,
 });
 
@@ -112,18 +149,18 @@ function NotificationsPage() {
     setVisibleLimit(50);
   }, [activeFilter]);
 
-  const visible = notifications.filter((n) => {
-    if (dismissed.has(n.id)) return false;
-    const kind = filterMap[activeFilter];
-    if (kind && n.kind !== kind) return false;
-    return true;
-  });
+  const visible = sortNotifications(
+    notifications.filter((n) => {
+      if (dismissed.has(n.id)) return false;
+      const kind = filterMap[activeFilter];
+      if (kind && n.kind !== kind) return false;
+      return true;
+    }),
+  );
 
   const pagedVisible = visible.slice(0, visibleLimit);
   const hasMore = visible.length > visibleLimit;
-
-  const todayItems = pagedVisible.slice(0, 3);
-  const earlierItems = pagedVisible.slice(3);
+  const tierGroups = groupByTier(pagedVisible);
 
   function NotifItem({ n }: { n: AppNotification }) {
     const cfg = iconConfig[n.kind] ?? iconConfig.system!;
@@ -134,17 +171,17 @@ function NotificationsPage() {
 
     return (
       <div
-        className={`group relative flex items-start gap-4 px-5 py-4 transition-default ${
+        className={`group conversation-item relative flex items-start gap-4 px-5 py-4 ${
           isUnread ? "bg-primary/[0.03]" : "hover:bg-secondary/20"
         }`}
       >
         {/* Unread dot */}
         {isUnread && (
-          <span className="absolute left-2 top-5 size-1.5 rounded-full bg-primary" />
+          <span className="unread-badge absolute left-2 top-5 size-1.5 rounded-full bg-primary" />
         )}
 
         {/* Icon */}
-        <div className={`mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl ${cfg.bg} ${cfg.text}`}>
+        <div className={`gpu-layer mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-xl shadow-sm ${cfg.bg} ${cfg.text}`}>
           <Icon className="size-4.5" />
         </div>
 
@@ -154,6 +191,11 @@ function NotificationsPage() {
             <div>
               <h3 className={`text-sm ${isUnread ? "font-semibold" : "font-medium"}`}>
                 {n.title}
+                {notificationTier(n) === "critical" && (
+                  <span className="ml-2 rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">
+                    Shoshilinch
+                  </span>
+                )}
               </h3>
               <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{n.body}</p>
             </div>
@@ -165,7 +207,7 @@ function NotificationsPage() {
                   setDismissed((s) => new Set([...s, n.id]));
                   actionFeedback.dismissed();
                 }}
-                className={`touch-target inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-default hover:bg-secondary hover:text-foreground focus-ring ${isUnread ? "opacity-100" : "opacity-60 sm:opacity-0 sm:group-hover:opacity-100"}`}
+                className={`premium-press touch-target inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground focus-ring ${isUnread ? "opacity-100" : "opacity-60 sm:opacity-0 sm:group-hover:opacity-100"}`}
                 aria-label="Yopish"
               >
                 <X className="size-3.5" />
@@ -182,7 +224,7 @@ function NotificationsPage() {
                     markNotificationRead(n.id, user?.id);
                     if (primaryRoute) navigate({ to: primaryRoute });
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium transition-default hover:border-primary/20 hover:text-primary focus-ring"
+                  className="premium-press inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium hover:border-primary/20 hover:text-primary focus-ring"
                 >
                   {actions.primary}
                   <ChevronRight className="size-3" />
@@ -278,35 +320,25 @@ function NotificationsPage() {
           </div>
         ) : (
         <>
-        {/* Bugun */}
-        {todayItems.length > 0 && (
-          <>
-            <div className="flex items-center gap-3 border-b border-border px-5 py-2">
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Bugun</span>
-              <div className="h-px flex-1 bg-border" />
+        {(Object.keys(tierGroups) as Array<keyof typeof tierGroups>).map((tier) => {
+          const items = tierGroups[tier];
+          if (items.length === 0) return null;
+          return (
+            <div key={tier}>
+              <div className="flex items-center gap-3 border-b border-border px-5 py-2">
+                <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {TIER_LABELS[tier]}
+                </span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className="divide-y divide-border">
+                {items.map((n) => (
+                  <NotifItem key={n.id} n={n} />
+                ))}
+              </div>
             </div>
-            <div className="divide-y divide-border">
-              {todayItems.map((n) => (
-                <NotifItem key={n.id} n={n} />
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Oldinroq */}
-        {earlierItems.length > 0 && (
-          <>
-            <div className="flex items-center gap-3 border-t border-b border-border px-5 py-2">
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Oldinroq</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-            <div className="divide-y divide-border">
-              {earlierItems.map((n) => (
-                <NotifItem key={n.id} n={n} />
-              ))}
-            </div>
-          </>
-        )}
+          );
+        })}
 
         {hasMore && (
           <div className="border-t border-border px-5 py-4 text-center">

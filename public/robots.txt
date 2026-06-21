@@ -1,4 +1,20 @@
-User-agent: *
-Allow: /
-
-Sitemap: /sitemap.xml
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /messages
+Disallow: /wallet
+Disallow: /checkout
+Disallow: /settings
+Disallow: /onboarding
+Disallow: /notifications
+Disallow: /escrow
+Disallow: /orders
+Disallow: /applications
+Disallow: /login
+Disallow: /verify-otp
+Disallow: /analytics
+Disallow: /revenue
+Disallow: /crm
+
+Sitemap: https://ishbor.uz/sitemap.xml

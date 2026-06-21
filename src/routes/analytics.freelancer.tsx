@@ -80,9 +80,16 @@ function FreelancerAnalyticsPage() {
       <>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SimpleStatCard label="Profil ko'rishlar" value={String(analytics.profileViews)} />
+        <SimpleStatCard label="Xizmat ko'rishlar" value={String(analytics.serviceViews)} />
         <SimpleStatCard label={`Daromad (${range} kun)`} value={`$${analytics.earnings30.toLocaleString()}`} />
         <SimpleStatCard label="Ishonch balli" value={String(analytics.trustScore)} />
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SimpleStatCard label="Javob foizi" value={`${analytics.responseRate}%`} />
+        <SimpleStatCard label="Muvaffaqiyat balli" value={String(analytics.successScore)} />
+        <SimpleStatCard label="Ariza qabul foizi" value={`${analytics.proposalAcceptanceRate}%`} />
+        <SimpleStatCard label="Aloqa bosishlar" value={String(analytics.contactClicks)} />
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

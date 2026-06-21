@@ -88,6 +88,10 @@ function YaratishPortfolioForm({
       return;
     }
     const item = publishPortfolio(input, ctx);
+    if ("error" in item) {
+      actionFeedback.error(item.error);
+      return;
+    }
     actionFeedback.published("Portfolio", "Ommaviy ro'yxat uchun admin tasdig'i kutilmoqda.");
     navigate({ to: "/portfolio/$slug", params: { slug: item.slug } });
   };

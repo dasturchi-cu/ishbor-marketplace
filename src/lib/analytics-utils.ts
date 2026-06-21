@@ -66,7 +66,7 @@ export function getFreelancerAnalytics(user: AuthUser, days = 30): FreelancerAna
   const orders = username ? getOrdersForFreelancer(username) : [];
   const completed = orders.filter((o) => o.status === "completed");
   const earnings = completed.reduce((s, o) => s + o.amount, 0);
-  const cutoff = Date.now() - 30 * 86400000;
+  const cutoff = Date.now() - days * 86400000;
   const earnings30 = completed
     .filter((o) => o.completedAt && new Date(o.completedAt).getTime() >= cutoff)
     .reduce((s, o) => s + o.amount, 0);
@@ -185,7 +185,11 @@ export function getClientAnalytics(user: AuthUser, days = 30) {
     ordersCreated: orders.length,
     escrowFunded,
     totalSpend,
-    averageHireTime: hired > 0 ? Math.round(totalSpend / hired) : 0,
+    averageSpendPerHire: hired > 0 ? Math.round(totalSpend / hired) : 0,
+    hiringSuccessRate:
+      proposals.length > 0
+        ? Math.round((orders.filter((o) => o.status === "completed").length / Math.max(proposals.length, 1)) * 100)
+        : 0,
     repeatFreelancerRate: repeatRate,
     trustScore: computeProfileCompletionPercent(user.id, "client"),
     hiringSpend: totalSpend,
@@ -193,8 +197,26 @@ export function getClientAnalytics(user: AuthUser, days = 30) {
   };
 }
 
-export function getClientChartData(_userId: string, range: 7 | 30 | 90) {
-  return getDailyBuckets(["project_created", "proposal_received", "order_created", "escrow_funded"], range);
+export function getClientChartData(userId: string, range: 7 | 30 | 90) {
+  const types = ["project_created", "proposal_received", "order_created", "escrow_funded"] as const;
+  const cutoff = Date.now() - range * 86400000;
+  const events = getAllAnalyticsEvents().filter(
+    (e) =>
+      (types as readonly string[]).includes(e.type) &&
+      e.userId === userId &&
+      new Date(e.timestamp).getTime() >= cutoff,
+  );
+  const buckets: { date: string; label: string; value: number }[] = [];
+  const now = new Date();
+  for (let i = range - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const label = `${d.getDate()}/${d.getMonth() + 1}`;
+    const value = events.filter((e) => e.timestamp.slice(0, 10) === key).length;
+    buckets.push({ date: key, label, value });
+  }
+  return buckets;
 }
 
 export function getClientSpendChart(user: AuthUser, months = 6) {

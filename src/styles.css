@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "./styles/premium-emoji.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -336,16 +337,7 @@
   }
 }
 
-/* Staggered fade-up for card grids */
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
-.stagger-children > *:nth-child(9) { animation-delay: 320ms; }
+/* Stagger delays — animation defined in premium-motion.css */
 
 /* Focus ring utility — Stripe-style */
 @layer components {

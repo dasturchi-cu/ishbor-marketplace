@@ -21,11 +21,16 @@ import { EMPTY_STATE_CTA } from "@/lib/ux-constants";
 import { syncSmartNotifications } from "@/lib/ai-smart-notifications";
 
 import { computeSuccessScore, getMonthlyEarnings, getEarningsLast30Days } from "@/lib/growth-metrics";
+import { getRepeatClientStats } from "@/lib/ecosystem-progress";
 import { subscribeOrders, readStoredOrders } from "@/lib/orders-store";
 import { getReviewsForFreelancer, subscribeReviews } from "@/lib/reviews-store";
 import { FreelancerRecommendations } from "@/components/site/personalized-recommendations";
 import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { GettingStartedCard } from "@/components/ftue/getting-started-card";
+import { WelcomeBanner } from "@/components/ftue/welcome-banner";
+import { resolvePrimaryNextAction } from "@/lib/journey-guidance";
 import { DashboardActivityFeed } from "@/components/site/dashboard-activity-feed";
+import { MarketplaceActivityStrip } from "@/components/ecosystem/marketplace-activity-strip";
 import { SimpleStatCard } from "@/components/site/simple-stat-card";
 
 import { getAllApplications, subscribeApplications } from "@/lib/applications-store";
@@ -107,6 +112,7 @@ function FreelancerDashboard() {
   const totalEarnings = earningsData.reduce((sum, d) => sum + d.value, 0);
 
   const successMetrics = user?.username ? computeSuccessScore(user.username) : null;
+  const repeatStats = user?.username ? getRepeatClientStats(user.username) : null;
   const ratingDisplay =
     successMetrics && successMetrics.reviewCount > 0
       ? successMetrics.avgRating.toFixed(1)
@@ -114,36 +120,72 @@ function FreelancerDashboard() {
 
   const recentApplications = myApplications.slice(0, 5);
 
+  const primaryAction = user ? resolvePrimaryNextAction(user, "freelancer") : null;
+  const primaryHref = primaryAction?.href ?? "/projects";
+  const primaryLabel = primaryAction?.cta ?? "Ish topish";
+  const secondaryHref = primaryHref === "/services/create" ? "/projects" : "/services/create";
+  const secondaryLabel = primaryHref === "/services/create" ? "Ish topish" : "Xizmat yaratish";
+
   return (
 
     <WorkspaceShell
 
       eyebrow="Frilanser ish maydoni"
 
-      title={`Xush kelibsiz, ${user?.fullName.split(" ")[0] ?? "do'stim"}.`}
+      title={`Xush kelibsiz, ${user?.fullName?.split(" ")[0] ?? "do'stim"}.`}
 
       actions={
-        <Link
-          to="/projects"
-          className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
-        >
-          <Briefcase className="size-4" /> Ish topish
-        </Link>
+        primaryAction ? (
+          <Link
+            to={primaryAction.href}
+            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+          >
+            <Briefcase className="size-4" /> {primaryAction.cta}
+          </Link>
+        ) : (
+          <Link
+            to="/projects"
+            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+          >
+            <Briefcase className="size-4" /> Ish topish
+          </Link>
+        )
       }
 
     >
 
-      {user && <WorkspaceGuidance user={user} hideNextAction />}
+      {user && (
+        <div className="mb-6 space-y-4">
+          <WelcomeBanner
+            user={user}
+            roleLabel="Frilanser"
+            primaryHref={primaryHref}
+            primaryLabel={primaryLabel}
+            secondaryHref={secondaryHref}
+            secondaryLabel={secondaryLabel}
+          />
+          <GettingStartedCard user={user} />
+          <WorkspaceGuidance user={user} hideNextAction />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SimpleStatCard label="Daromad (30 kun)" value={earnings30 > 0 ? `$${earnings30.toLocaleString()}` : "$0"} />
         <SimpleStatCard label="Faol buyurtmalar" value={String(activeOrdersCount)} />
         <SimpleStatCard label="Arizalar" value={String(applicationCount)} sub={applicationCount > 0 ? `${winRate}% qabul` : undefined} />
         <SimpleStatCard label="Reyting" value={ratingDisplay} sub={reviewCount > 0 ? `${reviewCount} sharh` : undefined} />
+        {repeatStats && repeatStats.repeatClientCount > 0 && (
+          <SimpleStatCard
+            label="Takror mijozlar"
+            value={String(repeatStats.repeatClientCount)}
+            sub={`${repeatStats.repeatClientRate}%`}
+          />
+        )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <DashboardActivityFeed />
+        <MarketplaceActivityStrip />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -157,7 +199,7 @@ function FreelancerDashboard() {
 
           <div className="divide-y divide-border">
             {activeOrders.length > 0 ? activeOrders.slice(0, 4).map((order) => (
-              <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block px-4 py-3 transition-default hover:bg-secondary/20 sm:px-5">
+              <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block px-4 py-3 premium-list-row hover:bg-secondary/20 sm:px-5">
                 <div className="flex items-center gap-3">
                   <GradientAvatar name={order.client} hue={order.clientHue} size={32} rounded="rounded-lg" />
                   <div className="min-w-0 flex-1">
@@ -203,7 +245,7 @@ function FreelancerDashboard() {
 
           <div className="divide-y divide-border">
             {recentApplications.length > 0 ? recentApplications.map((app) => (
-              <Link key={app.id} to="/applications/$id" params={{ id: app.id }} className="block px-4 py-3 transition-default hover:bg-secondary/20 sm:px-5">
+              <Link key={app.id} to="/applications/$id" params={{ id: app.id }} className="block px-4 py-3 premium-list-row hover:bg-secondary/20 sm:px-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="truncate text-sm font-medium">{app.projectTitle}</div>

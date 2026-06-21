@@ -110,13 +110,15 @@ type SettingsSearch = {
   tab?: string;
 };
 
+import { buildPageMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/settings")({
   beforeLoad: requireAuth,
   validateSearch: (search: Record<string, unknown>): SettingsSearch => ({
     pay: typeof search.pay === "string" ? search.pay : undefined,
     tab: typeof search.tab === "string" ? search.tab : undefined,
   }),
-  head: () => ({ meta: [{ title: "Sozlamalar — Ishbor" }] }),
+  head: () => buildPageMeta({ title: "Sozlamalar — Ishbor", noindex: true }),
   component: () => (
     <ProtectedGate>
       <SettingsPage />

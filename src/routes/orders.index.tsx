@@ -17,6 +17,8 @@ import {
 } from "@/components/site/incremental-list-footer";
 import { useIncrementalList, WORKSPACE_PAGE_SIZE } from "@/hooks/use-incremental-list";
 import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { JourneyBannerCard } from "@/components/ux/journey-banner";
+import { resolveOrdersListBanner } from "@/lib/journey-guidance";
 
 export const Route = createFileRoute("/orders/")({
   head: () => ({ meta: [{ title: "Buyurtmalar — Ishbor" }] }),
@@ -24,8 +26,7 @@ export const Route = createFileRoute("/orders/")({
 });
 
 const tabs: { key: string; label: string; emptyLabel: string; statuses: Order["status"][] }[] = [
-  { key: "active", label: "Faol", emptyLabel: "faol", statuses: ["in_progress"] },
-  { key: "review", label: "Ko'rib chiqilmoqda", emptyLabel: "ko'rib chiqilayotgan", statuses: ["review", "revision"] },
+  { key: "active", label: "Faol", emptyLabel: "faol", statuses: ["in_progress", "review", "revision"] },
   { key: "completed", label: "Yakunlangan", emptyLabel: "yakunlangan", statuses: ["completed"] },
   { key: "cancelled", label: "Bekor qilingan", emptyLabel: "bekor qilingan", statuses: ["cancelled", "disputed"] },
 ];
@@ -51,6 +52,7 @@ function OrdersPage() {
 
   const current = tabs.find((t) => t.key === tab)!;
   const filtered = userOrders.filter((o) => current.statuses.includes(o.status));
+  const listBanner = session?.user ? resolveOrdersListBanner(session.user, activeRole) : null;
   const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
     filtered,
     WORKSPACE_PAGE_SIZE,
@@ -60,13 +62,14 @@ function OrdersPage() {
   return (
     <WorkspaceShell eyebrow="Ish maydoni" title="Buyurtmalar">
       {session?.user && <WorkspaceGuidance user={session.user} hideNextAction />}
+      {listBanner && <JourneyBannerCard banner={listBanner} className="mb-4" />}
 
       <div className="mobile-scroll-x flex gap-2 border-b border-border pb-3">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`touch-target shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-default ${
+            className={`touch-target shrink-0 premium-tab rounded-lg px-3 py-1.5 text-sm font-medium ${
               tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50"
             }`}
           >
@@ -96,7 +99,7 @@ function OrdersPage() {
                 key={order.id}
                 to="/orders/$id"
                 params={{ id: order.id }}
-                className="flex flex-col gap-3 p-4 transition-default hover:bg-secondary/20 sm:flex-row sm:items-center sm:p-6"
+                className="flex flex-col gap-3 p-4 premium-list-row hover:bg-secondary/20 sm:flex-row sm:items-center sm:p-6"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <GradientAvatar name={order.freelancer} hue={order.freelancerHue} size={44} rounded="rounded-lg" />

@@ -121,7 +121,7 @@ function MyProjectsPage() {
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-default ${
+            className={`premium-tab rounded-lg px-3 py-1.5 text-sm font-medium ${
               tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50"
             }`}
           >

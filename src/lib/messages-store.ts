@@ -2,6 +2,8 @@ import { messages as seedConversations } from "./mock-data";
 import { getSession } from "./auth";
 import { persistRead, persistWrite } from "./store-persist";
 import { recordIncomingMessage, recordOutgoingReply } from "./response-metrics-store";
+import { isBlockedByModeration, moderationSummary, scanContent } from "./content-moderation";
+import { flagContentForReview } from "./moderation-queue";
 
 const STORAGE_PREFIX = "ishbor-messages";
 const listeners = new Set<() => void>();
@@ -188,7 +190,12 @@ export function nowTime() {
   return new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
 }
 
-export function sendMessage(conversationId: string, body: string): ThreadMessage {
+export function sendMessage(conversationId: string, body: string): ThreadMessage | { error: string } {
+  const flags = scanContent(body);
+  if (isBlockedByModeration(flags)) {
+    return { error: moderationSummary(flags) };
+  }
+  flagContentForReview("message", body.slice(0, 80), flags);
   const state = getMessagesState();
   const now = Date.now();
   const msg: ThreadMessage = { id: uniqueMsgId(), from: "me", type: "text", body, time: nowTime(), timestampMs: now, read: false };
@@ -205,6 +212,8 @@ export function sendMessage(conversationId: string, body: string): ThreadMessage
 }
 
 export function receiveMessage(conversationId: string, body: string, fromName?: string): ThreadMessage {
+  const flags = scanContent(body);
+  flagContentForReview("message", body.slice(0, 80), flags);
   const state = getMessagesState();
   const now = Date.now();
   const msg: ThreadMessage = { id: uniqueMsgId(), from: "them", type: "text", body, time: nowTime(), timestampMs: now };
@@ -369,6 +378,43 @@ export function searchConversations(query: string, inbox: ConversationInbox = "a
     const thread = state.threads[c.id] ?? [];
     return thread.some((m) => m.body?.toLowerCase().includes(q));
   });
+}
+
+export function findConversationByUsername(username: string): Conversation | undefined {
+  const key = username.trim().toLowerCase();
+  return getConversationsByInbox("active").find(
+    (c) => c.participantUsername?.toLowerCase() === key,
+  );
+}
+
+export function ensureConversationForUsername(
+  username: string,
+  displayName: string,
+  hue = 250,
+): string {
+  const existing = findConversationByUsername(username);
+  if (existing) return existing.id;
+
+  const state = getMessagesState();
+  const id = `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const conv: Conversation = {
+    id,
+    name: displayName,
+    hue,
+    snippet: "",
+    time: "Hozir",
+    unread: 0,
+    online: false,
+    archived: false,
+    pinned: false,
+    participantUsername: username,
+    participantHue: hue,
+  };
+  persist({
+    conversations: [conv, ...state.conversations],
+    threads: { ...state.threads, [id]: [] },
+  });
+  return id;
 }
 
 export function getActiveConversationId(): string {

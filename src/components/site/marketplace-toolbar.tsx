@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, SlidersHorizontal, ChevronDown, X } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronDown, X, Bell } from "lucide-react";
 import { sortLabels, type SortOption } from "@/lib/marketplace";
 import { POPULAR_SEARCHES } from "@/lib/search-suggestions";
 
@@ -17,6 +17,8 @@ type Props = {
   resultCount: number;
   resultLabel: string;
   onSearchChange: (patch: { q?: string; sort?: SortOption; filter?: string; category?: string }) => void;
+  onSaveSearch?: () => void;
+  showSaveSearch?: boolean;
 };
 
 export function MarketplaceToolbar({
@@ -30,6 +32,8 @@ export function MarketplaceToolbar({
   resultCount,
   resultLabel,
   onSearchChange,
+  onSaveSearch,
+  showSaveSearch = false,
 }: Props) {
   const [showSort, setShowSort] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -202,6 +206,15 @@ export function MarketplaceToolbar({
         {hasFilters && (
           <button type="button" onClick={clearAll} className="text-xs font-medium text-primary hover:underline">
             Filtrlarni tozalash
+          </button>
+        )}
+        {showSaveSearch && q.trim() && onSaveSearch && (
+          <button
+            type="button"
+            onClick={onSaveSearch}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+          >
+            <Bell className="size-3.5" /> Qidiruvni saqlash
           </button>
         )}
       </div>

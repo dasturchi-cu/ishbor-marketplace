@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { getActiveDashboardPath } from "@/lib/active-role-store";
-import { loginWithCredentials, logout } from "@/lib/auth";
+import { logout } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
 
@@ -57,8 +57,7 @@ export function AdminOnlyGate({ children }: { children: ReactNode }) {
               type="button"
               onClick={() => {
                 logout();
-                loginWithCredentials("admin@ishbor.uz", "demo1234");
-                navigate({ to: "/admin" });
+                navigate({ to: "/login", search: { redirect: "/admin", switch: "1" } });
               }}
               className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium hover:border-primary/20"
             >

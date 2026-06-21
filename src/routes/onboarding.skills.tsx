@@ -32,7 +32,7 @@ function OnboardingSkillsPage() {
     <OnboardingLayout
       stepId="skills"
       title="Qanday ko'nikmalaringiz bor?"
-      subtitle="Mutaxassisligingizni eng yaxshi ifodalovchi 8 tagacha ko'nikmani tanlang. Mijozlar shu bo'yicha qidiradi."
+      subtitle="Siz ish topishni tanladingiz — ko'nikmalaringiz mijozlarga sizni qidiruvda ko'rsatadi. 8 tagacha tanlang."
     >
       <p className="mb-4 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
         {skills.length}/8 tanlandi

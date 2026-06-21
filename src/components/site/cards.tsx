@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
+import { messagesPath } from "@/lib/messages-routing";
 import {
   Star,
   Clock,
@@ -23,7 +24,16 @@ import {
 } from "@/lib/project-validation";
 import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import { CardTrustStrip } from "@/components/trust/trust-summary";
-import { computeSuccessScore, computeResponseRate, formatResponseTime } from "@/lib/growth-metrics";
+import { computeSuccessScore, computeResponseRate, formatResponseTime, getFreelancerLevel } from "@/lib/growth-metrics";
+import { getAverageRating } from "@/lib/reviews-store";
+import {
+  CardSocialProofChip,
+  RecentReviewSnippet,
+} from "@/components/marketplace/social-proof";
+import {
+  getFreelancerSocialProof,
+  getServiceSocialProof,
+} from "@/lib/marketplace-signals";
 
 const actionBase =
   "touch-target relative z-10 inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2.5 text-[11px] font-semibold transition-default focus-ring";
@@ -31,10 +41,18 @@ const actionSecondary =
   "border border-border bg-card text-foreground hover:border-primary/25 hover:bg-secondary/40";
 const actionPrimary =
   "bg-primary text-primary-foreground shadow-[0_8px_20px_-8px_oklch(0.546_0.185_257/0.35)] hover:opacity-90 active:scale-[0.98]";
+const marketplaceCardShell =
+  "group premium-card-interactive relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card hover:border-primary/20 hover:shadow-[0_20px_56px_-16px_oklch(0.546_0.185_257/0.14)]";
 
 export function FreelancerCard({ f }: { f: Freelancer }) {
+  const liveRating = getAverageRating(f.username);
+  const displayRating = liveRating.count > 0 ? liveRating.avg : f.rating;
+  const displayReviews = liveRating.count > 0 ? liveRating.count : f.reviews;
+  const proof = getFreelancerSocialProof(f.username);
+  const success = computeSuccessScore(f.username);
+
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-default hover-lift hover:border-primary/20 hover:shadow-[0_20px_56px_-16px_oklch(0.546_0.185_257/0.14)] active:scale-[0.995]">
+    <div className={marketplaceCardShell}>
       <SaveButton
         type="freelancer"
         id={f.username}
@@ -66,18 +84,24 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
             <div className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">Reyting</div>
             <div className="flex items-center justify-end gap-1">
               <Star className="size-3.5 fill-gold text-gold" />
-              <span className="font-display text-sm font-bold">{f.rating.toFixed(2)}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">({f.reviews})</span>
+              <span className="font-display text-sm font-bold">{displayRating.toFixed(2)}</span>
+              <span className="font-mono text-[10px] text-muted-foreground">({displayReviews})</span>
             </div>
           </div>
         </div>
 
         <CardTrustStrip
           username={f.username}
-          level={f.level}
           identityVerified={f.identityVerified}
           className="mb-3"
         />
+
+        <CardSocialProofChip
+          views={proof.profileViews}
+          completedJobs={proof.completedJobs}
+          repeatRate={success.repeatClientRate > 0 ? success.repeatClientRate : undefined}
+        />
+        {proof.recentReview && <RecentReviewSnippet review={proof.recentReview} />}
 
         <div className="flex flex-wrap gap-1.5">
           {f.skills.slice(0, 3).map((s) => (
@@ -112,7 +136,7 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
         <Link to="/freelancers/$username" params={{ username: f.username }} className={`${actionBase} ${actionSecondary}`}>
           <Eye className="size-3.5" /> Profil
         </Link>
-        <Link to="/messages" className={`${actionBase} ${actionSecondary}`}>
+        <Link {...messagesPath(f.username)} className={`${actionBase} ${actionSecondary}`}>
           <MessageSquare className="size-3.5" /> Xabar
         </Link>
         <ClientCheckoutLink
@@ -129,9 +153,14 @@ export function FreelancerCard({ f }: { f: Freelancer }) {
 export function ServiceCard({ s, compact = false }: { s: Service; compact?: boolean }) {
   const sellerSuccess = computeSuccessScore(s.sellerUsername);
   const sellerResponse = formatResponseTime(computeResponseRate(s.sellerUsername).medianMinutes);
+  const sellerLevel = getFreelancerLevel(s.sellerUsername);
+  const liveRating = getAverageRating(s.sellerUsername);
+  const displayRating = liveRating.count > 0 ? liveRating.avg : s.rating;
+  const displayReviews = liveRating.count > 0 ? liveRating.count : s.reviews;
+  const proof = getServiceSocialProof(s.slug, s.sellerUsername);
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-default hover-lift hover:border-primary/20 hover:shadow-[0_20px_56px_-16px_oklch(0.546_0.185_257/0.14)] active:scale-[0.995]">
+    <div className={marketplaceCardShell}>
       <Link to="/services/$slug" params={{ slug: s.slug }} className="block flex-1">
         <div
           className="relative aspect-[5/3] w-full overflow-hidden"
@@ -179,7 +208,7 @@ export function ServiceCard({ s, compact = false }: { s: Service; compact?: bool
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <span className="truncate text-xs font-semibold text-foreground">{s.seller}</span>
-                <LevelBadge level={s.sellerLevel} className="!shrink-0 !px-1.5 !py-0 !text-[8px]" />
+                <LevelBadge level={sellerLevel} className="!shrink-0 !px-1.5 !py-0 !text-[8px]" />
               </div>
             </div>
           </div>
@@ -191,8 +220,8 @@ export function ServiceCard({ s, compact = false }: { s: Service; compact?: bool
           <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-border bg-surface/80 px-3 py-2">
             <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <Star className="size-3 fill-gold text-gold" />
-              <span className="font-mono font-semibold text-foreground">{s.rating.toFixed(1)}</span>
-              <span>({s.reviews})</span>
+              <span className="font-mono font-semibold text-foreground">{displayRating.toFixed(1)}</span>
+              <span>({displayReviews})</span>
             </span>
             <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <Clock className="size-3" />
@@ -207,6 +236,13 @@ export function ServiceCard({ s, compact = false }: { s: Service; compact?: bool
             <span className="font-mono rounded-md border border-border bg-surface px-2 py-0.5 text-[10px] text-muted-foreground">
               Ball <span className="font-semibold text-foreground">{sellerSuccess.score}</span>
             </span>
+          </div>
+          <div className="mt-2">
+            <CardSocialProofChip
+              views={proof.serviceViews}
+              completedJobs={proof.completedJobs}
+            />
+            {proof.recentReview && <RecentReviewSnippet review={proof.recentReview} />}
           </div>
         </div>
       </Link>
@@ -227,7 +263,7 @@ export function ServiceCard({ s, compact = false }: { s: Service; compact?: bool
           <span className="truncate">Ko'rish</span>
         </Link>
         {!compact && (
-          <Link to="/messages" className={`${actionBase} ${actionSecondary}`}>
+          <Link {...messagesPath(s.sellerUsername)} className={`${actionBase} ${actionSecondary}`}>
             <MessageSquare className="size-3.5 shrink-0" />
             <span className="truncate">Bog'lanish</span>
           </Link>
@@ -252,7 +288,7 @@ export function ProjectCard({ p }: { p: Project }) {
   const budgetLabel = formatProjectBudget(p);
 
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card transition-default hover-lift hover:border-primary/20 hover:shadow-[0_20px_56px_-16px_oklch(0.546_0.185_257/0.14)] active:scale-[0.995]">
+    <div className={marketplaceCardShell}>
       <SaveButton
         type="project"
         id={p.slug}

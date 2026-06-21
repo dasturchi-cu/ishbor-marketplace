@@ -17,6 +17,10 @@ import { getEscrowByOrderId as getStoredEscrowByOrderId } from "@/lib/escrow-sto
 import { hasUserReviewedOrder, getReviewsForOrder, getOrderReviewDirection } from "@/lib/reviews-store";
 import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import { EntityNotFound } from "@/components/site/entity-not-found";
+import { ReviewPromptCard } from "@/components/ecosystem/ecosystem-indicators";
+import { JourneyBannerCard } from "@/components/ux/journey-banner";
+import { resolveOrderJourneyBanner } from "@/lib/journey-guidance";
+import { messagesPath } from "@/lib/messages-routing";
 
 function canAccessOrder(order: ReturnType<typeof getOrderById>, session: ReturnType<typeof getSession>) {
   if (!order || !session) return false;
@@ -86,10 +90,14 @@ function OrderDetailPage() {
     order.client === session.user.company;
   const canApproveDelivery = isClient && (order.status === "in_progress" || order.status === "review");
 
+  const journeyBanner = resolveOrderJourneyBanner(order, session.user);
+
   const handleApproveDelivery = () => {
     const result = approveOrderDelivery(order.id);
     if (result) {
-      toast.success("Yetkazib berish tasdiqlandi. Eskrou mablag' chiqarildi.");
+      toast.success("Yetkazib berish tasdiqlandi. Endi sharh qoldiring — reyting oshadi.", {
+        action: { label: "Sharh yozish", onClick: () => document.getElementById("review-prompt")?.scrollIntoView({ behavior: "smooth" }) },
+      });
     } else {
       toast.error("Tasdiqlash amalga oshmadi.");
     }
@@ -110,12 +118,14 @@ function OrderDetailPage() {
               <CheckCircle2 className="size-4" /> Yetkazib berishni tasdiqlash
             </button>
           )}
-          <Link to="/messages" className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-4 text-sm font-medium hover:border-primary/20">
+          <Link {...messagesPath()} className="touch-target inline-flex items-center gap-1.5 rounded-lg border border-border px-4 text-sm font-medium hover:border-primary/20">
             <MessageCircle className="size-4" /> Xabar yozish
           </Link>
         </div>
       }
     >
+      {journeyBanner && <JourneyBannerCard banner={journeyBanner} className="mb-6" />}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
           <section className="rounded-2xl border border-border bg-card p-5">
@@ -144,7 +154,12 @@ function OrderDetailPage() {
             </div>
           </section>
 
+          {showReview && (
+            <ReviewPromptCard orderTitle={order.title} orderId={order.id} />
+          )}
+
           {showReview && user && (
+            <div id="review-form">
             <ReviewForm
               orderId={order.id}
               project={order.title}
@@ -156,6 +171,7 @@ function OrderDetailPage() {
               toCompany={order.clientSlug ?? user.companySlug}
               onSubmitted={() => setReviewed(true)}
             />
+            </div>
           )}
 
           {orderReviews.length > 0 && (

@@ -107,7 +107,11 @@ function TahrirlashPortfolioForm({
       actionFeedback.error("Barcha majburiy maydonlarni to'ldiring.");
       return;
     }
-    publishPortfolio(input, ctx, slug);
+    const result = publishPortfolio(input, ctx, slug);
+    if ("error" in result) {
+      actionFeedback.error(result.error);
+      return;
+    }
     actionFeedback.updated("Portfolio");
     navigate({ to: "/portfolio/$slug", params: { slug } });
   };

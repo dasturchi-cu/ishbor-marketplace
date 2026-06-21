@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Search, ArrowRight, Briefcase, Users, Package } from "lucide-react";
+import { Search, ArrowRight, Briefcase, Users, Package, Shield } from "lucide-react";
 
 import { POPULAR_SEARCHES } from "@/lib/search-suggestions";
 
@@ -22,10 +22,7 @@ export function SearchCommandPalette({
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!open) {
-      setQ("");
-      return;
-    }
+    if (!open) return;
     inputRef.current?.focus();
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
@@ -35,6 +32,7 @@ export function SearchCommandPalette({
     return () => {
       document.body.style.overflow = "";
       document.removeEventListener("keydown", onKey);
+      setQ("");
     };
   }, [open, onClose]);
 
@@ -42,9 +40,16 @@ export function SearchCommandPalette({
 
   const submit = () => {
     const trimmed = q.trim();
+    if (/^admin$/i.test(trimmed)) {
+      navigate({ to: "/admin" });
+      onClose();
+      return;
+    }
     navigate({ to: "/search", search: { q: trimmed, type: "all", sort: "ranking_score" } });
     onClose();
   };
+
+  const showAdminShortcut = /^admin$/i.test(q.trim());
 
   return (
     <div className="fixed inset-0 z-[110] flex items-start justify-center p-4 pt-[max(1rem,12vh)] sm:p-6">
@@ -76,6 +81,20 @@ export function SearchCommandPalette({
           </kbd>
         </div>
         <div className="p-2">
+          {showAdminShortcut && (
+            <button
+              type="button"
+              onClick={() => {
+                navigate({ to: "/admin" });
+                onClose();
+              }}
+              className="mb-2 flex w-full items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-left text-sm transition-default hover:border-primary/35"
+            >
+              <Shield className="size-4 text-primary" />
+              <span className="flex-1 font-semibold text-primary">Admin konsoli</span>
+              <ArrowRight className="size-3.5 text-primary" />
+            </button>
+          )}
           <p className="px-2 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
             Tez havolalar
           </p>
@@ -87,7 +106,7 @@ export function SearchCommandPalette({
                 navigate({ to: link.to });
                 onClose();
               }}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm transition-default hover:bg-secondary/50"
+              className="premium-press flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-secondary/50"
             >
               <link.icon className="size-4 text-muted-foreground" />
               <span className="flex-1 font-medium">{link.label}</span>

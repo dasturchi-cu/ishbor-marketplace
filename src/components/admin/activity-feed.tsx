@@ -27,7 +27,7 @@ export function ActivityFeed({ events }: { events: ActivityEvent[] }) {
       {events.map((e) => {
         const Icon = TYPE_ICONS[e.type];
         return (
-          <div key={e.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-default hover:bg-secondary/30">
+          <div key={e.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5 premium-list-row hover:bg-secondary/30">
             {e.hue ? (
               <GradientAvatar name={e.description.split("—")[0]?.trim() ?? e.title} hue={e.hue} size={32} />
             ) : (

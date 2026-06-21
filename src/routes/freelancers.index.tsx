@@ -1,10 +1,16 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useSyncExternalStore } from "react";
+import { toast } from "sonner";
+import { saveMarketplaceSearch } from "@/lib/alerts-store";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { FreelancerCard } from "@/components/site/cards";
 import { CardSkeleton, EmptyState } from "@/components/site/feedback";
 import { freelancers } from "@/lib/mock-data";
+import {
+  getAllDiscoverableFreelancers,
+  subscribeDiscoverableFreelancers,
+} from "@/lib/freelancer-profile-resolver";
 import { usePageReady } from "@/hooks/use-page-ready";
 import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/marketplace-toolbar";
 import { MarketplacePulseMini } from "@/components/site/marketplace-pulse-mini";
@@ -18,15 +24,16 @@ import {
   shouldPersonalizeList,
   subscribeRecommendations,
 } from "@/lib/recommendations";
+import { buildPageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/freelancers/")({
   validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
-  head: () => ({
-    meta: [
-      { title: "Iste'dod topish — Ishbor" },
-      { name: "description", content: "Markaziy Osiyo bo'ylab tekshirilgan frilanserlar yollang." },
-    ],
-  }),
+  head: () =>
+    buildPageMeta({
+      title: "Iste'dod topish — Ishbor",
+      description: "Markaziy Osiyo bo'ylab tekshirilgan frilanserlar yollang.",
+      path: "/freelancers",
+    }),
   component: FreelancersPage,
 });
 
@@ -42,17 +49,42 @@ const filterChips = [
 function FreelancersPage() {
   const ready = usePageReady();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { activeRole } = useActiveRole();
   const search = Route.useSearch();
   const setSearch = useMarketplaceSearch(search, "/freelancers");
   const recVersion = useSyncExternalStore(subscribeRecommendations, getRecommendationsVersion, () => 0);
+  const discoverable = useSyncExternalStore(
+    subscribeDiscoverableFreelancers,
+    getAllDiscoverableFreelancers,
+    () => freelancers,
+  );
   const filtered = useMemo(() => {
-    const base = filterFreelancers(freelancers, search);
+    const base = filterFreelancers(discoverable, search);
     if (user && activeRole === "client" && shouldPersonalizeList(search)) {
       return applyPersonalizedFreelancerOrder(base, user.id);
     }
     return base;
-  }, [search, user?.id, activeRole, recVersion]);
+  }, [search, user?.id, activeRole, recVersion, discoverable]);
+
+  const handleSaveSearch = () => {
+    const q = search.q ?? "";
+    if (!q.trim()) {
+      toast.error("Qidiruv so'zini kiriting");
+      return;
+    }
+    if (!user) {
+      navigate({ to: "/login", search: { redirect: "/freelancers" } });
+      return;
+    }
+    const result = saveMarketplaceSearch(user.id, {
+      q,
+      type: "freelancers",
+      filter: search.filter,
+    });
+    if ("error" in result) toast.error(result.error);
+    else toast.success("Qidiruv saqlandi");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,8 +109,26 @@ function FreelancersPage() {
             resultCount={filtered.length}
             resultLabel="frilanser"
             onSearchChange={setSearch}
+            showSaveSearch
+            onSaveSearch={handleSaveSearch}
           />
           <MarketplacePulseMini />
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              { slug: "toshkent", label: "Toshkent" },
+              { slug: "samarqand", label: "Samarqand" },
+              { slug: "buxoro", label: "Buxoro" },
+            ].map((r) => (
+              <Link
+                key={r.slug}
+                to="/freelancers/region/$city"
+                params={{ city: r.slug }}
+                className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground transition-default hover:border-primary/40 hover:text-primary"
+              >
+                {r.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
 

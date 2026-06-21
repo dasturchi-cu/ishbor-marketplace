@@ -12,6 +12,9 @@ import { getAllServices } from "@/lib/services-store";
 import { freelancers, projects } from "@/lib/mock-data";
 import { getAllProjects } from "@/lib/projects-store";
 import { getAllPortfolios } from "@/lib/portfolio-store";
+import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
+import { ArrowRight } from "lucide-react";
+import { hasPriorOrderWithFreelancer } from "@/lib/ecosystem-progress";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/saved")({
@@ -137,9 +140,20 @@ function SavedPage() {
             {savedFreelancers.map((entry) => entry && (
               <div key={entry.freelancer.username} className="space-y-2">
                 <FreelancerCard f={entry.freelancer} />
-                <p className="font-mono text-[10px] text-muted-foreground">
-                  Saqlangan: {new Date(entry.savedAt).toLocaleDateString("uz-UZ")}
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                  <p className="font-mono text-[10px] text-muted-foreground">
+                    Saqlangan: {new Date(entry.savedAt).toLocaleDateString("uz-UZ")}
+                    {user && hasPriorOrderWithFreelancer(user, entry.freelancer.username)
+                      ? " · Oldin hamkorlik qilgan"
+                      : ""}
+                  </p>
+                  <ClientCheckoutLink
+                    search={{ type: "hire" as const, freelancer: entry.freelancer.username }}
+                    className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-95"
+                  >
+                    Qayta yollash <ArrowRight className="size-3" />
+                  </ClientCheckoutLink>
+                </div>
               </div>
             ))}
           </div>

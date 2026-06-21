@@ -36,6 +36,9 @@ import {
   recordPortfolioContactClick,
   recordPortfolioHireConversion,
 } from "@/lib/portfolio-analytics-store";
+import { buildPageMeta, buildJsonLdHead, buildBreadcrumbJsonLd } from "@/lib/seo";
+import { shareEntity } from "@/lib/share-analytics";
+import { messagesPath } from "@/lib/messages-routing";
 
 export const Route = createFileRoute("/portfolio/$slug")({
   beforeLoad: ({ params }) => {
@@ -46,10 +49,47 @@ export const Route = createFileRoute("/portfolio/$slug")({
       throw redirect({ to: "/portfolio" });
     }
   },
-  loader: ({ params }) => ({ slug: params.slug }),
-  head: () => ({
-    meta: [{ title: "Portfolio — Ishbor" }],
-  }),
+  loader: ({ params }) => {
+    const item = getPublicPortfolioBySlug(params.slug);
+    if (!item) return { seo: null };
+    return {
+      seo: {
+        title: item.title,
+        slug: item.slug,
+        category: item.category,
+        author: item.freelancerName,
+        description: item.description?.slice(0, 160) ?? item.title,
+      },
+    };
+  },
+  head: ({ loaderData }) => {
+    const p = loaderData?.seo;
+    if (!p) {
+      return buildPageMeta({ title: "Portfolio topilmadi — Ishbor", noindex: true });
+    }
+    return {
+      ...buildPageMeta({
+        title: `${p.title} — ${p.author} | Ishbor Portfolio`,
+        description: p.description,
+        path: `/portfolio/${p.slug}`,
+        type: "article",
+      }),
+      ...buildJsonLdHead([
+        {
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          name: p.title,
+          author: { "@type": "Person", name: p.author },
+          url: `https://ishbor.uz/portfolio/${p.slug}`,
+        },
+        buildBreadcrumbJsonLd([
+          { name: "Bosh sahifa", path: "/" },
+          { name: "Portfolio", path: "/portfolio" },
+          { name: p.title },
+        ]),
+      ]),
+    };
+  },
   component: PortfolioDetailPage,
 });
 
@@ -172,19 +212,23 @@ function PortfolioDetailContent({
     : [item.hue, (item.hue + 40) % 360, (item.hue + 80) % 360];
 
   const handleShare = async () => {
-    const url = window.location.href;
     recordPortfolioShare(slug);
-    if (navigator.share) {
-      await navigator.share({ title: item.title, url });
-      return;
+    try {
+      await shareEntity({
+        entity: "portfolio",
+        entityId: slug,
+        title: item.title,
+        url: window.location.href,
+        onCopied: () => toast.success("Havola nusxalandi"),
+      });
+    } catch {
+      /* user cancelled share */
     }
-    await navigator.clipboard.writeText(url);
-    toast.success("Havola nusxalandi");
   };
 
   const handleContact = () => {
     recordPortfolioContactClick(slug);
-    navigate({ to: "/messages" });
+    navigate(messagesPath());
   };
 
   const handleHire = () => {

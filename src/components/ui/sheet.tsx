@@ -14,7 +14,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     ref={ref}
-    className={cn("liquid-glass-overlay fixed inset-0 z-[100]", className)}
+    className={cn("liquid-glass-overlay fixed inset-0 z-[100] gpu-layer data-[state=open]:premium-overlay", className)}
     {...props}
   />
 ));
@@ -29,15 +29,15 @@ const SheetContent = React.forwardRef<
     <SheetPrimitive.Content
       ref={ref}
       className={cn(
-        "liquid-glass-panel fixed z-[100] flex flex-col gap-4 transition-default",
-        side === "right" && "inset-y-0 right-0 h-full w-full max-w-md border-l p-5",
-        side === "left" && "inset-y-0 left-0 h-full w-full max-w-xs border-r p-5",
+        "liquid-glass-panel fixed z-[100] flex flex-col gap-4 gpu-layer data-[state=open]:animate-in data-[state=closed]:animate-out",
+        side === "right" && "inset-y-0 right-0 h-full w-full max-w-md border-l p-5 data-[state=open]:premium-drawer",
+        side === "left" && "inset-y-0 left-0 h-full w-full max-w-xs border-r p-5 data-[state=open]:premium-drawer",
         className,
       )}
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-lg opacity-70 hover:opacity-100">
+      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-lg opacity-70 premium-press-flat transition-default hover:opacity-100">
         <X className="size-4" />
         <span className="sr-only">Yopish</span>
       </SheetPrimitive.Close>

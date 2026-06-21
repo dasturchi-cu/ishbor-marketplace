@@ -26,7 +26,7 @@ export function WaitingState({
   return (
     <div
       className={cn(
-        "rounded-xl border border-warning/20 bg-warning/5",
+        "premium-surface-panel rounded-xl border border-warning/20 bg-warning/5",
         compact ? "px-3 py-2.5" : "p-4",
         className,
       )}

@@ -61,7 +61,7 @@ export function AdminDataTable<T extends { id: string }>({
   const selectedRows = filtered.filter((r) => selected.has(r.id));
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-card gpu-layer premium-surface-panel">
       <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

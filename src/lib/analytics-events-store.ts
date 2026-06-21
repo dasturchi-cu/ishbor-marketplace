@@ -34,7 +34,12 @@ export type AnalyticsEventType =
   | "agency_created"
   | "agency_published"
   | "agency_member_invited"
-  | "agency_verified";
+  | "agency_verified"
+  | "search_query"
+  | "profile_share"
+  | "service_share"
+  | "project_share"
+  | "referral_signup";
 
 export type AnalyticsEvent = {
   id: string;
@@ -171,6 +176,11 @@ const EVENT_LABELS: Record<string, string> = {
   credit_refund: "Kredit qaytarildi",
   credit_purchase: "Kredit sotib olindi",
   review_submitted: "Sharh yuborildi",
+  search_query: "Qidiruv amalga oshirildi",
+  profile_share: "Profil ulashildi",
+  service_share: "Xizmat ulashildi",
+  project_share: "Loyiha ulashildi",
+  referral_signup: "Referral ro'yxatdan o'tdi",
   agency_view: "Agentlik ko'rildi",
   agency_created: "Agentlik yaratildi",
   agency_published: "Agentlik e'lon qilindi",

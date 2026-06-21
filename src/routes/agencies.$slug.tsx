@@ -53,6 +53,7 @@ import { getSession } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 
 import { agencyRoleLabels } from "@/lib/agency-types";
+import { messagesPath } from "@/lib/messages-routing";
 
 
 
@@ -146,7 +147,7 @@ function AgencyProfilePage() {
       });
       return;
     }
-    navigate({ to: "/messages" });
+    navigate(messagesPath());
     toast.success("Xabarlar bo'limiga o'tildi");
   };
 

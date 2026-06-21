@@ -39,6 +39,7 @@ import {
   type AgencyPermission,
 } from "@/lib/agency-store";
 import type { WorkspaceRole } from "@/lib/active-role-store";
+import { messagesPath } from "@/lib/messages-routing";
 
 type NavItem = {
   to: string;
@@ -144,9 +145,10 @@ function NavLink({
   onClick?: () => void;
 }) {
   const active = n.exact ? pathname === n.to : pathname.startsWith(n.to);
+  const linkTarget = n.to === "/messages" ? messagesPath() : { to: n.to };
   return (
     <Link
-      to={n.to}
+      {...linkTarget}
       onClick={onClick}
       className={`group flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-default ${
         active

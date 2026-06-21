@@ -8,6 +8,8 @@ import { loadOnboardingState } from "@/lib/auth-constants";
 import { consumePendingRegistrationPassword } from "@/lib/registration-store";
 import { completeRegistrationSession } from "@/lib/api/session.functions";
 import { applyServerSession } from "@/lib/auth";
+import { applyReferralCode } from "@/lib/referral-store";
+import { queueWelcomeEmail, queueVerificationEmail, flushEmailOutbox } from "@/lib/email-lifecycle";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/verify-otp")({
@@ -27,6 +29,10 @@ function VerifyOtpPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    if (email) queueVerificationEmail(email, "123456");
+  }, [email]);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -68,6 +74,18 @@ function VerifyOtpPage() {
         return;
       }
       applyServerSession(result.session);
+      const userId = result.session.user.id;
+      const userEmail = result.session.user.email;
+      const pendingRef =
+        typeof sessionStorage !== "undefined"
+          ? sessionStorage.getItem("ishbor-pending-ref")
+          : null;
+      if (pendingRef) {
+        applyReferralCode(userId, userEmail, pendingRef);
+        sessionStorage.removeItem("ishbor-pending-ref");
+      }
+      queueWelcomeEmail(userEmail, onboarding.fullName || "Foydalanuvchi");
+      void flushEmailOutbox();
       toast.success("Hisob tasdiqlandi!");
       navigate({ to: "/welcome", search: {} });
     } catch {

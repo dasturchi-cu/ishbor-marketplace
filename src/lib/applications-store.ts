@@ -11,6 +11,7 @@ import { createEscrowFromOrder } from "./escrow-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
 import { getProjectBySlug } from "./projects-store";
 import { notifyProposalReceived, notifyProposalAccepted, notifyOrderCreated } from "./notification-events";
+import { maybeCompleteReferral } from "./referral-store";
 import { canSubmitProposal, recordProposalSubmitted, getProposalUsage } from "./subscription-store";
 
 const STORAGE_KEY = "ishbor-user-applications";
@@ -222,6 +223,8 @@ export function createApplication(input: NewApplicationInput): Application | { e
   if (project?.ownerUserId) {
     notifyProposalReceived(project.ownerUserId, input.projectTitle, input.projectSlug);
   }
+
+  maybeCompleteReferral(session.user.id, "application_submitted");
 
   return app;
 

@@ -32,7 +32,7 @@ export function OnboardingLayout({ children, title, subtitle, stepId, showProgre
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="premium-page-content mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         {showProgress && (
         <div className="mb-10">
           <div className="mb-3 flex items-center justify-between gap-3">
@@ -135,7 +135,7 @@ export function OnboardingNav({
         type="button"
         onClick={onContinue}
         disabled={disabled}
-        className="touch-target inline-flex items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground transition-default hover:opacity-90 focus-ring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+        className="touch-target send-btn-ready inline-flex items-center gap-2 rounded-xl bg-primary px-6 text-sm font-semibold text-primary-foreground hover:opacity-90 focus-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         {continueLabel}
       </button>
@@ -163,7 +163,7 @@ export function UserTypeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "w-full rounded-2xl border p-5 text-left transition-default hover-lift focus-ring",
+        "premium-card-interactive w-full rounded-2xl border p-5 text-left focus-ring",
         selected
           ? "border-primary bg-primary/5 ring-2 ring-primary/20"
           : "border-border bg-card hover:border-primary/30",

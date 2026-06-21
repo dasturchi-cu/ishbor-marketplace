@@ -116,6 +116,7 @@ import { Route as AdminUsersIndexRouteImport } from './routes/admin.users.index'
 import { Route as AdminEscrowIndexRouteImport } from './routes/admin.escrow.index'
 import { Route as ServicesCategorySlugRouteImport } from './routes/services.category.$slug'
 import { Route as PortfolioEditSlugRouteImport } from './routes/portfolio.edit.$slug'
+import { Route as FreelancersRegionCityRouteImport } from './routes/freelancers.region.$city'
 import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 import { Route as AdminEscrowIdRouteImport } from './routes/admin.escrow.$id'
 
@@ -654,6 +655,11 @@ const PortfolioEditSlugRoute = PortfolioEditSlugRouteImport.update({
   path: '/edit/$slug',
   getParentRoute: () => PortfolioRoute,
 } as any)
+const FreelancersRegionCityRoute = FreelancersRegionCityRouteImport.update({
+  id: '/region/$city',
+  path: '/region/$city',
+  getParentRoute: () => FreelancersRoute,
+} as any)
 const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -771,6 +777,7 @@ export interface FileRoutesByFullPath {
   '/services/': typeof ServicesIndexRoute
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
+  '/freelancers/region/$city': typeof FreelancersRegionCityRoute
   '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
   '/services/category/$slug': typeof ServicesCategorySlugRoute
   '/admin/escrow/': typeof AdminEscrowIndexRoute
@@ -868,6 +875,7 @@ export interface FileRoutesByTo {
   '/services': typeof ServicesIndexRoute
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
+  '/freelancers/region/$city': typeof FreelancersRegionCityRoute
   '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
   '/services/category/$slug': typeof ServicesCategorySlugRoute
   '/admin/escrow': typeof AdminEscrowIndexRoute
@@ -980,6 +988,7 @@ export interface FileRoutesById {
   '/services/': typeof ServicesIndexRoute
   '/admin/escrow/$id': typeof AdminEscrowIdRoute
   '/admin/users/$id': typeof AdminUsersIdRoute
+  '/freelancers/region/$city': typeof FreelancersRegionCityRoute
   '/portfolio/edit/$slug': typeof PortfolioEditSlugRoute
   '/services/category/$slug': typeof ServicesCategorySlugRoute
   '/admin/escrow/': typeof AdminEscrowIndexRoute
@@ -1093,6 +1102,7 @@ export interface FileRouteTypes {
     | '/services/'
     | '/admin/escrow/$id'
     | '/admin/users/$id'
+    | '/freelancers/region/$city'
     | '/portfolio/edit/$slug'
     | '/services/category/$slug'
     | '/admin/escrow/'
@@ -1190,6 +1200,7 @@ export interface FileRouteTypes {
     | '/services'
     | '/admin/escrow/$id'
     | '/admin/users/$id'
+    | '/freelancers/region/$city'
     | '/portfolio/edit/$slug'
     | '/services/category/$slug'
     | '/admin/escrow'
@@ -1301,6 +1312,7 @@ export interface FileRouteTypes {
     | '/services/'
     | '/admin/escrow/$id'
     | '/admin/users/$id'
+    | '/freelancers/region/$city'
     | '/portfolio/edit/$slug'
     | '/services/category/$slug'
     | '/admin/escrow/'
@@ -2103,6 +2115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortfolioEditSlugRouteImport
       parentRoute: typeof PortfolioRoute
     }
+    '/freelancers/region/$city': {
+      id: '/freelancers/region/$city'
+      path: '/region/$city'
+      fullPath: '/freelancers/region/$city'
+      preLoaderRoute: typeof FreelancersRegionCityRouteImport
+      parentRoute: typeof FreelancersRoute
+    }
     '/admin/users/$id': {
       id: '/admin/users/$id'
       path: '/$id'
@@ -2289,12 +2308,14 @@ interface FreelancersRouteChildren {
   FreelancersUsernameRoute: typeof FreelancersUsernameRoute
   FreelancersManageRoute: typeof FreelancersManageRoute
   FreelancersIndexRoute: typeof FreelancersIndexRoute
+  FreelancersRegionCityRoute: typeof FreelancersRegionCityRoute
 }
 
 const FreelancersRouteChildren: FreelancersRouteChildren = {
   FreelancersUsernameRoute: FreelancersUsernameRoute,
   FreelancersManageRoute: FreelancersManageRoute,
   FreelancersIndexRoute: FreelancersIndexRoute,
+  FreelancersRegionCityRoute: FreelancersRegionCityRoute,
 }
 
 const FreelancersRouteWithChildren = FreelancersRoute._addFileChildren(

@@ -20,19 +20,66 @@ import {
   enrichService,
   getServiceReviews,
   getSimilarServices,
+  categories,
 } from "@/lib/mock-data";
+import { buildPageMeta, buildJsonLdHead, buildServiceJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo";
 import { getServiceBySlug, subscribeServices } from "@/lib/services-store";
 import { applyLiveServiceMetrics } from "@/lib/growth-metrics";
 import { recordServiceView } from "@/lib/analytics-utils";
+import { shareEntity } from "@/lib/share-analytics";
+import { getServiceSocialProof } from "@/lib/marketplace-signals";
+import { SocialProofLine } from "@/components/marketplace/social-proof";
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
 import { useAuth } from "@/hooks/use-auth";
 import { isFeaturedActive } from "@/lib/featured-store";
 import { getSession } from "@/lib/auth";
 import { EntityNotFound } from "@/components/site/entity-not-found";
-import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
+import { messagesPath } from "@/lib/messages-routing";
 
 export const Route = createFileRoute("/services/$slug")({
-  head: () => ({ meta: [{ title: "Xizmat — Ishbor" }] }),
+  loader: ({ params }) => {
+    const raw = services.find((x) => x.slug === params.slug);
+    if (!raw) return { seo: null };
+    const s = enrichService(raw);
+    return {
+      seo: {
+        title: s.title,
+        seller: s.seller,
+        slug: s.slug,
+        price: s.price,
+        category: s.category,
+        rating: s.rating,
+        reviews: s.reviews,
+        description: s.description?.slice(0, 160),
+      },
+    };
+  },
+  head: ({ loaderData }) => {
+    const s = loaderData?.seo;
+    if (!s) {
+      return buildPageMeta({
+        title: "Xizmat topilmadi — Ishbor",
+        noindex: true,
+      });
+    }
+    const desc = `${s.title} — $${s.price} dan. ${s.category}. Eskrou himoyasi bilan xavfsiz buyurtma.`;
+    return {
+      ...buildPageMeta({
+        title: `${s.title} — ${s.seller} | Ishbor`,
+        description: desc,
+        path: `/services/${s.slug}`,
+        type: "product",
+      }),
+      ...buildJsonLdHead([
+        buildServiceJsonLd(s),
+        buildBreadcrumbJsonLd([
+          { name: "Bosh sahifa", path: "/" },
+          { name: "Xizmatlar", path: "/services" },
+          { name: s.title },
+        ]),
+      ]),
+    };
+  },
   component: ServiceDetail,
 });
 
@@ -102,25 +149,30 @@ function ServiceDetailContent({
   similarServices: ReturnType<typeof getSimilarServices>;
   user: ReturnType<typeof useAuth>["user"];
 }) {
-  const defaultPkg =
-    service.packages.find((p) => p.popular)?.tier.toLowerCase() ??
-    service.packages[0]?.tier.toLowerCase() ??
-    "essential";
   const storedRecord = getServiceBySlug(service.slug);
   const isOwner = user?.username === service.sellerUsername;
+  const categorySlug = categories.find(
+    (c) => c.name.toLowerCase() === service.category.toLowerCase(),
+  )?.slug;
 
   useEffect(() => {
     recordServiceView(service.slug, service.sellerUsername);
   }, [service.slug, service.sellerUsername]);
 
+  const serviceProof = getServiceSocialProof(service.slug, service.sellerUsername);
+
   const handleShare = async () => {
-    const url = `${window.location.origin}/services/${service.slug}`;
-    if (navigator.share) {
-      await navigator.share({ title: service.title, url });
-      return;
+    try {
+      await shareEntity({
+        entity: "service",
+        entityId: service.slug,
+        title: service.title,
+        url: `${window.location.origin}/services/${service.slug}`,
+        onCopied: () => toast.success("Xizmat havolasi nusxalandi"),
+      });
+    } catch {
+      /* user cancelled share */
     }
-    await navigator.clipboard.writeText(url);
-    toast.success("Xizmat havolasi nusxalandi");
   };
 
   return (
@@ -131,7 +183,17 @@ function ServiceDetailContent({
         <nav className="font-mono mb-5 flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground">
           <Link to="/services" className="transition-default hover:text-primary">Xizmatlar</Link>
           <ChevronRight className="size-3 opacity-50" />
-          <span>{service.category}</span>
+          {categorySlug ? (
+            <Link
+              to="/services/category/$slug"
+              params={{ slug: categorySlug }}
+              className="transition-default hover:text-primary"
+            >
+              {service.category}
+            </Link>
+          ) : (
+            <span>{service.category}</span>
+          )}
           <ChevronRight className="size-3 opacity-50" />
           <span className="line-clamp-1 text-foreground">{service.title}</span>
         </nav>
@@ -174,18 +236,18 @@ function ServiceDetailContent({
                   )}
                 </div>
 
+                <div className="mt-4">
+                  <SocialProofLine proof={serviceProof} variant="detail" />
+                </div>
+
                 <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   {!isOwner ? (
-                    <ClientCheckoutLink
-                      search={{
-                        type: "service" as const,
-                        service: service.slug,
-                        package: defaultPkg as "essential" | "premium" | "enterprise",
-                      }}
+                    <a
+                      href="#order-packages"
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
                     >
-                      <ShoppingCart className="size-4" /> Hozir buyurtma berish
-                    </ClientCheckoutLink>
+                      <ShoppingCart className="size-4" /> Paketlarni ko'rish
+                    </a>
                   ) : (
                     <Link
                       to="/my-services"
@@ -196,7 +258,7 @@ function ServiceDetailContent({
                   )}
                   <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-1 sm:max-w-md">
                     <Link
-                      to="/messages"
+                      {...messagesPath(service.sellerUsername)}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm font-medium transition-default hover:border-primary/25 focus-ring"
                     >
                       <MessageSquare className="size-4" /> Bog'lanish
@@ -312,6 +374,7 @@ function ServiceDetailContent({
             <PackageCard
               packages={service.packages}
               serviceSlug={service.slug}
+              sellerUsername={service.sellerUsername}
               queuePosition={service.queuePosition}
             />
 
@@ -374,23 +437,13 @@ function ServiceDetailContent({
       <SiteFooter />
 
       {!isOwner && (
-        <div className="liquid-glass fixed inset-x-0 bottom-0 z-40 flex gap-2 border-t p-3 lg:hidden">
-          <ClientCheckoutLink
-            search={{
-              type: "service" as const,
-              service: service.slug,
-              package: defaultPkg as "essential" | "premium" | "enterprise",
-            }}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.4)] focus-ring"
+        <div className="liquid-glass fixed inset-x-0 bottom-0 z-40 border-t p-3 lg:hidden">
+          <a
+            href="#order-packages"
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.4)] focus-ring"
           >
-            <ShoppingCart className="size-4" /> Hozir buyurtma berish
-          </ClientCheckoutLink>
-          <Link
-            to="/messages"
-            className="inline-flex items-center justify-center rounded-xl border border-border px-4 py-3 text-sm font-medium focus-ring"
-          >
-            <MessageSquare className="size-4" />
-          </Link>
+            <ShoppingCart className="size-4" /> Paketlarni tanlash
+          </a>
         </div>
       )}
     </div>

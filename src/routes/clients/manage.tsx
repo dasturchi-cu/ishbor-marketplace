@@ -14,6 +14,7 @@ import { computeFreelancerReputation } from "@/lib/reputation-store";
 import { subscribeOrders } from "@/lib/orders-store";
 import { subscribeSaved } from "@/lib/saved-store";
 import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
+import { messagesPath } from "@/lib/messages-routing";
 
 export const Route = createFileRoute("/clients/manage")({
   beforeLoad: requireRole(["client"]),
@@ -147,7 +148,7 @@ function FreelancerRow({
         )}
         {showInvite && (
           <Link
-            to="/messages"
+            {...messagesPath()}
             className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium"
           >
             <UserPlus className="size-3.5" /> Taklif

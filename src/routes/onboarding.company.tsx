@@ -26,7 +26,7 @@ function OnboardingCompanyPage() {
     <OnboardingLayout
       stepId="company"
       title="Kompaniyangiz nomi nima?"
-      subtitle="Bu nom ish e'lonlaringizda ko'rinadi va frilanserlar kim bilan ishlayotganini tushunishiga yordam beradi."
+      subtitle="Siz loyiha joylashni tanladingiz — bu ma'lumotlar sizga mos frilanserlarni tezroq topishga yordam beradi."
     >
       <AuthField
         label="Kompaniya nomi"

@@ -1,5 +1,6 @@
 import { CheckCircle2, Clock, Repeat2, ShieldCheck, Star, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import {
   LevelBadge,
   VerifiedIdentityBadge,
@@ -46,20 +47,29 @@ function TrustMetricPill({
 /** Compact trust row for marketplace cards — single source from growth-metrics + reputation-store */
 export function CardTrustStrip({
   username,
-  level,
   identityVerified,
   className,
 }: {
   username: string;
-  level?: Level;
+  /** @deprecated Always uses live level from growth-metrics */
+  level?: "Top Rated" | "Expert" | "Rising" | "Verified";
   identityVerified?: boolean;
   className?: string;
 }) {
-  const liveLevel = level ?? getFreelancerLevel(username);
-  const success = computeSuccessScore(username);
-  const response = computeResponseRate(username);
-  const responseLabel = formatResponseTime(response.medianMinutes);
-  const rep = computeFreelancerReputation(username);
+  const hydrated = useClientHydrated();
+  const liveLevel = hydrated ? getFreelancerLevel(username) : ("Verified" as Level);
+  const success = hydrated ? computeSuccessScore(username) : { score: 0, completionRate: 0, repeatClientRate: 0 };
+  const response = hydrated ? computeResponseRate(username) : { medianMinutes: null as number | null };
+  const responseLabel = hydrated && response.medianMinutes != null ? formatResponseTime(response.medianMinutes) : "—";
+  const rep = hydrated ? computeFreelancerReputation(username) : { tier: "Bronze" as const, reviewCount: 0 };
+
+  if (!hydrated) {
+    return (
+      <div className={cn("space-y-2", className)} aria-busy="true">
+        <div className="h-14 animate-pulse rounded-lg bg-secondary/40" />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -96,6 +106,21 @@ export function ProfileTrustBanner({
   reviewCount: number;
   className?: string;
 }) {
+  const hydrated = useClientHydrated();
+  if (!hydrated) {
+    return (
+      <div
+        className={cn(
+          "rounded-xl border border-border bg-gradient-to-r from-surface via-card to-surface p-4 sm:p-5",
+          className,
+        )}
+        aria-busy="true"
+      >
+        <div className="h-24 animate-pulse rounded-lg bg-secondary/40" />
+      </div>
+    );
+  }
+
   const level = getFreelancerLevel(username);
   const success = computeSuccessScore(username);
   const response = computeResponseRate(username);

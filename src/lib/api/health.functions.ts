@@ -15,11 +15,16 @@ export const getHealth = createServerFn({ method: "GET" }).handler(async () => {
     }
   }
 
+  const email: "configured" | "demo" = config.resendApiKey ? "configured" : "demo";
+  const observability: "configured" | "demo" = config.sentryDsn ? "configured" : "demo";
+
   return {
     status: database === "error" ? "degraded" : "ok",
     version: "1.0.0",
     environment: config.nodeEnv ?? "development",
     database,
+    email,
+    observability,
     timestamp: new Date().toISOString(),
   };
 });

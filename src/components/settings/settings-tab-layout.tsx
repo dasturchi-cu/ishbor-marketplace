@@ -14,7 +14,7 @@ export function SettingsTabLayout({
   sidebar?: ReactNode;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="premium-page-content space-y-6">
       {(title || description) && (
         <div className="border-b border-border pb-5">
           {title && <h2 className="font-display text-xl font-bold tracking-tight">{title}</h2>}

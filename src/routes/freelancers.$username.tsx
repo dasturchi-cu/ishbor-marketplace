@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Star,
   MapPin,
@@ -33,18 +33,16 @@ import { ProfileReviews } from "@/components/site/profile/profile-reviews";
 import { ConversionFlowBanner, FREELANCER_HIRE_CHECKOUT_FLOW } from "@/components/site/conversion-flow";
 import { SaveButtonInline } from "@/components/site/save-button";
 import {
-  freelancers,
   services,
-  enrichFreelancer,
   getFreelancerReviews,
 } from "@/lib/mock-data";
-import { getReviewsForFreelancer } from "@/lib/reviews-store";
+import { computeSuccessScore, computeResponseRate, formatResponseTime, getFreelancerLevel } from "@/lib/growth-metrics";
+import { getReviewsForFreelancer, getAverageRating } from "@/lib/reviews-store";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyPublishedProjects, subscribeProjects } from "@/lib/projects-store";
 import { createDirectHireApplication } from "@/lib/applications-store";
 import { getPublishedPortfoliosByUsername, subscribePortfolios } from "@/lib/portfolio-store";
 import type { PortfolioItem } from "@/lib/portfolio-types";
-import { computeSuccessScore, computeResponseRate, formatResponseTime } from "@/lib/growth-metrics";
 import { ReputationBadge } from "@/components/reputation/reputation-badge";
 import { ProfileTrustBanner } from "@/components/trust/trust-summary";
 import { computeFreelancerReputation } from "@/lib/reputation-store";
@@ -53,11 +51,26 @@ import { useClientCheckout } from "@/hooks/use-client-checkout";
 import { ensureClientRoleForCheckout } from "@/lib/client-checkout";
 import { getOrdersForFreelancer } from "@/lib/orders-store";
 import { recordProfileView, recordContactClick, getEntityEventCount } from "@/lib/analytics-utils";
+import { shareEntity } from "@/lib/share-analytics";
+import { messagesPath } from "@/lib/messages-routing";
+import {
+  getRepeatClientStats,
+  isRepeatClientForFreelancer,
+} from "@/lib/ecosystem-progress";
+import { RepeatClientBadge } from "@/components/ecosystem/ecosystem-indicators";
+import { SocialProofLine } from "@/components/marketplace/social-proof";
+import { getFreelancerSocialProof } from "@/lib/marketplace-signals";
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
 import { isProfileFeatured } from "@/lib/featured-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
 import { ProfileVideoEditor } from "@/components/profile/profile-video-editor";
 import { getProfileByUsername, getUserProfile, subscribeProfiles } from "@/lib/profile-store";
+import {
+  findMockFreelancerByUsername,
+  resolveFreelancerByUsername,
+  subscribeFreelancerProfile,
+} from "@/lib/freelancer-profile-resolver";
+import { buildPageMeta, buildJsonLdHead, buildPersonJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo";
 
 const EMPTY_PROJECTS: never[] = [];
 const EMPTY_PORTFOLIO: PortfolioItem[] = [];
@@ -73,22 +86,54 @@ const profileTabs: { key: ProfileTab; label: string }[] = [
 
 export const Route = createFileRoute("/freelancers/$username")({
   loader: ({ params }) => {
-    const raw = freelancers.find((x) => x.username === params.username);
-    if (!raw) throw notFound();
-    const freelancer = enrichFreelancer(raw);
-    const storedReviews = getReviewsForFreelancer(params.username).filter(
-      (r) => r.direction !== "freelancer_to_client",
-    );
-    const freelancerReviews = storedReviews.length > 0 ? storedReviews : getFreelancerReviews(params.username);
-    const freelancerServices = services.filter((s) => s.sellerUsername === params.username);
-    return { freelancer, freelancerReviews, freelancerServices };
+    const freelancer = findMockFreelancerByUsername(params.username);
+    if (freelancer) {
+      const storedReviews = getReviewsForFreelancer(params.username).filter(
+        (r) => r.direction !== "freelancer_to_client",
+      );
+      const freelancerReviews =
+        storedReviews.length > 0 ? storedReviews : getFreelancerReviews(params.username);
+      const freelancerServices = services.filter((s) => s.sellerUsername === params.username);
+      return { username: params.username, freelancer, freelancerReviews, freelancerServices };
+    }
+    return {
+      username: params.username,
+      freelancer: null,
+      freelancerReviews: [] as ReturnType<typeof getFreelancerReviews>,
+      freelancerServices: [] as typeof services,
+    };
   },
-  head: ({ loaderData }) => ({
-    meta: [
-      { title: `${loaderData?.freelancer?.name ?? "Frilanser"} — Ishbor` },
-      { name: "description", content: loaderData?.freelancer?.title ?? "" },
-    ],
-  }),
+  head: ({ loaderData }) => {
+    const f = loaderData?.freelancer;
+    const username = loaderData?.username ?? "";
+    const title = f?.title ?? "Frilanser";
+    const name = f?.name ?? username;
+    const desc = f?.bio?.slice(0, 160) ?? `${name} — ${title}. Ishbor'da xavfsiz yollash.`;
+    return {
+      ...buildPageMeta({
+        title: `${name} — ${title} | Ishbor`,
+        description: desc,
+        path: `/freelancers/${username}`,
+        type: "profile",
+      }),
+      ...(f
+        ? buildJsonLdHead([
+            buildPersonJsonLd({
+              name: f.name,
+              username: f.username,
+              title: f.title,
+              rating: f.rating,
+              reviewCount: f.reviews,
+            }),
+            buildBreadcrumbJsonLd([
+              { name: "Bosh sahifa", path: "/" },
+              { name: "Frilanserlar", path: "/freelancers" },
+              { name: f.name },
+            ]),
+          ])
+        : {}),
+    };
+  },
   notFoundComponent: () => (
     <EntityNotFound
       title="Profil topilmadi"
@@ -101,10 +146,57 @@ export const Route = createFileRoute("/freelancers/$username")({
 });
 
 function FreelancerProfile() {
-  const { freelancer: f, freelancerReviews, freelancerServices } = Route.useLoaderData();
+  const { username, freelancer: loaderFreelancer, freelancerReviews: loaderReviews, freelancerServices: loaderServices } =
+    Route.useLoaderData();
+  const dynamicFreelancer = useSyncExternalStore(
+    (onStoreChange) => subscribeFreelancerProfile(username, onStoreChange),
+    () => resolveFreelancerByUsername(username),
+    () => null,
+  );
+  const f = loaderFreelancer ?? dynamicFreelancer;
+
+  if (!f) {
+    return (
+      <EntityNotFound
+        title="Profil topilmadi"
+        description="Bu frilanser mavjud emas yoki profil o'chirilgan."
+        backTo="/freelancers"
+        backLabel="Frilanserlarni ko'rish"
+      />
+    );
+  }
+
+  return (
+    <FreelancerProfileContent
+      f={f}
+      username={username}
+      loaderReviews={loaderReviews}
+      loaderServices={loaderServices}
+    />
+  );
+}
+
+function FreelancerProfileContent({
+  f,
+  username,
+  loaderReviews,
+  loaderServices,
+}: {
+  f: NonNullable<ReturnType<typeof resolveFreelancerByUsername>>;
+  username: string;
+  loaderReviews: ReturnType<typeof getFreelancerReviews>;
+  loaderServices: typeof services;
+}) {
   const navigate = useNavigate();
   const goCheckout = useClientCheckout();
   const { user, isAuthenticated } = useAuth();
+
+  const freelancerReviews =
+    loaderReviews.length > 0
+      ? loaderReviews
+      : getReviewsForFreelancer(username).filter((r) => r.direction !== "freelancer_to_client");
+  const freelancerServices =
+    loaderServices.length > 0 ? loaderServices : services.filter((s) => s.sellerUsername === username);
   const [showInvite, setShowInvite] = useState(false);
   const [selectedProject, setSelectedProject] = useState("");
   const [activeTab, setActiveTab] = useState<ProfileTab>("about");
@@ -146,7 +238,12 @@ function FreelancerProfile() {
   }, [storedProfile?.videoIntro, f.videoIntro, isOwnProfile]);
   const showVideoColumn = isOwnProfile || !!videoIntro;
   const liveSuccess = useMemo(() => computeSuccessScore(f.username), [f.username]);
+  const profileProof = useMemo(() => getFreelancerSocialProof(f.username), [f.username]);
   const liveResponse = useMemo(() => computeResponseRate(f.username), [f.username]);
+  const liveLevel = useMemo(() => getFreelancerLevel(f.username), [f.username]);
+  const liveRating = useMemo(() => getAverageRating(f.username), [f.username]);
+  const displayRating = liveRating.count > 0 ? liveRating.avg : f.rating;
+  const displayReviews = liveRating.count > 0 ? liveRating.count : f.reviews;
   const liveEarned = useMemo(
     () => getOrdersForFreelancer(f.username).filter((o) => o.status === "completed").reduce((s, o) => s + o.amount, 0),
     [f.username],
@@ -166,15 +263,22 @@ function FreelancerProfile() {
     repeatClients: liveSuccess.repeatClientRate,
   };
   const reputation = computeFreelancerReputation(f.username);
+  const repeatClientStats = getRepeatClientStats(f.username);
+  const viewerIsRepeatClient =
+    user && !isOwnProfile ? isRepeatClientForFreelancer(f.username, user) : false;
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/freelancers/${f.username}`;
-    if (navigator.share) {
-      await navigator.share({ title: f.name, url });
-      return;
+    try {
+      await shareEntity({
+        entity: "profile",
+        entityId: f.username,
+        title: f.name,
+        url: `${window.location.origin}/freelancers/${f.username}`,
+        onCopied: () => toast.success("Profil havolasi nusxalandi"),
+      });
+    } catch {
+      /* user cancelled share */
     }
-    await navigator.clipboard.writeText(url);
-    toast.success("Profil havolasi nusxalandi");
   };
 
   const handleInvite = () => {
@@ -245,7 +349,7 @@ function FreelancerProfile() {
             />
             <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
             <div className="absolute left-5 right-5 top-5 flex flex-wrap items-start justify-between gap-3 sm:left-6 sm:right-6">
-              <LevelBadge level={f.level} className="border border-white/25 bg-black/45 text-white" />
+              <LevelBadge level={liveLevel} className="border border-white/25 bg-black/45 text-white" />
               <div className="font-mono rounded-full border border-white/20 bg-black/45 px-3 py-1 text-[10px] uppercase tracking-widest text-white/90">
                 A'zo bo'lgan sana: {f.memberSince}
               </div>
@@ -273,8 +377,8 @@ function FreelancerProfile() {
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 px-2.5 py-1">
                       <Star className="size-3 fill-gold text-gold" />
-                      <span className="font-mono font-semibold text-foreground">{f.rating.toFixed(2)}</span>
-                      <span>({f.reviews} sharh)</span>
+                      <span className="font-mono font-semibold text-foreground">{displayRating.toFixed(2)}</span>
+                      <span>({displayReviews} sharh)</span>
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/8 px-2.5 py-1 font-mono font-semibold text-primary">
                       ${(liveEarned / 1000).toFixed(0)}k topilgan
@@ -283,11 +387,22 @@ function FreelancerProfile() {
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <ReputationBadge tier={reputation.tier} size="md" />
                     <CompactTrustRow
-                      level={f.level}
+                      level={liveLevel}
                       identityVerified={f.identityVerified}
                       businessVerified={f.businessVerified}
                       successScore={liveSuccess.score}
                     />
+                    {isOwnProfile && repeatClientStats.repeatClientCount > 0 && (
+                      <RepeatClientBadge
+                        count={repeatClientStats.repeatClientCount}
+                        rate={repeatClientStats.repeatClientRate}
+                      />
+                    )}
+                    {viewerIsRepeatClient && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                        Siz takror hamkorsiz
+                      </span>
+                    )}
                   </div>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {f.skills.slice(0, 5).map((skill) => (
@@ -303,38 +418,18 @@ function FreelancerProfile() {
               </div>
 
               {!isOwnProfile && (
-              <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto lg:min-w-[280px]">
-                <ClientCheckoutLink
-                  search={{ type: "hire" as const, freelancer: f.username }}
-                  onClick={() => recordContactClick(f.username)}
-                  className="touch-target inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_10px_28px_-10px_oklch(0.546_0.185_257/0.45)] transition-default hover:opacity-95 active:scale-[0.98] focus-ring"
-                >
-                  Yollash ${f.rate}/h <ArrowRight className="size-4" />
-                </ClientCheckoutLink>
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    to="/messages"
-                    onClick={() => recordContactClick(f.username)}
-                    className="touch-target inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm font-medium transition-default hover:border-primary/25 hover:bg-primary/[0.03] focus-ring"
-                  >
-                    <MessageSquare className="size-4" /> Xabar
-                  </Link>
-                  {isAuthenticated && !isOwnProfile ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={handleInvite}
-                        className="touch-target inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2.5 text-sm font-semibold text-primary transition-default hover:border-primary/40 focus-ring"
-                      >
-                        <UserPlus className="size-4" /> Taklif qilish
-                      </button>
-                      <SaveButtonInline type="freelancer" id={f.username} />
-                    </>
-                  ) : (
-                    <SaveButtonInline type="freelancer" id={f.username} label="Profilni saqlash" />
+                <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto lg:min-w-[200px] lg:justify-end">
+                  <SaveButtonInline type="freelancer" id={f.username} label="Profilni saqlash" />
+                  {isAuthenticated && (
+                    <button
+                      type="button"
+                      onClick={handleInvite}
+                      className="touch-target inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2.5 text-sm font-semibold text-primary transition-default hover:border-primary/40 focus-ring"
+                    >
+                      <UserPlus className="size-4" /> Taklif qilish
+                    </button>
                   )}
                 </div>
-              </div>
               )}
             </div>
 
@@ -347,10 +442,14 @@ function FreelancerProfile() {
         <ProfileTrustBanner
           username={f.username}
           identityVerified={f.identityVerified}
-          rating={f.rating}
-          reviewCount={f.reviews}
+          rating={displayRating}
+          reviewCount={displayReviews}
           className="mt-6"
         />
+
+        <div className="mt-4">
+          <SocialProofLine proof={profileProof} variant="detail" />
+        </div>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
           <div className="space-y-6 min-w-0">
@@ -495,7 +594,7 @@ function FreelancerProfile() {
             {activeTab === "reviews" && (
               <section className="rounded-2xl border border-border bg-card p-6 sm:p-8">
                 <h2 className="font-display text-xl font-bold tracking-tight">Sharhlar</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{f.reviews} tasdiqlangan mijoz sharhi</p>
+                <p className="mt-1 text-sm text-muted-foreground">{displayReviews} tasdiqlangan mijoz sharhi</p>
                 <div className="mt-5">
                   <ProfileReviews reviews={freelancerReviews} />
                 </div>
@@ -557,7 +656,8 @@ function FreelancerProfile() {
                     </button>
                   )}
                   <Link
-                    to="/messages"
+                    {...messagesPath(f.username)}
+                    onClick={() => recordContactClick(f.username)}
                     className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-border bg-surface py-2.5 text-sm font-medium transition-default hover:border-primary/25 focus-ring"
                   >
                     <MessageSquare className="size-4" /> Xabar yuborish

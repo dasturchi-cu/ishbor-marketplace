@@ -39,7 +39,7 @@ export function GettingStartedCard({ user }: { user: AuthUser }) {
     activeRole === "client" ? "Mijoz" : plan.userType === "agency" ? "Agentlik" : "Frilanser";
 
   return (
-    <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 shadow-sm">
+    <div className="premium-surface-panel rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -143,7 +143,7 @@ function StepRow({
       <Link
         to={step.href}
         className={cn(
-          "flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-default hover:bg-secondary/60",
+          "premium-press flex items-center gap-2 rounded-lg px-2 py-2 text-sm hover:bg-secondary/60",
           step.done && "opacity-60",
         )}
       >

@@ -17,6 +17,7 @@ import { getActiveDashboardPath } from "@/lib/active-role-store";
 import type { AuthUser } from "@/lib/auth";
 import { SearchCommandPalette, useSearchCommandShortcut } from "./search-command";
 import { UserMenu } from "./user-menu";
+import { messagesPath } from "@/lib/messages-routing";
 
 function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; isAuthenticated: boolean }) {
   const { activeRole } = useActiveRole();
@@ -31,7 +32,7 @@ function NavBusinessActions({ user, isAuthenticated }: { user: AuthUser | null; 
         <Link to="/projects" className={secondary}>
           <Briefcase className="size-3.5" /> Ish topish
         </Link>
-        <Link to="/login" search={{ redirect: "/projects/create" }} className={primary}>
+        <Link to="/projects/preview" className={primary}>
           <Plus className="size-3.5" /> Loyiha joylash
         </Link>
       </>
@@ -108,6 +109,7 @@ export function SiteNav() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   const openSearch = useCallback(() => setSearchOpen(true), []);
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
   useSearchCommandShortcut(openSearch);
 
   const [mobileQ, setMobileQ] = useState("");
@@ -226,7 +228,7 @@ export function SiteNav() {
             <>
 
               <Link
-                to="/messages"
+                {...messagesPath()}
                 className="touch-target liquid-glass-chip relative inline-flex items-center justify-center rounded-lg text-foreground/70 transition-default hover:text-foreground focus-ring"
                 aria-label={msgUnread > 0 ? `Xabarlar, ${msgUnread} ta o'qilmagan` : "Xabarlar"}
               >
@@ -271,7 +273,7 @@ export function SiteNav() {
               <NavBusinessActions user={user} isAuthenticated={isAuthenticated} />
 
               <Link
-                to="/messages"
+                {...messagesPath()}
                 className="touch-target liquid-glass-chip relative inline-flex items-center justify-center rounded-lg text-foreground/70 transition-default hover:text-foreground focus-ring"
                 aria-label={msgUnread > 0 ? `Xabarlar, ${msgUnread} ta o'qilmagan` : "Xabarlar"}
               >
@@ -458,8 +460,7 @@ export function SiteNav() {
 
               {!isAuthenticated && (
                 <Link
-                  to="/login"
-                  search={{ redirect: "/projects/create" }}
+                  to="/projects/preview"
                   onClick={() => setOpen(false)}
                   className="touch-target rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground"
                 >
@@ -475,7 +476,7 @@ export function SiteNav() {
 
       )}
 
-      <SearchCommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <SearchCommandPalette open={searchOpen} onClose={closeSearch} />
     </header>
 
   );

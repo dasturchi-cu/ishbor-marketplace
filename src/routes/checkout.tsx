@@ -27,6 +27,7 @@ import { getAllServices } from "@/lib/services-store";
 import { computeSuccessScore } from "@/lib/growth-metrics";
 import { StickyMobileCta } from "@/components/ux/sticky-mobile-cta";
 import { primaryActionClass } from "@/components/ux/action-buttons";
+import { messagesPath } from "@/lib/messages-routing";
 
 type CheckoutSearch = {
   type?: "service" | "hire" | "order";
@@ -82,6 +83,8 @@ function checkoutPresentation(type: CheckoutKind, step: "review" | "payment") {
   };
 }
 
+import { buildPageMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/checkout")({
   beforeLoad: requireRole(["client"]),
   validateSearch: (search: Record<string, unknown>): CheckoutSearch => ({
@@ -99,7 +102,7 @@ export const Route = createFileRoute("/checkout")({
         ? search.package
         : undefined,
   }),
-  head: () => ({ meta: [{ title: "To'lov — Ishbor" }] }),
+  head: () => buildPageMeta({ title: "To'lov — Ishbor", noindex: true }),
   component: () => (
     <ProtectedGate roles={["client"]}>
       <CheckoutPage />
@@ -342,7 +345,7 @@ function CheckoutPage() {
                 Sotuvchiga xabar
               </Link>
             ) : (
-              <Link to="/messages" className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
+              <Link {...messagesPath()} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-5 py-2.5 text-sm font-medium transition-default hover:border-primary/20 focus-ring">
                 Xabarlar
               </Link>
             )}

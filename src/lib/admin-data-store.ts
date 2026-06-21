@@ -23,6 +23,10 @@ import { setUserVerified } from "./verified-users-store";
 import { syncAccountStatusFromAdmin } from "./auth";
 import { updateProjectStatus } from "./projects-store";
 import { updateServiceStatus } from "./services-store";
+import { updatePortfolioAdminStatus } from "./portfolio-store";
+import { getAllServices } from "./services-store";
+import { getPublishedProjects } from "./projects-store";
+import { getAllPortfolios } from "./portfolio-store";
 import { blockDemoAccountServer } from "./api/auth.functions";
 
 const STORAGE_KEY = "ishbor-admin-data";
@@ -202,6 +206,24 @@ export function updateSupportTicket(id: string, patch: Partial<SupportTicket>): 
   return support[idx];
 }
 
+export function enqueueModerationItem(
+  input: Pick<ModerationItem, "type" | "title" | "reason" | "reportedBy">,
+): ModerationItem {
+  const state = getAdminData();
+  const item: ModerationItem = {
+    id: `mod-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    type: input.type,
+    title: input.title,
+    reason: input.reason,
+    reportedBy: input.reportedBy,
+    status: "pending",
+    reportedAt: "Hozirgina",
+    hue: 250,
+  };
+  persist({ ...state, moderation: [item, ...state.moderation] });
+  return item;
+}
+
 export function updateModerationItem(id: string, patch: Partial<ModerationItem>): ModerationItem | undefined {
   const state = getAdminData();
   const idx = state.moderation.findIndex((m) => m.id === id);
@@ -209,7 +231,39 @@ export function updateModerationItem(id: string, patch: Partial<ModerationItem>)
   const moderation = [...state.moderation];
   moderation[idx] = { ...moderation[idx]!, ...patch };
   persist({ ...state, moderation });
+  applyModerationAction(moderation[idx]!);
   return moderation[idx];
+}
+
+function applyModerationAction(item: ModerationItem): void {
+  if (item.status !== "hidden" && item.status !== "removed") return;
+
+  const titleNeedle = item.title.split(" — ")[0]?.trim() ?? item.title;
+
+  if (item.type === "service") {
+    const svc = getAllServices().find(
+      (s) => item.title.includes(s.title) || s.title.includes(titleNeedle),
+    );
+    if (svc) updateServiceStatus(svc.slug, "paused");
+    return;
+  }
+
+  if (item.type === "project") {
+    const project = getPublishedProjects().find(
+      (p) => item.title.includes(p.title) || p.title.includes(titleNeedle),
+    );
+    if (project) updateProjectStatus(project.slug, "closed");
+    return;
+  }
+
+  if (item.type === "portfolio") {
+    const portfolio = getAllPortfolios().find(
+      (p) =>
+        p.status === "published" &&
+        (item.title.includes(p.title) || p.title.includes(titleNeedle)),
+    );
+    if (portfolio) updatePortfolioAdminStatus(portfolio.slug, "hidden");
+  }
 }
 
 export function updateVerification(id: string, patch: Partial<VerificationRequest>): VerificationRequest | undefined {

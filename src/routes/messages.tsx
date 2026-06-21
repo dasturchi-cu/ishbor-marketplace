@@ -18,6 +18,7 @@ import {
   Archive,
   Inbox,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { WorkspaceShell } from "@/components/site/workspace-shell";
 import { StandardEmptyState } from "@/components/ux/standard-empty-state";
 import { PrimaryLink } from "@/components/ux/action-buttons";
@@ -26,10 +27,16 @@ import { useActiveRole } from "@/hooks/use-active-role";
 import { GradientAvatar } from "@/components/site/avatar";
 import { FileAttachModal, SendOfferModal, EscrowActionModal } from "@/components/site/modals";
 import { MessageEmojiPicker } from "@/components/messages/emoji-picker";
+import { PremiumEmojiText } from "@/components/premium/premium-emoji-text";
+import { analyzeMessageContent } from "@/lib/premium-emoji/parse";
+import { QuickReactionsBar } from "@/components/premium/premium-emoji-button";
+import { PremiumReadReceipt, PremiumPinGlyph } from "@/components/premium/premium-status-glyphs";
 import { MessageTrustChip } from "@/components/trust/trust-summary";
 import { CallModal } from "@/components/messages/call-modal";
 import { freelancers, escrowWorkflows } from "@/lib/mock-data";
 import { ProtectedGate } from "@/components/auth/protected-gate";
+import { JourneyBannerCard } from "@/components/ux/journey-banner";
+import { resolveMessagesJourneyBanner } from "@/lib/journey-guidance";
 import { downloadTextFile } from "@/lib/export-utils";
 import { requireAuth } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
@@ -55,14 +62,20 @@ import {
   formatLastSeen,
   getActiveConversationId,
   getConversationsByInbox,
+  ensureConversationForUsername,
   type ThreadMessage,
   type Conversation,
   type ConversationInbox,
 } from "@/lib/messages-store";
 
+import { buildPageMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/messages")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: "Xabarlar — Ishbor" }] }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    with: typeof search.with === "string" && search.with.trim() ? search.with.trim() : undefined,
+  }),
+  head: () => buildPageMeta({ title: "Xabarlar — Ishbor", noindex: true }),
   component: () => (
     <ProtectedGate>
       <MessagesPage />
@@ -84,23 +97,86 @@ function getParticipantDisplay(conversation: Conversation) {
   };
 }
 
-function TextBubble({ m }: { m: ThreadMessage }) {
+function TextBubble({
+  m,
+  reaction,
+  onReact,
+}: {
+  m: ThreadMessage;
+  reaction?: string;
+  onReact?: (emoji: string) => void;
+}) {
   const isMe = m.from === "me";
+  const body = m.body ?? "";
+  const { emojiOnly } = analyzeMessageContent(body);
+
+  const bubbleBase = isMe
+    ? "rounded-br-sm bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)]"
+    : "rounded-bl-sm border border-border bg-background";
+
+  const metaRow = (
+  <div
+    className={cn(
+      "flex shrink-0 items-center gap-0.5 text-[10px] leading-none",
+      emojiOnly
+        ? isMe
+          ? "text-primary-foreground/85"
+          : "text-muted-foreground"
+        : isMe
+          ? "text-primary-foreground/60"
+          : "text-muted-foreground",
+    )}
+  >
+    <span>{m.time}</span>
+    {isMe && m.read && (
+      <span title="O'qildi" className="inline-flex">
+        <PremiumReadReceipt className="text-current opacity-90" size={12} />
+      </span>
+    )}
+  </div>
+  );
+
   return (
-    <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm ${
-          isMe
-            ? "rounded-br-sm bg-primary text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.25)]"
-            : "rounded-bl-sm border border-border bg-background"
-        }`}
-      >
-        <p className="leading-relaxed">{m.body}</p>
-        <div className={`mt-1 flex items-center gap-1 text-[10px] ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-          <span>{m.time}</span>
-          {isMe && m.read && <span title="O'qildi">✓✓</span>}
+    <div className={`group relative flex flex-col gap-1 ${isMe ? "items-end" : "items-start"}`}>
+      <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+        <div
+          className={cn(
+            "relative w-fit max-w-[min(72%,20rem)] rounded-2xl text-sm",
+            emojiOnly ? "chat-bubble-emoji px-1 py-0.5" : "px-3 py-1.5",
+            bubbleBase,
+          )}
+        >
+          {body && (
+            emojiOnly ? (
+              <div className="chat-bubble-emoji-body">
+                <PremiumEmojiText text={body} compact />
+                <div className={cn("chat-bubble-emoji-meta", !isMe && "chat-bubble-emoji-meta-incoming")}>
+                  {metaRow}
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="leading-snug">
+                  <PremiumEmojiText text={body} emojiSize="md" />
+                </p>
+                <div className="mt-0.5 flex justify-end">{metaRow}</div>
+              </>
+            )
+          )}
         </div>
       </div>
+      {reaction && (
+        <div className={`${isMe ? "mr-2" : "ml-2"} -mt-2`}>
+          <PremiumEmojiText text={reaction} emojiSize="sm" />
+        </div>
+      )}
+      {onReact && (
+        <div
+          className={`pointer-events-none absolute -top-9 opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 ${isMe ? "right-0" : "left-0"}`}
+        >
+          <QuickReactionsBar onReact={onReact} />
+        </div>
+      )}
     </div>
   );
 }
@@ -114,7 +190,9 @@ function FileBubble({ m }: { m: ThreadMessage }) {
     <div className={`flex flex-col gap-1.5 ${isMe ? "items-end" : "items-start"}`}>
       {m.body && (
         <div className={`max-w-[72%] rounded-2xl px-4 py-2.5 text-sm ${isMe ? "rounded-br-sm bg-primary text-primary-foreground" : "rounded-bl-sm border border-border bg-background"}`}>
-          <p>{m.body}</p>
+          <p>
+            <PremiumEmojiText text={m.body} emojiSize="md" />
+          </p>
         </div>
       )}
       <div className="flex max-w-[72%] flex-col gap-2 rounded-xl border border-border bg-background p-3 sm:flex-row sm:items-center">
@@ -231,6 +309,7 @@ function EscrowNotification({ m }: { m: ThreadMessage }) {
 
 function MessagesPage() {
   const navigate = useNavigate();
+  const { with: withUsername } = Route.useSearch();
   const { user } = useAuth();
   const { activeRole } = useActiveRole();
   const [input, setInput] = useState("");
@@ -245,6 +324,7 @@ function MessagesPage() {
   const [callType, setCallType] = useState<"voice" | "video">("voice");
   const [inboxTab, setInboxTab] = useState<ConversationInbox>("active");
   const [listLimit, setListLimit] = useState(50);
+  const [messageReactions, setMessageReactions] = useState<Record<string, string>>({});
   const [, setTypingTick] = useState(0);
 
   const messagesState = useSyncExternalStore(subscribeMessages, getMessagesState, getMessagesState);
@@ -269,6 +349,17 @@ function MessagesPage() {
   }, [searchQuery, inboxTab]);
 
   useEffect(() => {
+    if (!withUsername) return;
+    const freelancer = freelancers.find((f) => f.username === withUsername);
+    const displayName = freelancer?.name ?? withUsername;
+    const hue = freelancer?.hue ?? 250;
+    const id = ensureConversationForUsername(withUsername, displayName, hue);
+    setActiveId(id);
+    setShowList(false);
+    markConversationRead(id);
+  }, [withUsername]);
+
+  useEffect(() => {
     if (!activeId || !isTyping(activeId)) return;
     const timer = window.setInterval(() => setTypingTick((t) => t + 1), 400);
     return () => window.clearInterval(timer);
@@ -281,6 +372,7 @@ function MessagesPage() {
 
   const participant = activeConversation ? getParticipantDisplay(activeConversation) : null;
   const isClient = activeRole === "client";
+  const messagesBanner = user ? resolveMessagesJourneyBanner(user, activeRole) : null;
   const projectTitle = activeConversation?.projectContext ?? "Faol loyiha";
   const escrowTotal = activeConversation?.escrowAmount ?? 0;
   const matchedEscrow = activeConversation?.projectContext
@@ -400,6 +492,7 @@ function MessagesPage() {
 
   return (
     <WorkspaceShell eyebrow="Kirish qutisi" title="Xabarlar">
+      {messagesBanner && <JourneyBannerCard banner={messagesBanner} className="mb-4" />}
       <div className="grid h-[calc(100dvh-12rem)] min-h-0 overflow-hidden rounded-2xl border border-border bg-card md:h-[calc(100vh-200px)] md:min-h-[560px] md:grid-cols-[280px_1fr]">
         {/* Sidebar */}
         <aside className={`${showList ? "flex" : "hidden"} min-h-0 flex-col border-r border-border md:flex`}>
@@ -473,7 +566,7 @@ function MessagesPage() {
                   <button
                     key={m.id}
                     onClick={() => handleSelectConversation(m.id)}
-                    className={`touch-target flex w-full items-center gap-3 border-b border-border p-3 text-left transition-default hover:bg-secondary/30 ${
+                    className={`conversation-item touch-target flex w-full items-center gap-3 border-b border-border p-3 text-left hover:bg-secondary/30 ${
                       m.id === activeId ? "bg-primary/5" : ""
                     }`}
                   >
@@ -487,7 +580,11 @@ function MessagesPage() {
                       <div className="flex items-center justify-between gap-2">
                         <span className={`truncate text-sm ${m.unread > 0 ? "font-semibold" : "font-medium"}`}>
                           {display.name}
-                          {m.pinned && <span className="ml-1 text-[10px] text-primary">📌</span>}
+                          {m.pinned && (
+                            <span className="ml-1 inline-flex align-middle text-primary">
+                              <PremiumPinGlyph size={12} />
+                            </span>
+                          )}
                         </span>
                         <span className="font-mono shrink-0 text-[10px] text-muted-foreground">{m.time}</span>
                       </div>
@@ -674,7 +771,16 @@ function MessagesPage() {
                     );
                   }
                   if (m.type === "file") return <FileBubble key={m.id} m={m} />;
-                  return <TextBubble key={m.id} m={m} />;
+                  return (
+                    <TextBubble
+                      key={m.id}
+                      m={m}
+                      reaction={messageReactions[m.id]}
+                      onReact={(emoji) =>
+                        setMessageReactions((prev) => ({ ...prev, [m.id]: emoji }))
+                      }
+                    />
+                  );
                 })
               )}
               {isTyping(activeId) && (
@@ -707,9 +813,13 @@ function MessagesPage() {
                     placeholder="Xabar yozing..."
                     className="min-h-11 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/60"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey && input.trim()) {
+                      if (e.key === "Enter" && !e.shiftKey && input.trim() && activeId) {
                         e.preventDefault();
-                        sendMessage(activeId, input.trim());
+                        const result = sendMessage(activeId, input.trim());
+                        if ("error" in result) {
+                          toast.error(result.error);
+                          return;
+                        }
                         setInput("");
                       }
                     }}
@@ -744,8 +854,12 @@ function MessagesPage() {
                   <button
                     disabled={!input.trim()}
                     onClick={() => {
-                      if (!input.trim()) return;
-                      sendMessage(activeId, input.trim());
+                      if (!input.trim() || !activeId) return;
+                      const result = sendMessage(activeId, input.trim());
+                      if ("error" in result) {
+                        toast.error(result.error);
+                        return;
+                      }
                       setInput("");
                     }}
                     className="touch-target inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-semibold text-primary-foreground shadow-[0_4px_12px_-2px_oklch(0.546_0.185_257/0.2)] transition-default hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 focus-ring"

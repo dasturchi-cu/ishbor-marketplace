@@ -9,6 +9,7 @@ import { requireRole } from "@/lib/guards";
 import { useAuth } from "@/hooks/use-auth";
 import { getFreelancerCrmData } from "@/lib/crm-store";
 import { subscribeOrders } from "@/lib/orders-store";
+import { messagesPath } from "@/lib/messages-routing";
 
 export const Route = createFileRoute("/freelancers/manage")({
   beforeLoad: requireRole(["freelancer"]),
@@ -66,7 +67,7 @@ function FreelancerCrmPage() {
         ))}
       </Section>
 
-      <Section title="Takror mijozlar" empty={crm.repeatClients.length === 0} className="mt-8" emptyAction={<Link to="/messages" className="text-xs font-semibold text-primary hover:underline">Xabarlar →</Link>}>
+      <Section title="Takror mijozlar" empty={crm.repeatClients.length === 0} className="mt-8" emptyAction={<Link {...messagesPath()} className="text-xs font-semibold text-primary hover:underline">Xabarlar →</Link>}>
         {crm.repeatClients.map((c) => (
           <ClientRow key={c.slug} c={c} showFollowUp />
         ))}
@@ -155,14 +156,14 @@ function ClientRow({
       <div className="flex gap-2">
         {showFollowUp && (
           <Link
-            to="/messages"
+            {...messagesPath()}
             className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-medium"
           >
             <MessageSquare className="size-3.5" /> Kuzatish
           </Link>
         )}
         <Link
-          to="/messages"
+          {...messagesPath()}
           className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground"
         >
           <RotateCcw className="size-3.5" /> Bog'lanish

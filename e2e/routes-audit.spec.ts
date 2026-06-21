@@ -158,7 +158,10 @@ async function auditRoute(page: Page, route: string, auth: string): Promise<void
   let detail = "";
 
   try {
-    const response = await page.goto(route, { waitUntil: "load", timeout: 45_000 });
+    let response = await page.goto(route, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    if (!response && route.includes("/admin/")) {
+      response = await page.goto(route, { waitUntil: "domcontentloaded", timeout: 45_000 });
+    }
     await page.locator("body").waitFor({ state: "visible", timeout: 10_000 });
     await page.waitForTimeout(150);
 

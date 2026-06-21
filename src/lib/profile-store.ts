@@ -1,7 +1,8 @@
 import type { LanguageEntry, AvailabilitySettings } from "./auth-constants";
 import { loadOnboardingState } from "./auth-constants";
 import type { WorkspaceRole } from "./active-role-store";
-import { toProfileUserType } from "./active-role-store";
+import { getActiveRole, toProfileUserType } from "./active-role-store";
+import { handleProfileCompletionChange } from "./ecosystem-progress";
 import { getSession, updateSessionUser } from "./auth";
 import { getPublishedPortfoliosByUsername } from "./portfolio-store";
 import { getMyPublishedProjects } from "./projects-store";
@@ -85,6 +86,11 @@ function writeAll(data: Record<string, UserProfile>) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+export function getAllProfiles(): UserProfile[] {
+  if (!cache) cache = new Map(Object.entries(readAll()));
+  return [...cache.values()];
+}
+
 export function getUserProfile(userId: string): UserProfile | null {
   if (!cache) cache = new Map(Object.entries(readAll()));
   return cache.get(userId) ?? null;
@@ -113,6 +119,8 @@ export function saveProfileVideoIntro(userId: string, videoIntro: ProfileVideoIn
 
 export function saveUserProfile(userId: string, patch: Partial<UserProfile>): UserProfile {
   const existing = getUserProfile(userId);
+  const role = getActiveRole();
+  const previousPercent = computeProfileCompletionPercent(userId, role);
   const next: UserProfile = {
     userId,
     username: patch.username ?? existing?.username,
@@ -134,6 +142,10 @@ export function saveUserProfile(userId: string, patch: Partial<UserProfile>): Us
   cache.set(userId, next);
   writeAll(Object.fromEntries(cache));
   notify();
+  const nextPercent = computeProfileCompletionPercent(userId, role);
+  if (nextPercent !== previousPercent) {
+    handleProfileCompletionChange(userId, role, previousPercent, nextPercent);
+  }
   return next;
 }
 

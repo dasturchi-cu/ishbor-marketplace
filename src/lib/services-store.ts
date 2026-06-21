@@ -1,9 +1,11 @@
 import type { Service, ServicePackage, ServiceFaq } from "./mock-data";
 import { services as mockServices } from "./mock-data";
 import { notifyNewListing } from "./alerts-store";
-import { completeReferral } from "./referral-store";
+import { maybeCompleteReferral } from "./referral-store";
 import { getSession } from "./auth";
 import { canCreateService, getPlan } from "./subscription-store";
+import { findDuplicateTitle, isBlockedByModeration, moderationSummary, scanListing } from "./content-moderation";
+import { flagContentForReview } from "./moderation-queue";
 
 const STORAGE_KEY = "ishbor-user-services";
 const listeners = new Set<() => void>();
@@ -262,6 +264,19 @@ export function publishService(
       };
     }
   }
+  const moderationFlags = scanListing({
+    title: input.title,
+    description: [input.description, input.descriptionExtended].filter(Boolean).join("\n"),
+  });
+  if (isBlockedByModeration(moderationFlags)) {
+    return { error: moderationSummary(moderationFlags) };
+  }
+  const existingTitles = stored
+    .filter((s) => s.status === "published" && s.slug !== existingSlug)
+    .map((s) => s.title);
+  if (findDuplicateTitle(input.title, existingTitles)) {
+    return { error: "Bunday nomli xizmat allaqachon mavjud" };
+  }
   const service = buildService(input, ctx, "published", existing);
   const next = existing
     ? stored.map((s) => (s.slug === existingSlug ? service : s))
@@ -276,7 +291,8 @@ export function publishService(
     href: `/services/${service.slug}`,
     type: "service",
   });
-  if (session) completeReferral(session.user.id);
+  flagContentForReview("service", service.title, moderationFlags);
+  if (session) maybeCompleteReferral(session.user.id, "listing_published");
   return service;
 }
 

@@ -77,7 +77,7 @@ export function JobAlertsTab({ userId }: { userId: string }) {
       <SettingsSection
         title="Saqlangan qidiruvlar"
         action={
-          <Link to="/projects" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+          <Link to="/search" className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
             <Search className="size-3" /> Qidiruvni saqlash
           </Link>
         }

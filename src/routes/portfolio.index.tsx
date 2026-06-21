@@ -126,7 +126,7 @@ function PortfolioDashboardContent({ user }: { user: NonNullable<ReturnType<type
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-default ${
+            className={`premium-tab rounded-lg px-3 py-1.5 text-sm font-medium ${
               tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary/50"
             }`}
           >
@@ -191,12 +191,16 @@ function PortfolioRow({ item: p, ctx }: { item: PortfolioItem; ctx: { id: string
 
   const handlePublish = () => {
     const input = portfolioToFormInput(p);
-    publishPortfolio(input, {
+    const result = publishPortfolio(input, {
       ownerUserId: ctx.id,
       freelancerUsername: ctx.username ?? ctx.fullName.toLowerCase().replace(/\s+/g, "-"),
       freelancerName: ctx.fullName,
       freelancerHue: ctx.avatarHue,
     }, p.slug);
+    if ("error" in result) {
+      actionFeedback.error(result.error);
+      return;
+    }
     actionFeedback.published("Portfel", "Ommaviy ko'rinish uchun admin tasdig'i kutilmoqda.");
   };
 

@@ -1,0 +1,254 @@
+/* Ishbor Premium Emoji System — Telegram Premium darajasi */
+
+.premium-emoji-img {
+  display: block;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transform: translateZ(0);
+  will-change: transform;
+  filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.06));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.premium-emoji-text {
+  word-break: break-word;
+}
+
+.premium-emoji-text .premium-emoji {
+  margin-inline: 0.05em;
+  vertical-align: -0.15em;
+}
+
+/* Xabar pufakchasi — faqat emoji (Telegram ixcham uslubi) */
+.chat-bubble-emoji {
+  display: inline-flex;
+  width: fit-content;
+  max-width: none;
+  padding: 1px;
+  overflow: visible;
+}
+
+.chat-bubble-emoji--compact.chat-bubble-outgoing {
+  box-shadow: 0 1px 2px oklch(0.546 0.185 257 / 0.16) !important;
+}
+
+.chat-bubble-emoji--compact.chat-bubble-incoming {
+  box-shadow: none;
+}
+
+.chat-bubble-emoji-body {
+  position: relative;
+  display: block;
+  width: fit-content;
+  line-height: 0;
+  overflow: visible;
+}
+
+.chat-bubble-emoji-grid {
+  display: grid;
+  gap: 0;
+  width: fit-content;
+  padding: 1px 1px 0;
+  overflow: visible;
+}
+
+.chat-bubble-emoji-cell {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  overflow: visible !important;
+  line-height: 0;
+}
+
+.chat-bubble-emoji-cell .premium-emoji-img {
+  display: block;
+  max-width: none;
+  max-height: none;
+  filter: none;
+}
+
+.chat-bubble-emoji-meta {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  border-radius: 6px;
+  padding: 1px 4px;
+  background: oklch(0 0 0 / 0.32);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.chat-bubble-emoji-meta-incoming {
+  background: oklch(0 0 0 / 0.08);
+  backdrop-filter: none;
+}
+
+.chat-bubble-reaction {
+  z-index: 2;
+  margin-top: -8px;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  padding: 2px 6px;
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.08);
+}
+
+/* Interaktiv emoji tugma */
+.premium-emoji-btn {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transform: translateZ(0);
+  transition: transform 220ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    background-color 180ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.premium-emoji-btn:hover {
+  transform: scale(1.05) translateZ(0);
+  background-color: oklch(0.546 0.185 257 / 0.08);
+}
+
+.premium-emoji-btn:active {
+  transform: scale(0.92) translateZ(0);
+  transition-duration: 100ms;
+}
+
+.premium-emoji-btn-selected {
+  background-color: oklch(0.546 0.185 257 / 0.14);
+}
+
+@keyframes premium-emoji-pop {
+  0% {
+    transform: scale(1) translateZ(0);
+  }
+  35% {
+    transform: scale(1.28) translateZ(0);
+  }
+  65% {
+    transform: scale(0.94) translateZ(0);
+  }
+  100% {
+    transform: scale(1) translateZ(0);
+  }
+}
+
+@keyframes premium-emoji-sparkle {
+  0% {
+    transform: scale(1) translateZ(0);
+    filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.06));
+  }
+  40% {
+    transform: scale(1.18) translateZ(0);
+    filter: drop-shadow(0 0 8px oklch(0.546 0.185 257 / 0.45));
+  }
+  100% {
+    transform: scale(1) translateZ(0);
+    filter: drop-shadow(0 1px 1px oklch(0 0 0 / 0.06));
+  }
+}
+
+.premium-emoji-pop .premium-emoji-img {
+  animation: premium-emoji-pop 420ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+}
+
+.premium-emoji-sparkle .premium-emoji-img {
+  animation: premium-emoji-sparkle 520ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+.premium-emoji-interactive {
+  cursor: pointer;
+  transition: transform 220ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+.premium-emoji-interactive:hover {
+  transform: scale(1.05) translateZ(0);
+}
+
+.premium-emoji-interactive:active {
+  transform: scale(0.94) translateZ(0);
+}
+
+.premium-reactions-bar {
+  animation: premium-reactions-in 240ms var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+
+@keyframes premium-reactions-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1) translateZ(0);
+  }
+}
+
+.premium-glyph {
+  transform: translateZ(0);
+}
+
+.premium-emoji-picker .EmojiPickerReact {
+  --epr-emoji-size: 28px;
+  --epr-header-padding: 12px 14px;
+  --epr-search-input-height: 38px;
+  --epr-category-navigation-button-size: 28px;
+  border: none !important;
+}
+
+.premium-emoji-picker .epr-emoji-category-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.premium-emoji-picker .epr-btn {
+  transition: transform 200ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    background-color 160ms ease !important;
+}
+
+.premium-emoji-picker .epr-btn:hover {
+  transform: scale(1.06) translateZ(0);
+}
+
+.premium-emoji-picker .epr-btn:active {
+  transform: scale(0.94) translateZ(0);
+}
+
+.premium-emoji-picker .epr-emoji-img {
+  filter: drop-shadow(0 1px 2px oklch(0 0 0 / 0.08));
+}
+
+html[data-animations="off"] .premium-emoji-pop .premium-emoji-img,
+html[data-animations="off"] .premium-emoji-sparkle .premium-emoji-img,
+html[data-animations="off"] .premium-reactions-bar,
+html[data-animations="off"] .premium-emoji-btn {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-emoji-pop .premium-emoji-img,
+  .premium-emoji-sparkle .premium-emoji-img,
+  .premium-reactions-bar {
+    animation: none !important;
+  }
+
+  .premium-emoji-btn:hover,
+  .premium-emoji-interactive:hover {
+    transform: none;
+  }
+}

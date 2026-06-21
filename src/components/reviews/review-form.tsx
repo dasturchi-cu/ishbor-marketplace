@@ -2,7 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { submitReview, type ReviewInput } from "@/lib/reviews-store";
-import { addNotification } from "@/lib/notifications-store";
+import { measureReviewImpact } from "@/lib/ecosystem-progress";
 
 type Props = {
   orderId: string;
@@ -38,7 +38,7 @@ export function ReviewForm({
       return;
     }
     setLoading(true);
-    submitReview({
+    const result = submitReview({
       orderId,
       project,
       direction,
@@ -50,14 +50,19 @@ export function ReviewForm({
       rating,
       body: body.trim(),
     });
-    addNotification({
-      kind: "review",
-      title: "Sharh yuborildi",
-      body: `"${project}" uchun ${rating} yulduzli sharhingiz endi ko'rinadi.`,
-      priority: "normal",
-      href: "/profile",
-    });
-    toast.success("Sharh yuborildi — rahmat!");
+    if ("error" in result) {
+      toast.error(result.error);
+      setLoading(false);
+      return;
+    }
+    if (direction === "client_to_freelancer" && freelancerUsername) {
+      const impact = measureReviewImpact(freelancerUsername, rating);
+      toast.success("Sharh yuborildi — rahmat!", {
+        description: `Reyting ta'siri: muvaffaqiyat ~${impact.newSuccessScore}, qidiruv ~${impact.newRankingScore} (+${impact.rankingDelta}).`,
+      });
+    } else {
+      toast.success("Sharh yuborildi — rahmat!");
+    }
     onSubmitted?.();
     setLoading(false);
   };

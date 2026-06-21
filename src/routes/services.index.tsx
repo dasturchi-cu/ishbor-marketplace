@@ -12,8 +12,10 @@ import { MarketplaceToolbar, useMarketplaceSearch } from "@/components/site/mark
 import { MarketplacePulseMini } from "@/components/site/marketplace-pulse-mini";
 import { filterServices, normalizeSearch, type MarketplaceSearch } from "@/lib/marketplace";
 import { categories } from "@/lib/mock-data";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Package } from "lucide-react";
+import { toast } from "sonner";
+import { saveMarketplaceSearch } from "@/lib/alerts-store";
 import { CategoryBrowseRow } from "@/components/site/category-browse-row";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -22,20 +24,22 @@ import {
   shouldPersonalizeList,
   subscribeRecommendations,
 } from "@/lib/recommendations";
+import { buildPageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/services/")({
   validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
-  head: () => ({
-    meta: [
-      { title: "Xizmatlar — Ishbor" },
-      { name: "description", content: "Markaziy Osiyoning tekshirilgan ijodkorlaridan tayyor xizmatlar." },
-    ],
-  }),
+  head: () =>
+    buildPageMeta({
+      title: "Xizmatlar — Ishbor",
+      description: "Markaziy Osiyoning tekshirilgan ijodkorlaridan tayyor xizmatlar.",
+      path: "/services",
+    }),
   component: ServicesPage,
 });
 
 function ServicesPage() {
   const ready = usePageReady();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const search = Route.useSearch();
   const setSearch = useMarketplaceSearch(search, "/services");
   const allServices = useSyncExternalStore(subscribeServices, getPublishedServices, getPublishedServices);
@@ -46,11 +50,32 @@ function ServicesPage() {
       return applyPersonalizedServiceOrder(base, user.id);
     }
     return base;
-  }, [allServices, search, user?.id, recVersion]);  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
+  }, [allServices, search, user?.id, recVersion]);
+  const { visible, hasMore, loadMore, showing, total } = useIncrementalList(
     filtered,
     MARKETPLACE_PAGE_SIZE,
     `${search.q ?? ""}-${search.category ?? ""}-${search.sort ?? ""}-${search.filter ?? ""}`,
   );
+
+  const handleSaveSearch = () => {
+    const q = search.q ?? "";
+    if (!q.trim()) {
+      toast.error("Qidiruv so'zini kiriting");
+      return;
+    }
+    if (!user) {
+      navigate({ to: "/login", search: { redirect: "/services" } });
+      return;
+    }
+    const result = saveMarketplaceSearch(user.id, {
+      q,
+      type: "services",
+      category: search.category,
+      filter: search.filter,
+    });
+    if ("error" in result) toast.error(result.error);
+    else toast.success("Qidiruv saqlandi");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,6 +110,8 @@ function ServicesPage() {
             resultCount={filtered.length}
             resultLabel="xizmat"
             onSearchChange={setSearch}
+            showSaveSearch
+            onSaveSearch={handleSaveSearch}
           />
           <MarketplacePulseMini />
         </div>

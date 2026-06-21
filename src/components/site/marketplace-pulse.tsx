@@ -1,15 +1,12 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { Link } from "@tanstack/react-router";
-import { Star, Sparkles, Users, ArrowUpRight } from "lucide-react";
+import { Star, Sparkles, Users, ArrowUpRight, MessageSquareQuote } from "lucide-react";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
-import { readStoredReviews } from "@/lib/reviews-store";
+import { readStoredReviews, subscribeReviews } from "@/lib/reviews-store";
 import { getStoredServices } from "@/lib/services-store";
+import { readStoredOrders } from "@/lib/orders-store";
 import { freelancers } from "@/lib/mock-data";
 import { GradientAvatar } from "./avatar";
-
-function subscribeReviews() {
-  return () => {};
-}
 
 function getReviewCount() {
   return readStoredReviews().length;
@@ -30,6 +27,13 @@ export function MarketplacePulse() {
     if (!hydrated) return [];
     return getStoredServices()
       .filter((s) => s.status === "published")
+      .slice(0, 3);
+  }, [hydrated]);
+
+  const recentOrders = useMemo(() => {
+    if (!hydrated) return [];
+    return readStoredOrders()
+      .filter((o) => o.status === "completed" || o.escrowFunded)
       .slice(0, 3);
   }, [hydrated]);
 
@@ -75,20 +79,12 @@ export function MarketplacePulse() {
                 ))}
               </ul>
             ) : (
-              <ul className="space-y-3">
-                {[
-                  { rating: 5, name: "Sardor M.", text: "Tez va sifatli ishladi — eskrou jarayoni aniq edi." },
-                  { rating: 5, name: "Elena P.", text: "Portfolio va javob tezligi ajoyib. Qayta yolladik." },
-                ].map((r, i) => (
-                  <li key={i} className="rounded-lg border border-border bg-surface/50 px-3 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-semibold text-gold">{r.rating}★</span>
-                      <span className="text-xs text-muted-foreground">{r.name}</span>
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-foreground/80">{r.text}</p>
-                  </li>
-                ))}
-              </ul>
+              <div className="rounded-lg border border-dashed border-border bg-surface/30 px-4 py-6 text-center">
+                <MessageSquareQuote className="mx-auto size-6 text-muted-foreground/60" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Hali sharhlar yo&apos;q. Birinchi buyurtmani yakunlang — sharh shu yerda ko&apos;rinadi.
+                </p>
+              </div>
             )}
           </div>
 
@@ -127,7 +123,7 @@ export function MarketplacePulse() {
           <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
             <div className="mb-4 flex items-center gap-2">
               <Users className="size-4 text-success" />
-              <h3 className="font-display text-sm font-semibold">Hozir mavjud mutaxassislar</h3>
+              <h3 className="font-display text-sm font-semibold">Mavjud mutaxassislar</h3>
             </div>
             <ul className="space-y-2">
               {activeFreelancers.map((f) => (
@@ -150,6 +146,22 @@ export function MarketplacePulse() {
                 </li>
               ))}
             </ul>
+            {recentOrders.length > 0 && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="font-mono mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  So&apos;nggi buyurtmalar
+                </p>
+                <ul className="space-y-1.5">
+                  {recentOrders.map((o) => (
+                    <li key={o.id} className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">${o.amount.toLocaleString()}</span>
+                      {" · "}
+                      {o.status === "completed" ? "yakunlandi" : "eskrou to'ldirildi"}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -55,14 +55,17 @@ export function SiteFooter() {
           <div className="max-w-sm space-y-3">
             <Logo />
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Markaziy Osiyoning mustaqil ijodkorlari, muhandislari va strateglari
-              uchun premium bozor. Eskrou himoyasi, UZS yoki USD da to'lov.
+              Markaziy Osiyo uchun eskrou himoyalangan frilans bozori.
+              Humo/Uzcard, o&apos;zbek tilida — mahalliy talent uchun.
             </p>
             <div className="flex items-center gap-2">
-              <span className="font-mono inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+              <Link
+                to="/status"
+                className="font-mono inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-[10px] uppercase tracking-widest text-muted-foreground transition-default hover:border-primary/25 hover:text-foreground"
+              >
                 <span className="size-1.5 rounded-full bg-success animate-pulse-subtle" />
-                Barcha tizimlar normal
-              </span>
+                Tizim holati
+              </Link>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-8">

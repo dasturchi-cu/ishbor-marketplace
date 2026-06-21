@@ -12,7 +12,7 @@ import { AuthField, AuthButton, AuthDivider, authInputClass } from "@/components
 
 import { GoogleButton } from "@/components/auth/google-button";
 
-import { loginWithCredentials, isAdminUser, applyServerSession, type AuthUser } from "@/lib/auth";
+import { loginWithCredentials, isAdminUser, applyServerSession, logout, normalizeLoginEmail, type AuthUser } from "@/lib/auth";
 import { resetActiveRoleOnLogin, getActiveDashboardPath } from "@/lib/active-role-store";
 import { loginSession } from "@/lib/api/session.functions";
 import { checkClientLoginRateLimit, recordLoginAttempt } from "@/lib/rate-limit";
@@ -22,9 +22,8 @@ import { requireGuest } from "@/lib/guards";
 
 
 type LoginSearch = {
-
   redirect?: string;
-
+  switch?: string;
 };
 
 
@@ -32,9 +31,8 @@ type LoginSearch = {
 export const Route = createFileRoute("/login")({
 
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
-
     redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-
+    switch: typeof search.switch === "string" ? search.switch : undefined,
   }),
 
   beforeLoad: requireGuest,
@@ -77,39 +75,30 @@ function LoginPage() {
     return getActiveDashboardPath();
   };
 
-  const demoLogin = async (email: string) => {
+  const demoLogin = async (demoEmail: string) => {
     setLoading(true);
     setError("");
+    logout();
+    const normalized = normalizeLoginEmail(demoEmail);
     try {
-      try {
-        const result = await loginSession({ data: { email, password: "demo1234", remember: true } });
-        if (result.ok) {
-          applyServerSession(result.session);
-          resetActiveRoleOnLogin(result.session.user);
-          toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
-          if (redirectTo) {
-            window.location.href = redirectTo;
-            return;
-          }
-          navigate({ to: postLoginPath(result.session.user) });
-          return;
-        }
-      } catch (serverError) {
-        console.warn("[login] demo server session failed, using local fallback", serverError);
-      }
-
-      const fallback = loginWithCredentials(email, "demo1234", true);
-      if (!fallback.ok) {
-        setError(fallback.error);
+      const local = loginWithCredentials(normalized, "demo1234", true);
+      if (!local.ok) {
+        setError(local.error);
         return;
       }
-      applyServerSession(fallback.session);
-      toast.success("Xush kelibsiz!", { description: "Ish maydoningizga yo'naltirilmoqda." });
+      applyServerSession(local.session);
+      resetActiveRoleOnLogin(local.session.user);
+      toast.success("Xush kelibsiz!", {
+        description: isAdminUser(local.session.user) ? "Admin konsoliga yo'naltirilmoqda." : "Ish maydoningizga yo'naltirilmoqda.",
+      });
       if (redirectTo) {
         window.location.href = redirectTo;
         return;
       }
-      navigate({ to: postLoginPath(fallback.session.user) });
+      await navigate({ to: postLoginPath(local.session.user) });
+      void loginSession({ data: { email: normalized, password: "demo1234", remember: true } }).catch(() => {
+        /* server cookie optional in demo */
+      });
     } catch {
       setError("Nimadir xato ketdi. Qayta urinib ko'ring.");
     } finally {
@@ -130,7 +119,8 @@ function LoginPage() {
     }
 
     try {
-      const result = await loginSession({ data: { email, password, remember } });
+      const normalizedEmail = normalizeLoginEmail(email);
+      const result = await loginSession({ data: { email: normalizedEmail, password, remember } });
       if (!result.ok) {
         recordLoginAttempt();
         setError(result.error);

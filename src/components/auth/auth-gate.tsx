@@ -1,30 +1,26 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useLocation } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { LoadingSpinner } from "@/components/site/feedback";
 
+function redirectToLogin(pathname: string, search: string) {
+  const redirect = encodeURIComponent(`${pathname}${search}`);
+  window.location.replace(`/login?redirect=${redirect}`);
+}
+
 export function AuthGate({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   const hydrated = useClientHydrated();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hydrated || isAuthenticated) return;
-    navigate({ to: "/login", search: { redirect: location.pathname }, replace: true });
-  }, [hydrated, isAuthenticated, location.pathname, navigate]);
+    redirectToLogin(location.pathname, window.location.search);
+  }, [hydrated, isAuthenticated, location.pathname]);
 
-  if (!hydrated) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
+  if (!hydrated || !isAuthenticated) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <LoadingSpinner />

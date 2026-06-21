@@ -1,6 +1,7 @@
-import { notifications as seedNotifications } from "./mock-data";
 import { getSession } from "./auth";
 import { persistRead, persistWrite } from "./store-persist";
+import { getUserSettings } from "./settings-store";
+import { queueNotificationEmail } from "./email-lifecycle";
 
 const STORAGE_KEY = "ishbor-notifications";
 const listeners = new Set<() => void>();
@@ -51,12 +52,20 @@ function writeAll(data: Record<string, AppNotification[]>) {
   persistWrite(STORAGE_KEY, data);
 }
 
-function seedForUser(userId: string): AppNotification[] {
-  return seedNotifications.map((n) => ({ ...n, userId }));
-}
 
-const GUEST_NOTIFICATIONS: AppNotification[] = seedNotifications.map((n) => ({ ...n }));
 const EMPTY_NOTIFICATIONS: AppNotification[] = [];
+
+function kindAllowed(kind: NotificationKind, userId: string): boolean {
+  const prefs = getUserSettings(userId).notifications;
+  if (kind === "system" || kind === "admin") return true;
+  if (kind === "escrow" || kind === "payment") return prefs.escrow || prefs.orders;
+  if (kind === "proposal") return prefs.proposals;
+  if (kind === "order") return prefs.orders;
+  if (kind === "review") return prefs.reviews;
+  if (kind === "message") return prefs.marketplace;
+  if (kind === "portfolio") return prefs.marketplace;
+  return prefs.marketplace;
+}
 
 export function getNotifications(userId?: string): AppNotification[] {
   const uid = userId ?? getSession()?.user.id;
@@ -64,9 +73,8 @@ export function getNotifications(userId?: string): AppNotification[] {
   if (!cache) cache = new Map(Object.entries(readAll()));
   const stored = cache.get(uid);
   if (stored) return stored;
-  const seeded = seedForUser(uid);
-  persist(uid, seeded);
-  return seeded;
+  persist(uid, []);
+  return EMPTY_NOTIFICATIONS;
 }
 
 function persist(uid: string, items: AppNotification[]) {
@@ -80,8 +88,12 @@ function persist(uid: string, items: AppNotification[]) {
 
 export function addNotification(
   input: Omit<AppNotification, "id" | "time" | "read"> & { userId?: string },
-): AppNotification {
+): AppNotification | null {
   const uid = input.userId ?? getSession()?.user.id ?? "global";
+  const priority = input.priority ?? "normal";
+  const isCritical = priority === "high" || input.kind === "escrow" || input.kind === "payment";
+  if (!isCritical && !kindAllowed(input.kind, uid)) return null;
+
   const items = getNotifications(uid);
   const entry: AppNotification = {
     ...input,
@@ -91,7 +103,26 @@ export function addNotification(
     userId: uid,
   };
   persist(uid, [entry, ...items].slice(0, 100));
+
+  tryBrowserPush(entry);
+
+  const session = getSession();
+  if (isCritical && session?.user.id === uid && session.user.email) {
+    queueNotificationEmail(session.user.email, entry.title, entry.body);
+  }
+
   return entry;
+}
+
+function tryBrowserPush(entry: AppNotification): void {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+  if (document.visibilityState === "visible") return;
+  try {
+    new Notification(entry.title, { body: entry.body, tag: entry.id });
+  } catch {
+    /* unsupported */
+  }
 }
 
 export function markNotificationRead(id: string, userId?: string): void {

@@ -20,7 +20,7 @@ export function AgencyCard({ agency, metrics, rankingScore }: AgencyCardProps) {
     <Link
       to="/agencies/$slug"
       params={{ slug: agency.slug }}
-      className="group flex flex-col rounded-2xl border border-border bg-card p-5 transition-default hover-lift hover:border-primary/25 hover:shadow-md active:scale-[0.995]"
+      className="group premium-card-interactive flex flex-col rounded-2xl border border-border bg-card p-5 hover:border-primary/25 hover:shadow-md"
     >
       <div className="flex items-start gap-3">
         {agency.logo ? (

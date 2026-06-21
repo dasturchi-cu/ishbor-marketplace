@@ -10,9 +10,8 @@ import { useActiveRole } from "@/hooks/use-active-role";
 import { ProtectedGate } from "@/components/auth/protected-gate";
 import { requireAuth } from "@/lib/guards";
 import type { AuthUser } from "@/lib/auth";
+import { resolveFreelancerForUser } from "@/lib/freelancer-profile-resolver";
 import {
-  enrichFreelancer,
-  freelancers,
   getClient,
   getClientProjects,
   getFreelancerReviews,
@@ -42,18 +41,7 @@ const EMPTY_PROJECTS: ReturnType<typeof getMyProjects> = [];
 const EMPTY_PORTFOLIOS: ReturnType<typeof getMyPortfolios> = [];
 
 function resolveFreelancer(user: AuthUser) {
-  if (user.username) {
-    const match = freelancers.find((x) => x.username === user.username);
-    if (match) return enrichFreelancer(match);
-  }
-  const fallback = enrichFreelancer(freelancers[0]!);
-  return {
-    ...fallback,
-    name: user.fullName,
-    hue: user.avatarHue,
-    username: user.username ?? user.fullName.toLowerCase().replace(/\s+/g, "-").slice(0, 20),
-    bio: user.bio ?? fallback.bio,
-  };
+  return resolveFreelancerForUser(user);
 }
 
 function filterClientEscrow(user: AuthUser, workflows: EscrowWorkflow[]) {

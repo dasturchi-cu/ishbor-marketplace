@@ -14,15 +14,16 @@ const EMPTY_AGENCIES: Agency[] = [];
 import { useNavigate } from "@tanstack/react-router";
 import { IncrementalListFooter } from "@/components/site/incremental-list-footer";
 import { MARKETPLACE_PAGE_SIZE, useIncrementalList } from "@/hooks/use-incremental-list";
+import { buildPageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/agencies/")({
   validateSearch: (search: Record<string, unknown>): AgencySearchParams => normalizeAgencySearch(search),
-  head: () => ({
-    meta: [
-      { title: "Agentliklar — Ishbor" },
-      { name: "description", content: "Tekshirilgan agentliklar va jamoalar bilan katta loyihalarni bajaring." },
-    ],
-  }),
+  head: () =>
+    buildPageMeta({
+      title: "Agentliklar — Ishbor",
+      description: "Tekshirilgan agentliklar va jamoalar bilan katta loyihalarni bajaring.",
+      path: "/agencies",
+    }),
   component: AgenciesPage,
 });
 

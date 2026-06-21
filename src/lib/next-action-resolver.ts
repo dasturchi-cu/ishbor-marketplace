@@ -9,12 +9,18 @@ import { getPendingProposalsForClient } from "./client-dashboard-utils";
 import { getAgenciesForUser } from "./agency-store";
 import { getCaseStudiesByAgency } from "./agency-portfolio-store";
 import { adminStats } from "./admin-mock-data";
+import {
+  getPendingReviewOrders,
+  getClientRepeatHireStats,
+  getSavedFavoriteFreelancers,
+} from "./ecosystem-progress";
 
 export type NextAction = {
   title: string;
   description: string;
   href: string;
   cta: string;
+  urgent?: boolean;
 };
 
 export function resolveContextualNextAction(
@@ -28,6 +34,18 @@ export function resolveContextualNextAction(
 }
 
 function resolveClientAction(user: AuthUser): NextAction {
+  const pendingReviews = getPendingReviewOrders(user);
+  if (pendingReviews.length > 0) {
+    const o = pendingReviews[0]!;
+    return {
+      title: "Sharh qoldiring",
+      description: `"${o.title}" yakunlandi — sharh ishonchingizni va keyingi yollashni oshiradi.`,
+      href: `/orders/${o.id}`,
+      cta: "Sharh yozish",
+      urgent: true,
+    };
+  }
+
   const projects = getMyPublishedProjects(user.id);
   const pending = getPendingProposalsForClient(user);
   const orders = getOrdersForUser(
@@ -54,6 +72,7 @@ function resolveClientAction(user: AuthUser): NextAction {
       description: `${first.freelancerName ?? "Frilanser"} — ${first.projectTitle} loyihasiga taklif yubordi.`,
       href: `/projects/${first.projectSlug ?? ""}`,
       cta: "Takliflarni ko'rish",
+      urgent: true,
     };
   }
   if (reviewOrders.length > 0) {
@@ -62,6 +81,7 @@ function resolveClientAction(user: AuthUser): NextAction {
       description: `${reviewOrders.length} ta buyurtma tasdiqlashingizni kutmoqda — to'lov frilanserga o'tadi.`,
       href: `/orders/${reviewOrders[0]!.id}`,
       cta: "Buyurtmani ko'rish",
+      urgent: true,
     };
   }
   if (activeOrders.length > 0) {
@@ -70,18 +90,53 @@ function resolveClientAction(user: AuthUser): NextAction {
       description: `${activeOrders.length} ta buyurtma jarayonda — frilanser bilan aloqada bo'ling.`,
       href: "/orders",
       cta: "Buyurtmalarga o'tish",
+      urgent: true,
     };
   }
+
+  const repeat = getClientRepeatHireStats(user);
+  if (repeat.priorFreelancerUsernames.length > 0) {
+    const username = repeat.priorFreelancerUsernames[0]!;
+    return {
+      title: "Tanish frilanserni qayta yollang",
+      description: "Oldingi hamkoringiz bilan tezroq yangi buyurtma oching.",
+      href: `/freelancers/${username}`,
+      cta: "Qayta yollash",
+    };
+  }
+
+  const saved = getSavedFavoriteFreelancers(user.id);
+  if (saved.length > 0) {
+    return {
+      title: "Saqlangan frilanserlarni ko'ring",
+      description: `${saved.length} ta saqlangan mutaxassis — tez yollash uchun tayyor.`,
+      href: `/freelancers/${saved[0]!.id}`,
+      cta: "Profilni ko'rish",
+    };
+  }
+
   return {
-    title: "Frilanser yollang",
-    description: "Tasdiqlangan mutaxassislarni toping yoki saqlangan frilanserlaringizni ko'ring.",
-    href: "/freelancers",
-    cta: "Frilanser topish",
+    title: "Bozordan mutaxassis qidiring",
+    description: "Kalit so'z, ko'nikma yoki kategoriya bo'yicha eng mos natijalar.",
+    href: "/search",
+    cta: "Qidiruvni boshlash",
   };
 }
 
 function resolveFreelancerAction(user: AuthUser): NextAction {
   const username = user.username ?? "";
+  const pendingReviews = getPendingReviewOrders(user);
+  if (pendingReviews.length > 0) {
+    const o = pendingReviews[0]!;
+    return {
+      title: "Sharh qoldiring",
+      description: `"${o.title}" yakunlandi — sharh reytingingizni va ko'rinishni oshiradi.`,
+      href: `/orders/${o.id}`,
+      cta: "Sharh yozish",
+      urgent: true,
+    };
+  }
+
   const portfolios = username ? getPublishedPortfoliosByUsername(username) : [];
   const services = getMyPublishedServices(user.id);
   const apps = readStoredApplications().filter(
@@ -89,7 +144,9 @@ function resolveFreelancerAction(user: AuthUser): NextAction {
   );
   const pending = apps.filter((a) => a.status === "pending" || a.status === "shortlisted");
   const orders = username ? getOrdersForFreelancer(username) : [];
-  const activeOrders = orders.filter((o) => o.status === "in_progress" || o.status === "review");
+  const activeOrders = orders.filter(
+    (o) => o.status === "in_progress" || o.status === "review" || o.status === "revision",
+  );
 
   if (portfolios.length === 0) {
     return {
@@ -107,20 +164,23 @@ function resolveFreelancerAction(user: AuthUser): NextAction {
       cta: "Xizmat yaratish",
     };
   }
+  if (activeOrders.length > 0) {
+    const deliver = activeOrders.find((o) => o.status === "in_progress" || o.status === "revision");
+    const target = deliver ?? activeOrders[0]!;
+    return {
+      title: deliver ? "Buyurtmani bajaring" : "Faol buyurtmani ko'ring",
+      description: `${activeOrders.length} ta buyurtma jarayonda — muddatga rioya qiling va natija yuboring.`,
+      href: `/orders/${target.id}`,
+      cta: "Buyurtmaga o'tish",
+      urgent: true,
+    };
+  }
   if (pending.length > 0) {
     return {
       title: "Kutilayotgan arizalarni kuzating",
       description: `${pending.length} ta taklif javob kutmoqda — mijoz tezda qaror qiladi.`,
       href: "/applications",
       cta: "Arizalarim",
-    };
-  }
-  if (activeOrders.length > 0) {
-    return {
-      title: "Faol buyurtmani bajaring",
-      description: `${activeOrders.length} ta buyurtma jarayonda — muddatga rioya qiling va natija yuboring.`,
-      href: `/orders/${activeOrders[0]!.id}`,
-      cta: "Buyurtmaga o'tish",
     };
   }
   if (apps.length === 0) {

@@ -19,6 +19,9 @@ import { applyAppearancePrefs } from "../lib/appearance-apply";
 import { getSession } from "../lib/auth";
 import { getLocale } from "../lib/locale-store";
 import { installStressSeedGlobals } from "../lib/stress-seed";
+import { trackUserActivity } from "../lib/re-engagement";
+import { flushEmailOutbox } from "../lib/email-lifecycle";
+import { initObservability } from "../lib/observability";
 
 function NotFoundComponent() {
   return (
@@ -154,12 +157,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    initObservability();
     void hydrateAuthFromServer().then(() => {
       runClientAuthBootstrap(window.location.pathname);
+      trackUserActivity();
+      void flushEmailOutbox();
     });
     installStressSeedGlobals();
     const session = getSession();
-    if (session?.user.id) {
+    if (session?.user?.id) {
       applyAppearancePrefs(session.user.id);
     }
     if (typeof document !== "undefined") {

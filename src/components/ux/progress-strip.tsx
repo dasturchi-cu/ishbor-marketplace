@@ -12,6 +12,11 @@ import {
 } from "@/lib/reputation-store";
 import { ReputationBadge } from "@/components/reputation/reputation-badge";
 import { TrustScoreBadge } from "@/components/trust/trust-profile-card";
+import {
+  EcosystemMetricPills,
+  PendingReviewsBanner,
+} from "@/components/ecosystem/ecosystem-indicators";
+import { getEcosystemMetrics } from "@/lib/ecosystem-progress";
 import { getAgenciesForUser } from "@/lib/agency-store";
 import { getCaseStudiesByAgency } from "@/lib/agency-portfolio-store";
 import { AgencyVerificationBadge } from "@/components/agency/agency-verification-badge";
@@ -38,6 +43,8 @@ export function ProgressStrip({ user }: { user: AuthUser }) {
       : user.username
         ? computeFreelancerReputation(user.username, user)
         : null;
+
+  const ecosystem = getEcosystemMetrics(user, activeRole);
 
   const bars = [
     {
@@ -69,8 +76,40 @@ export function ProgressStrip({ user }: { user: AuthUser }) {
     });
   }
 
+  if (activeRole === "freelancer" && ecosystem.successScore > 0) {
+    bars.push({
+      label: "Muvaffaqiyat",
+      value: ecosystem.successScore,
+      detail: `${ecosystem.completedOrders} ish`,
+      color: "bg-success/80",
+    });
+  }
+
+  if (ecosystem.repeatClientRate > 0 || ecosystem.repeatHireCount > 0) {
+    bars.push({
+      label: activeRole === "client" ? "Takror yollash" : "Takror mijoz",
+      value: activeRole === "client" ? Math.min(100, ecosystem.repeatHireCount * 25) : ecosystem.repeatClientRate,
+      detail:
+        activeRole === "client"
+          ? `${ecosystem.repeatHireCount} frilanser`
+          : `${ecosystem.repeatClientCount} mijoz`,
+      color: "bg-[oklch(0.72_0.14_145)]",
+    });
+  }
+
+  if (activeRole === "freelancer" && ecosystem.rankingScore > 0) {
+    bars.push({
+      label: "Qidiruv",
+      value: ecosystem.rankingScore,
+      detail: `${ecosystem.rankingScore}/100`,
+      color: "bg-primary",
+    });
+  }
+
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="space-y-3">
+      <PendingReviewsBanner count={ecosystem.pendingReviews} />
+      <div className="rounded-xl border border-border bg-card p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
           Rivojlanish
@@ -78,6 +117,7 @@ export function ProgressStrip({ user }: { user: AuthUser }) {
         <div className="flex flex-wrap items-center gap-2">
           <TrustScoreBadge score={trust.trustScore} label={trust.label} />
           {reputation && <ReputationBadge tier={reputation.tier} />}
+          <EcosystemMetricPills metrics={ecosystem} role={activeRole === "client" ? "client" : "freelancer"} />
           {user.verified && (
             <span className="rounded-full border border-success/20 bg-success/5 px-2 py-0.5 text-[10px] font-semibold text-success">
               Tasdiqlangan
@@ -113,6 +153,7 @@ export function ProgressStrip({ user }: { user: AuthUser }) {
           </Link>
         );
       })()}
+      </div>
     </div>
   );
 }

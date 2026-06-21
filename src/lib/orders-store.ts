@@ -6,6 +6,8 @@ import { recordAnalyticsEvent } from "./analytics-events-store";
 import { getEscrowByOrderId, releaseEscrowMilestone } from "./escrow-store";
 import { notifyOrderCreated } from "./notification-events";
 import { getSession } from "./auth";
+import { queueOrderUpdateEmail, flushEmailOutbox } from "./email-lifecycle";
+import { handleOrderCompleted } from "./ecosystem-progress";
 
 const STORAGE_KEY = "ishbor-user-orders";
 const EMPTY_ORDERS: Order[] = [];
@@ -148,9 +150,26 @@ export function updateOrderStatus(
   next[idx] = updated;
   writeStored(next);
   notify();
+  const session = getSession();
+  const statusLabels: Record<string, string> = {
+    pending: "Kutilmoqda",
+    in_progress: "Jarayonda",
+    review: "Ko'rib chiqilmoqda",
+    completed: "Yakunlandi",
+    cancelled: "Bekor qilindi",
+  };
+  if (session?.user.email) {
+    queueOrderUpdateEmail(
+      session.user.email,
+      updated.title,
+      statusLabels[status] ?? status,
+    );
+    void flushEmailOutbox();
+  }
   if (status === "completed") {
     recordConversionEvent("order_completed", orderId, updated.amount);
     recordAnalyticsEvent({ type: "order_completed", entityId: orderId, value: updated.amount });
+    handleOrderCompleted(updated);
   }
   return updated;
 }
@@ -220,6 +239,7 @@ export function approveOrderDelivery(orderId: string): Order | undefined {
       userName: session?.user.fullName ?? order.client,
     },
   });
+  handleOrderCompleted(updated);
   return updated;
 }
 

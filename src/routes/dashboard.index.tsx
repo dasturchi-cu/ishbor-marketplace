@@ -26,7 +26,11 @@ import { getWallet, subscribeWallet } from "@/lib/wallet-store";
 import { getAllOrders, subscribeOrders } from "@/lib/orders-store";
 import { ClientRecommendations } from "@/components/site/personalized-recommendations";
 import { WorkspaceGuidance } from "@/components/ux/workspace-guidance";
+import { GettingStartedCard } from "@/components/ftue/getting-started-card";
+import { WelcomeBanner } from "@/components/ftue/welcome-banner";
+import { resolvePrimaryNextAction } from "@/lib/journey-guidance";
 import { DashboardActivityFeed } from "@/components/site/dashboard-activity-feed";
+import { MarketplaceActivityStrip } from "@/components/ecosystem/marketplace-activity-strip";
 import {
   buildHiringPipelineForClient,
   getClientLifetimeSpend,
@@ -155,6 +159,11 @@ function ClientDashboard() {
 
   const pendingProposals = useMemo(() => (user ? getPendingProposalsForClient(user) : []), [user, allOrders]);
 
+  const primaryAction = useMemo(
+    () => (user ? resolvePrimaryNextAction(user, "client") : null),
+    [user, allOrders, pendingProposals.length],
+  );
+
   const reviewingLeads = hiringLeads.filter((h) => h.stage === "reviewing");
   const shortlistedLeads = hiringLeads.filter((h) => h.stage === "shortlisted");
   const interviewLeads = hiringLeads.filter((h) => h.stage === "interview");
@@ -177,21 +186,44 @@ function ClientDashboard() {
 
       eyebrow="Mijoz ish maydoni"
 
-      title={`Xayrli kech, ${user?.fullName.split(" ")[0] ?? "do'stim"}.`}
+      title={`Xayrli kech, ${user?.fullName?.split(" ")[0] ?? "do'stim"}.`}
 
       actions={
-        <Link
-          to="/projects/create"
-          className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
-        >
-          <Plus className="size-4" />
-          Loyiha joylash
-        </Link>
+        primaryAction ? (
+          <Link
+            to={primaryAction.href}
+            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+          >
+            <Plus className="size-4" />
+            {primaryAction.cta}
+          </Link>
+        ) : (
+          <Link
+            to="/projects/create"
+            className="touch-target inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition-default shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.08)] hover:shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.16)] focus-ring sm:w-auto"
+          >
+            <Plus className="size-4" />
+            Loyiha joylash
+          </Link>
+        )
       }
 
     >
 
-      {user && <WorkspaceGuidance user={user} hideNextAction />}
+      {user && (
+        <div className="mb-6 space-y-4">
+          <WelcomeBanner
+            user={user}
+            roleLabel="Mijoz"
+            primaryHref={primaryAction?.href ?? "/projects/create"}
+            primaryLabel={primaryAction?.cta ?? "Loyiha joylash"}
+            secondaryHref="/search"
+            secondaryLabel="Mutaxassis qidirish"
+          />
+          <GettingStartedCard user={user} />
+          <WorkspaceGuidance user={user} hideNextAction />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SimpleStatCard label="Jami sarflangan" value={`$${lifetimeSpent.toLocaleString()}`} />
@@ -200,8 +232,9 @@ function ClientDashboard() {
         <SimpleStatCard label="Loyihalar" value={String(myProjects.length)} sub={pendingProposals.length > 0 ? `${pendingProposals.length} yangi taklif` : undefined} />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <DashboardActivityFeed />
+        <MarketplaceActivityStrip />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -218,7 +251,7 @@ function ClientDashboard() {
                   key={project.id}
                   to="/projects/$slug"
                   params={{ slug: project.slug }}
-                  className="block px-4 py-3 transition-default hover:bg-secondary/20 sm:px-5"
+                  className="block px-4 py-3 premium-list-row hover:bg-secondary/20 sm:px-5"
                 >
                   <div className="truncate text-sm font-medium">{project.title}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
@@ -245,7 +278,7 @@ function ClientDashboard() {
           </div>
           <div className="divide-y divide-border">
             {activeOrders.length > 0 ? activeOrders.slice(0, 4).map((order) => (
-              <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block px-4 py-3 transition-default hover:bg-secondary/20 sm:px-5">
+              <Link key={order.id} to="/orders/$id" params={{ id: order.id }} className="block px-4 py-3 premium-list-row hover:bg-secondary/20 sm:px-5">
                 <div className="flex items-center gap-3">
                   <GradientAvatar name={order.freelancer} hue={order.freelancerHue} size={32} rounded="rounded-lg" />
                   <div className="min-w-0 flex-1">
@@ -294,7 +327,7 @@ function ClientDashboard() {
                 key={app.id}
                 to="/projects/$slug"
                 params={{ slug: app.projectSlug ?? "" }}
-                className="flex items-center justify-between gap-3 px-4 py-3 transition-default hover:bg-secondary/20 sm:px-5"
+                className="flex items-center justify-between gap-3 px-4 py-3 premium-list-row hover:bg-secondary/20 sm:px-5"
               >
                 <div className="min-w-0">
                   <div className="truncate text-sm font-medium">{app.freelancerName ?? "Frilanser"}</div>

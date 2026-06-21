@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { filterFreelancers, filterServices, normalizeSearch, pickSearchRoute } from "./marketplace";
+import { matchesQuery } from "./search-match";
 import { freelancers, services } from "./mock-data";
 
 describe("marketplace search", () => {
@@ -31,5 +32,10 @@ describe("marketplace search", () => {
       params,
     );
     expect(results.length).toBeGreaterThan(0);
+  });
+
+  it("matches queries with typo tolerance", () => {
+    expect(matchesQuery("dizayn", "dizyn")).toBe(true);
+    expect(matchesQuery("development", "developmnt")).toBe(true);
   });
 });

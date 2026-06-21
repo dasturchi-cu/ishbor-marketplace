@@ -22,5 +22,8 @@ export function getServerConfig() {
     sessionSecret: process.env.SESSION_SECRET ?? "dev-only-change-in-production",
     databaseUrl: process.env.DATABASE_URL,
     stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    resendApiKey: process.env.RESEND_API_KEY,
+    emailFrom: process.env.EMAIL_FROM ?? "Ishbor <noreply@ishbor.uz>",
+    sentryDsn: process.env.SENTRY_DSN,
   };
 }

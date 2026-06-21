@@ -5,17 +5,26 @@ import { ServiceCard } from "@/components/site/cards";
 import { categories } from "@/lib/mock-data";
 import { getPublishedServices } from "@/lib/services-store";
 import { CategoryBrowseRow } from "@/components/site/category-browse-row";
+import { buildPageMeta, buildJsonLdHead, buildBreadcrumbJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/services/category/$slug")({
   head: ({ params }) => {
     const cat = categories.find((c) => c.slug === params.slug);
     const name = cat?.name ?? params.slug;
+    const desc = `Markaziy Osiyoda ${name} bo'yicha tekshirilgan frilanser xizmatlari. Eskrou himoyasi bilan xavfsiz buyurtma.`;
     return {
-      meta: [
-        { title: `${name} xizmatlari — Ishbor` },
-        { name: "description", content: `Markaziy Osiyoda ${name} bo'yicha tekshirilgan frilanser xizmatlari.` },
-        { property: "og:title", content: `${name} — Ishbor` },
-      ],
+      ...buildPageMeta({
+        title: `${name} xizmatlari — Ishbor`,
+        description: desc,
+        path: `/services/category/${params.slug}`,
+      }),
+      ...buildJsonLdHead(
+        buildBreadcrumbJsonLd([
+          { name: "Bosh sahifa", path: "/" },
+          { name: "Xizmatlar", path: "/services" },
+          { name: name },
+        ]),
+      ),
     };
   },
   component: CategoryServicesPage,

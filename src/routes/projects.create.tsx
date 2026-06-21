@@ -198,6 +198,10 @@ function CreateProjectPage() {
       return;
     }
     const project = publishProject(buildInput(), ctx, edit);
+    if ("error" in project) {
+      actionFeedback.error(project.error);
+      return;
+    }
     actionFeedback.published("Loyiha", "Frilanserlar endi taklif yuborishi mumkin.");
     navigate({ to: "/projects/$slug", params: { slug: project.slug }, search: { published: true } });
   };

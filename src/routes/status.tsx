@@ -5,7 +5,7 @@ import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { LoadingSpinner } from "@/components/site/feedback";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
-import { getHealth } from "@/lib/api/health.functions";
+import { getHealth, getReady } from "@/lib/api/health.functions";
 import { getApiMode } from "@/lib/api-mode";
 import { ApiError, callServerFn, isOffline } from "@/lib/api-client";
 
@@ -24,6 +24,14 @@ function StatusPage() {
   const { data, isLoading, error, refetch, dataUpdatedAt, isFetching } = useQuery({
     queryKey: ["health"],
     queryFn: () => callServerFn(() => getHealth(), { label: "getHealth" }),
+    refetchInterval: 30_000,
+    retry: 2,
+    enabled: hydrated,
+  });
+
+  const readyQuery = useQuery({
+    queryKey: ["ready"],
+    queryFn: () => callServerFn(() => getReady(), { label: "getReady" }),
     refetchInterval: 30_000,
     retry: 2,
     enabled: hydrated,
@@ -98,6 +106,27 @@ function StatusPage() {
               }
               detail={apiMode === "remote" ? "Remote API rejimi" : "Local demo rejimi"}
               ok={data?.database !== "error"}
+            />
+            <StatusRow
+              icon={Activity}
+              label="Tayyorlik (/ready)"
+              value={readyQuery.data?.ready ? "Tayyor" : "Kutilmoqda"}
+              detail={`Rejim: ${readyQuery.data?.mode ?? "—"}`}
+              ok={!!readyQuery.data?.ready}
+            />
+            <StatusRow
+              icon={Server}
+              label="Email xizmati"
+              value={data?.email === "configured" ? "Resend ulangan" : "Demo outbox"}
+              detail="RESEND_API_KEY production uchun"
+              ok={data?.email === "configured" || data?.email === "demo"}
+            />
+            <StatusRow
+              icon={Activity}
+              label="Observability"
+              value={data?.observability === "configured" ? "Sentry ulangan" : "Demo rejim"}
+              detail="SENTRY_DSN production uchun"
+              ok={true}
             />
             <p className="font-mono text-xs text-muted-foreground">
               Oxirgi tekshiruv: {dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleString("uz-UZ") : "—"}

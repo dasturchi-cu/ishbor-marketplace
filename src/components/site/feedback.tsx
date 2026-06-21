@@ -9,7 +9,7 @@ export function LoadingSpinner({ className, size = "md" }: { className?: string;
       role="status"
       aria-label="Yuklanmoqda"
       className={cn(
-        "inline-block animate-spin rounded-full border-primary/30 border-t-primary",
+        "inline-block rounded-full border-primary/30 border-t-primary premium-spinner",
         sizes[size],
         className,
       )}
@@ -117,12 +117,12 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center text-center",
+        "flex flex-col items-center text-center premium-empty-state",
         compact ? "gap-3 py-10" : "gap-4 py-16",
         className,
       )}
     >
-      <div className="inline-flex size-14 items-center justify-center rounded-2xl border border-border bg-gradient-to-b from-primary/8 to-transparent text-primary shadow-sm">
+      <div className="premium-empty-icon inline-flex size-14 items-center justify-center rounded-2xl border border-border bg-gradient-to-b from-primary/8 to-transparent text-primary shadow-sm">
         <Icon className="size-6" aria-hidden />
       </div>
       <div className="max-w-sm">

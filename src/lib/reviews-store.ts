@@ -4,8 +4,14 @@ import type { AuthUser } from "./auth";
 import { getSession } from "./auth";
 import { getOrderById } from "./orders-store";
 import { getOrder } from "./mock-data";
-import { addNotification } from "./notifications-store";
 import { recordAnalyticsEvent } from "./analytics-events-store";
+import { notifyReviewReceived } from "./notification-events";
+import { getProfileByUsername } from "./profile-store";
+import { isDuplicateReview, recordReviewFingerprint, isSuspiciousReviewTiming, recordSuspiciousReviewFlag } from "./fraud-prevention";
+import { queueReviewRequestEmail, flushEmailOutbox } from "./email-lifecycle";
+import { isBlockedByModeration, moderationSummary, scanContent } from "./content-moderation";
+import { flagContentForReview } from "./moderation-queue";
+import { handleReviewSubmitted } from "./ecosystem-progress";
 
 const STORAGE_KEY = "ishbor-reviews";
 const EMPTY_REVIEWS: StoredReview[] = [];
@@ -124,7 +130,20 @@ export function readStoredReviews(): StoredReview[] {
   return readStored();
 }
 
-export function submitReview(input: ReviewInput): StoredReview {
+export function submitReview(input: ReviewInput): StoredReview | { error: string } {
+  const targetId =
+    input.direction === "client_to_freelancer"
+      ? (input.freelancerUsername ?? input.toUsername ?? "")
+      : (input.toCompany ?? input.toUsername ?? "");
+  if (targetId && isDuplicateReview(input.fromUsername ?? input.from, targetId, input.orderId)) {
+    return { error: "Bu buyurtma uchun sharh allaqachon qoldirilgan" };
+  }
+
+  const reviewFlags = scanContent(input.body);
+  if (isBlockedByModeration(reviewFlags)) {
+    return { error: moderationSummary(reviewFlags) };
+  }
+
   const now = new Date();
   const review: StoredReview = {
     id: `rv-${Date.now()}`,
@@ -153,6 +172,41 @@ export function submitReview(input: ReviewInput): StoredReview {
     value: input.rating,
     meta: { direction: input.direction },
   });
+
+  if (targetId) {
+    recordReviewFingerprint(input.fromUsername ?? input.from, targetId, input.orderId);
+  }
+
+  const order = getOrderById(input.orderId) ?? getOrder(input.orderId);
+  const completedAt = order?.completedAt
+    ? new Date(order.completedAt).getTime()
+    : undefined;
+  if (isSuspiciousReviewTiming(completedAt)) {
+    recordSuspiciousReviewFlag();
+    flagContentForReview(
+      "review",
+      `${input.project} — shubhali vaqt`,
+      [{ severity: "high", code: "suspicious_review_timing", message: "Buyurtma yakunlangandan 1 soat ichida sharh qoldirildi" }],
+    );
+  }
+
+  flagContentForReview("review", input.project, reviewFlags);
+
+  if (input.direction === "client_to_freelancer" && input.freelancerUsername) {
+    const profile = getProfileByUsername(input.freelancerUsername);
+    if (profile) {
+      notifyReviewReceived(profile.userId, input.project, input.rating);
+    }
+  }
+
+  const session = getSession();
+  if (session?.user.email && input.direction === "client_to_freelancer") {
+    queueReviewRequestEmail(session.user.email, input.from);
+  }
+
+  handleReviewSubmitted(input);
+
+  void flushEmailOutbox();
 
   return review;
 }

@@ -24,6 +24,8 @@ export function WelcomeBanner({
 
   if (!visible) return null;
 
+  const showSecondary = secondaryHref !== primaryHref;
+
   const handleDismiss = () => {
     dismissWelcome(user.id);
     setVisible(false);
@@ -65,12 +67,14 @@ export function WelcomeBanner({
           >
             {primaryLabel} <ArrowRight className="size-4" />
           </Link>
-          <Link
-            to={secondaryHref}
-            className="touch-target inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:border-primary/20"
-          >
-            {secondaryLabel}
-          </Link>
+          {showSecondary && (
+            <Link
+              to={secondaryHref}
+              className="touch-target inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium hover:border-primary/20"
+            >
+              {secondaryLabel}
+            </Link>
+          )}
         </div>
       </div>
     </div>

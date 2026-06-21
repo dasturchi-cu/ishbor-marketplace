@@ -11,6 +11,7 @@ import {
 import { recordServiceSave } from "@/lib/analytics-utils";
 import { getServiceBySlug } from "@/lib/services-store";
 import { services } from "@/lib/mock-data";
+import { handleFavoriteFreelancer } from "@/lib/ecosystem-progress";
 
 export function useSaved(type: SavedType, id: string) {
   const { user } = useAuth();
@@ -31,6 +32,9 @@ export function useSaved(type: SavedType, id: string) {
     if (nowSaved && type === "service") {
       const svc = getServiceBySlug(id) ?? services.find((s) => s.slug === id);
       if (svc) recordServiceSave(id, svc.sellerUsername);
+    }
+    if (nowSaved && type === "freelancer") {
+      handleFavoriteFreelancer(uid, id);
     }
     const labels: Record<SavedType, string> = {
       service: "Xizmat",

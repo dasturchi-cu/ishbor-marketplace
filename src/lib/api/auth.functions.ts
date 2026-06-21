@@ -7,7 +7,7 @@ import { getServerConfig } from "../config.server";
 
 /** Demo-era server hook — production replaces with DB session invalidation. */
 export const blockDemoAccountServer = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       email: z.string().email(),
       blocked: z.boolean(),
@@ -19,7 +19,7 @@ export const blockDemoAccountServer = createServerFn({ method: "POST" })
 
 /** Server-side login validation — uses DB when configured, else format checks only. */
 export const validateLogin = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       email: z.string().min(3),
       password: z.string().min(1),

@@ -2,10 +2,11 @@ import { useMemo, useSyncExternalStore } from "react";
 import { Link } from "@tanstack/react-router";
 import { Activity, ArrowUpRight } from "lucide-react";
 import {
-  getAllAnalyticsEvents,
+  getRecentEventsForUser,
   subscribeAnalyticsEvents,
   getEventLabel,
 } from "@/lib/analytics-events-store";
+import { useAuth } from "@/hooks/use-auth";
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -18,23 +19,21 @@ function timeAgo(iso: string): string {
 }
 
 export function DashboardActivityFeed({ limit = 4 }: { limit?: number }) {
+  const { user } = useAuth();
   const eventCount = useSyncExternalStore(
     subscribeAnalyticsEvents,
-    () => getAllAnalyticsEvents().length,
+    () => (user ? getRecentEventsForUser(user.id, limit).length : 0),
     () => 0,
   );
 
-  const items = useMemo(
-    () =>
-      getAllAnalyticsEvents()
-        .slice(0, limit)
-        .map((e) => ({
-          id: e.id,
-          label: getEventLabel(e.type),
-          time: timeAgo(e.timestamp),
-        })),
-    [eventCount, limit],
-  );
+  const items = useMemo(() => {
+    if (!user) return [];
+    return getRecentEventsForUser(user.id, limit).map((e) => ({
+      id: e.id,
+      label: getEventLabel(e.type),
+      time: timeAgo(e.timestamp),
+    }));
+  }, [eventCount, limit, user?.id]);
 
   if (items.length === 0) {
     return (

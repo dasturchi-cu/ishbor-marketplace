@@ -27,9 +27,11 @@ import { primaryActionClass, secondaryActionClass } from "@/components/ux/action
 import { WALLET_PENDING_ETA } from "@/lib/ux-constants";
 import { downloadTextFile, toCsvRow } from "@/lib/export-utils";
 
+import { buildPageMeta } from "@/lib/seo";
+
 export const Route = createFileRoute("/wallet")({
   beforeLoad: requireAuth,
-  head: () => ({ meta: [{ title: "Hamyon — Ishbor" }] }),
+  head: () => buildPageMeta({ title: "Hamyon — Ishbor", noindex: true }),
   component: WalletPage,
 });
 
@@ -428,7 +430,7 @@ function WalletPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filteredTx.map((t) => (
-                    <tr key={t.id} className="transition-default hover:bg-secondary/20">
+                    <tr key={t.id} className="premium-list-row hover:bg-secondary/20">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-2.5">
                           <TxKindIcon tx={t} />

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOut, Settings, User, LayoutDashboard, ChevronDown } from "lucide-react";
+import { LogOut, Settings, User, LayoutDashboard, ChevronDown, Shield } from "lucide-react";
 import { GradientAvatar } from "./avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveRole } from "@/hooks/use-active-role";
@@ -39,7 +39,7 @@ export function UserMenu({ user }: { user: AuthUser }) {
   }, [open]);
 
   const itemClass =
-    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm transition-default hover:bg-secondary/50 active:scale-[0.98]";
+    "premium-press flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-secondary/50";
 
   return (
     <div ref={ref} className="relative ml-0.5 hidden sm:block">
@@ -65,7 +65,8 @@ export function UserMenu({ user }: { user: AuthUser }) {
           </div>
           <div className="py-1">
             <Link
-              {...profileTo}
+              to={profileTo.to}
+              {...(profileTo.params ? { params: profileTo.params } : {})}
               onClick={() => setOpen(false)}
               className={itemClass}
               role="menuitem"
@@ -80,6 +81,26 @@ export function UserMenu({ user }: { user: AuthUser }) {
             >
               <LayoutDashboard className="size-4 text-muted-foreground" /> Boshqaruv paneli
             </Link>
+            {user.isAdmin ? (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className={itemClass}
+                role="menuitem"
+              >
+                <Shield className="size-4 text-muted-foreground" /> Admin konsoli
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                search={{ redirect: "/admin", switch: "1" }}
+                onClick={() => setOpen(false)}
+                className={itemClass}
+                role="menuitem"
+              >
+                <Shield className="size-4 text-muted-foreground" /> Admin kirish
+              </Link>
+            )}
             <Link
               to="/settings"
               onClick={() => setOpen(false)}

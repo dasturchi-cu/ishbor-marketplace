@@ -7,6 +7,7 @@ import {
 } from "./growth-metrics";
 import { getAverageRating, getReviewsForFreelancer, getReviewsForClient } from "./reviews-store";
 import { getOrdersForFreelancer, getOrdersForClient } from "./orders-store";
+import { getProfileByUsername } from "./profile-store";
 
 export type ReputationTier = "Bronze" | "Silver" | "Gold" | "Platinum" | "Elite";
 
@@ -52,9 +53,18 @@ export function computeFreelancerReputation(username: string, user?: AuthUser): 
   const success = computeSuccessScore(username);
   const response = computeResponseRate(username);
   const { avg, count } = getAverageRating(username);
+  const profile = typeof window !== "undefined" ? getProfileByUsername(username) : null;
+  const profileBoost = profile
+    ? Math.min(15, profile.skills.length * 2 + (profile.onboardingComplete ? 5 : 0))
+    : 0;
   const trust = user
     ? computeTrustScore(user, username)
-    : { trustScore: Math.round(success.score * 0.6 + response.rate * 0.2 + avg * 8) };
+    : {
+        trustScore: Math.min(
+          100,
+          Math.round(success.score * 0.55 + response.rate * 0.2 + avg * 8 + profileBoost),
+        ),
+      };
 
   const tier = resolveTier(trust.trustScore, success.score, count, success.completedJobs);
 

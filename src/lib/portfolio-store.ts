@@ -9,6 +9,8 @@ import type {
   PortfolioSearchParams,
 } from "./portfolio-types";
 import { notifyPortfolioApproved } from "./notification-events";
+import { findDuplicateTitle, isBlockedByModeration, moderationSummary, scanListing } from "./content-moderation";
+import { flagContentForReview } from "./moderation-queue";
 
 export type {
   PortfolioStatus,
@@ -232,9 +234,22 @@ export function publishPortfolio(
   input: PortfolioFormInput,
   ctx: CreatePortfolioContext,
   existingSlug?: string,
-): PortfolioItem {
+): PortfolioItem | { error: string } {
   const stored = readStored();
   const existing = existingSlug ? stored.find((p) => p.slug === existingSlug) : undefined;
+  const moderationFlags = scanListing({
+    title: input.title,
+    description: [input.description, input.objectives, input.challenges].filter(Boolean).join("\n"),
+  });
+  if (isBlockedByModeration(moderationFlags)) {
+    return { error: moderationSummary(moderationFlags) };
+  }
+  const existingTitles = stored
+    .filter((p) => p.status === "published" && p.slug !== existingSlug)
+    .map((p) => p.title);
+  if (findDuplicateTitle(input.title, existingTitles)) {
+    return { error: "Bunday nomli portfolio allaqachon mavjud" };
+  }
   const item = buildPortfolio(input, ctx, "published", existing);
   if (!existing) {
     item.adminStatus = "pending";
@@ -244,6 +259,7 @@ export function publishPortfolio(
     : [item, ...stored];
   writeStored(next);
   notify();
+  flagContentForReview("portfolio", item.title, moderationFlags);
   return item;
 }
 

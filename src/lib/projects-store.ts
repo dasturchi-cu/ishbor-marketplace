@@ -2,9 +2,11 @@ import type { Project, ProjectStatus } from "./mock-data";
 import { projects as mockProjects } from "./mock-data";
 import { isMarketplaceReady } from "./project-validation";
 import { notifyNewListing } from "./alerts-store";
-import { completeReferral } from "./referral-store";
+import { maybeCompleteReferral } from "./referral-store";
 import { getSession } from "./auth";
 import { recordAnalyticsEvent } from "./analytics-events-store";
+import { findDuplicateTitle, isBlockedByModeration, moderationSummary, scanListing } from "./content-moderation";
+import { flagContentForReview } from "./moderation-queue";
 
 const STORAGE_KEY = "ishbor-user-projects";
 const listeners = new Set<() => void>();
@@ -211,9 +213,22 @@ export function publishProject(
   input: ProjectFormInput,
   ctx: CreateProjectContext,
   existingSlug?: string,
-): Project {
+): Project | { error: string } {
   const stored = readStored();
   const existing = existingSlug ? stored.find((p) => p.slug === existingSlug) : undefined;
+  const moderationFlags = scanListing({
+    title: input.title,
+    description: input.description,
+  });
+  if (isBlockedByModeration(moderationFlags)) {
+    return { error: moderationSummary(moderationFlags) };
+  }
+  const existingTitles = stored
+    .filter((p) => p.status === "published" && p.slug !== existingSlug)
+    .map((p) => p.title);
+  if (findDuplicateTitle(input.title, existingTitles)) {
+    return { error: "Bunday nomli loyiha allaqachon mavjud" };
+  }
   const project = buildProject(input, ctx, "published", existing);
   project.postedAgo = "Hozirgina";
   project.createdAt = existing?.createdAt ?? new Date().toISOString();
@@ -232,7 +247,7 @@ export function publishProject(
     type: "project",
   });
   const session = getSession();
-  if (session) completeReferral(session.user.id);
+  if (session) maybeCompleteReferral(session.user.id, "listing_published");
   recordAnalyticsEvent({
     type: "project_created",
     entityId: project.slug,
@@ -241,6 +256,7 @@ export function publishProject(
       userName: session?.user.fullName ?? project.client,
     },
   });
+  flagContentForReview("project", project.title, moderationFlags);
   return project;
 }
 

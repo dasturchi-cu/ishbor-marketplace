@@ -39,7 +39,7 @@ export const getServerSession = createServerFn({ method: "GET" }).handler(async 
 });
 
 export const loginSession = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       email: z.string().min(3),
       password: z.string().min(1),
@@ -90,7 +90,7 @@ const onboardingSchema = z.object({
 });
 
 export const completeRegistrationSession = createServerFn({ method: "POST" })
-  .inputValidator(onboardingSchema)
+  .validator(onboardingSchema)
   .handler(async ({ data }) => {
     assertSameOrigin();
     if (data.otp !== "123456") {

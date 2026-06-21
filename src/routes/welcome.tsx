@@ -13,6 +13,8 @@ import {
 import { getOnboardingSteps, getFirstOnboardingPath, loadOnboardingState } from "@/lib/auth-constants";
 import { persistOnboardingToProfile, persistOnboardingPortfolios } from "@/lib/profile-store";
 import { getSession } from "@/lib/auth";
+import { resolvePrimaryNextAction } from "@/lib/journey-guidance";
+import { recordConversionEvent } from "@/lib/conversion-store";
 import { Logo } from "@/components/site/logo";
 import { ThemeToggle } from "@/components/site/theme";
 import { EscrowShield } from "@/components/site/trust";
@@ -45,6 +47,11 @@ function WelcomePage() {
   const dashboardPath = isClient ? "/dashboard" : "/dashboard/freelancer";
   const roleLabel = isClient ? "Mijoz" : "Frilanser";
   const roleHint = isClient ? "mutaxassislarni yollash" : "ish topish va daromad olish";
+  const session = getSession();
+  const nextAfterComplete =
+    isComplete && session
+      ? resolvePrimaryNextAction(session.user, isClient ? "client" : "freelancer")
+      : null;
 
   useEffect(() => {
     if (isComplete) {
@@ -127,17 +134,20 @@ function WelcomePage() {
                 <>
                   <button
                     type="button"
-                    onClick={() => navigate({ to: dashboardPath })}
+                    onClick={() => {
+                      recordConversionEvent("checkout_start", "welcome_complete");
+                      navigate({ to: nextAfterComplete?.href ?? dashboardPath });
+                    }}
                     className="touch-target flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.546_0.185_257/0.35)] transition-default hover:opacity-95 focus-ring"
                   >
-                    Boshqaruv paneliga o&apos;tish
+                    {nextAfterComplete?.cta ?? "Boshqaruv paneliga o'tish"}
                     <ArrowRight className="size-4" />
                   </button>
                   <Link
-                    to={isClient ? "/freelancers" : "/projects"}
-                    className="touch-target flex w-full items-center justify-center rounded-xl border border-border bg-surface py-3 text-sm font-medium text-foreground transition-default hover:border-primary/25 hover:bg-secondary/30 focus-ring"
+                    to={dashboardPath}
+                    className="touch-target flex w-full items-center justify-center rounded-xl border border-border bg-surface py-3 text-sm font-medium text-muted-foreground transition-default hover:border-primary/25 hover:text-foreground focus-ring"
                   >
-                    {isClient ? "Mutaxassislarni ko'rish" : "Loyihalarni topish"}
+                    Boshqaruv paneli
                   </Link>
                 </>
               ) : (

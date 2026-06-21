@@ -1,5 +1,7 @@
 import { getSession } from "./auth";
 import { addNotification } from "./notifications-store";
+import { canApplyReferral, recordReferralApply } from "./fraud-prevention";
+import { recordAnalyticsEvent } from "./analytics-events-store";
 
 const STORAGE_KEY = "ishbor-referrals";
 const CREDIT_PER_REFERRAL = 50000;
@@ -100,7 +102,10 @@ export function findReferrerByCode(code: string): ReferralState | null {
 /** Called on registration with ?ref=CODE */
 export function applyReferralCode(newUserId: string, newUserEmail: string, code: string): boolean {
   const referrer = findReferrerByCode(code);
-  if (!referrer || referrer.userId === newUserId) return false;
+  if (!referrer) return false;
+
+  const guard = canApplyReferral(referrer.userId, newUserId);
+  if (!guard.ok) return false;
 
   const entry: ReferralEntry = {
     code,
@@ -123,26 +128,42 @@ export function applyReferralCode(newUserId: string, newUserEmail: string, code:
     referredBy: referrer.userId,
   };
   writeAll(all);
+  recordReferralApply(referrer.userId);
+  recordAnalyticsEvent({
+    type: "referral_signup",
+    entityId: referrer.userId,
+    userId: newUserId,
+    meta: { status: "pending", code },
+  });
   return true;
 }
 
 /** Complete referral when referred user completes first meaningful action. */
-export function completeReferral(referredUserId: string): void {
+export type ReferralCompletionTrigger =
+  | "application_submitted"
+  | "listing_published"
+  | "order_completed";
+
+export function maybeCompleteReferral(
+  referredUserId: string,
+  trigger: ReferralCompletionTrigger,
+): boolean {
   const all = readAll();
   const referred = all[referredUserId];
-  if (!referred?.referredBy) return;
+  if (!referred?.referredBy) return false;
 
   const referrer = all[referred.referredBy];
-  if (!referrer) return;
+  if (!referrer) return false;
 
   const idx = referrer.referrals.findIndex(
     (r) => r.referredUserId === referredUserId && r.status === "pending",
   );
-  if (idx === -1) return;
+  if (idx === -1) return false;
 
+  const entry = referrer.referrals[idx]!;
   const updated = [...referrer.referrals];
   updated[idx] = {
-    ...updated[idx]!,
+    ...entry,
     status: "completed",
     creditedAt: new Date().toISOString(),
   };
@@ -154,26 +175,49 @@ export function completeReferral(referredUserId: string): void {
   });
 
   void import("./credits-store").then(({ addCredits }) => {
-    addCredits(referrer.userId, CREDIT_PER_REFERRAL, "Referral mukofoti", { referredUserId });
+    addCredits(referrer.userId, CREDIT_PER_REFERRAL, "Referral mukofoti", {
+      referredUserId,
+      trigger,
+    });
   });
 
   addNotification({
     userId: referrer.userId,
     kind: "system",
     title: "Referral mukofoti",
-    body: `Do'stingiz faollashdi! +${CREDIT_PER_REFERRAL.toLocaleString()} UZS kredit qo'shildi.`,
+    body: `Do'stingiz faollashdi (${triggerLabel(trigger)})! +${CREDIT_PER_REFERRAL.toLocaleString()} UZS kredit qo'shildi.`,
     priority: "high",
-    href: "/settings",
+    href: "/settings?tab=referral",
   });
 
   addNotification({
     userId: referredUserId,
     kind: "system",
     title: "Xush kelibsiz bonus",
-    body: "Referral orqali qo'shildingiz. Birinchi loyiha yoki xizmat bilan boshlang!",
+    body: "Referral orqali qo'shildingiz. Birinchi loyiha, xizmat yoki ariza bilan boshlang!",
     priority: "normal",
     href: "/dashboard/freelancer",
   });
+
+  recordAnalyticsEvent({
+    type: "referral_signup",
+    entityId: referrer.userId,
+    userId: referredUserId,
+    meta: { status: "completed", code: entry.code, trigger },
+  });
+
+  return true;
+}
+
+function triggerLabel(trigger: ReferralCompletionTrigger): string {
+  if (trigger === "application_submitted") return "birinchi ariza";
+  if (trigger === "listing_published") return "e'lon joylash";
+  return "buyurtma yakunlash";
+}
+
+/** @deprecated Prefer maybeCompleteReferral with explicit trigger. */
+export function completeReferral(referredUserId: string): void {
+  maybeCompleteReferral(referredUserId, "order_completed");
 }
 
 export function spendReferralCredits(userId: string, amount: number): boolean {

@@ -58,7 +58,7 @@ export function SettingsNavButton({
       type="button"
       onClick={onSelect}
       className={cn(
-        "touch-target flex items-center gap-2.5 rounded-xl text-left text-sm transition-default focus-ring",
+        "touch-target premium-sidebar-link flex items-center gap-2.5 rounded-xl text-left text-sm focus-ring",
         compact ? "shrink-0 px-3.5 py-2" : "w-full px-3 py-2.5",
         active
           ? "bg-primary text-primary-foreground shadow-[0_4px_14px_-4px_oklch(0.546_0.185_257/0.45)]"
@@ -95,7 +95,7 @@ export function SettingsMoreToggle({
       type="button"
       onClick={onToggle}
       className={cn(
-        "touch-target flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-sm transition-default",
+        "touch-target premium-sidebar-link flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-left text-sm",
         active ? "bg-secondary font-medium text-foreground" : "text-muted-foreground hover:bg-secondary/60",
       )}
     >

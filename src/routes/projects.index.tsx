@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useSyncExternalStore } from "react";
 import { Plus, FolderOpen, FileText, Briefcase } from "lucide-react";
+import { toast } from "sonner";
+import { saveMarketplaceSearch } from "@/lib/alerts-store";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { ProjectCard } from "@/components/site/cards";
@@ -20,15 +22,16 @@ import {
   shouldPersonalizeList,
   subscribeRecommendations,
 } from "@/lib/recommendations";
+import { buildPageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/projects/")({
   validateSearch: (search: Record<string, unknown>): MarketplaceSearch => normalizeSearch(search),
-  head: () => ({
-    meta: [
-      { title: "Loyihalar — Ishbor" },
-      { name: "description", content: "Markaziy Osiyoda ochiq shartnomalar toping." },
-    ],
-  }),
+  head: () =>
+    buildPageMeta({
+      title: "Loyihalar — Ishbor",
+      description: "Markaziy Osiyoda ochiq shartnomalar toping.",
+      path: "/projects",
+    }),
   component: ProjectsPage,
 });
 
@@ -43,6 +46,7 @@ const projectCategories = [
 function ProjectsPage() {
   const ready = usePageReady();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { activeRole } = useActiveRole();
   const search = Route.useSearch();
   const setSearch = useMarketplaceSearch(search, "/projects");
@@ -62,6 +66,26 @@ function ProjectsPage() {
   );
   const createTo = !user ? "/login" : activeRole === "client" ? "/projects/create" : "/applications";
   const createSearch = !user ? { redirect: "/projects/create" } : {};
+
+  const handleSaveSearch = () => {
+    const q = search.q ?? "";
+    if (!q.trim()) {
+      toast.error("Qidiruv so'zini kiriting");
+      return;
+    }
+    if (!user) {
+      navigate({ to: "/login", search: { redirect: "/projects" } });
+      return;
+    }
+    const result = saveMarketplaceSearch(user.id, {
+      q,
+      type: "projects",
+      category: search.category,
+      filter: search.filter,
+    });
+    if ("error" in result) toast.error(result.error);
+    else toast.success("Qidiruv saqlandi");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,6 +141,8 @@ function ProjectsPage() {
             resultCount={filtered.length}
             resultLabel="loyiha"
             onSearchChange={setSearch}
+            showSaveSearch
+            onSaveSearch={handleSaveSearch}
           />
           <MarketplacePulseMini />
         </div>

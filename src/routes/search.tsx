@@ -1,12 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Search as SearchIcon } from "lucide-react";
+import { useMemo, useState, useSyncExternalStore } from "react";
+import { Search as SearchIcon, Bell } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { FreelancerCard, ServiceCard, ProjectCard } from "@/components/site/cards";
 import { EmptyState, LoadingSpinner } from "@/components/site/feedback";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { freelancers, services, projects } from "@/lib/mock-data";
+import {
+  getAllDiscoverableFreelancers,
+  subscribeDiscoverableFreelancers,
+} from "@/lib/freelancer-profile-resolver";
 import { getAllServices } from "@/lib/services-store";
 import { getPublishedProjects } from "@/lib/projects-store";
 import {
@@ -15,9 +19,17 @@ import {
   filterServices,
   normalizeSearch,
   pickSearchRoute,
+  recordSearchQuery,
+  sortLabels,
   type SortOption,
 } from "@/lib/marketplace";
-import { POPULAR_SEARCHES, SEARCH_TIPS } from "@/lib/search-suggestions";
+import { getDynamicSearchSuggestions, SEARCH_TIPS } from "@/lib/search-suggestions";
+import { MarketplaceStatsBar } from "@/components/marketplace/social-proof";
+import { getMarketplaceStatistics } from "@/lib/marketplace-signals";
+import { buildPageMeta } from "@/lib/seo";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
+import { saveMarketplaceSearch } from "@/lib/alerts-store";
 
 type SearchType = "all" | "services" | "freelancers" | "projects";
 
@@ -40,12 +52,13 @@ export const Route = createFileRoute("/search")({
   head: (match) => {
     const search = (match as { search?: SearchParams }).search;
     const q = search?.q ?? "";
-    return {
-      meta: [
-        { title: q ? `"${q}" — Qidiruv — Ishbor` : "Qidiruv — Ishbor" },
-        { name: "description", content: "Xizmatlar, mutaxassislar va loyihalar bo'yicha qidiruv" },
-      ],
-    };
+    const hasQuery = q.trim().length > 0;
+    return buildPageMeta({
+      title: hasQuery ? `"${q}" — Qidiruv — Ishbor` : "Qidiruv — Ishbor",
+      description: "Xizmatlar, mutaxassislar va loyihalar bo'yicha qidiruv",
+      path: hasQuery ? undefined : "/search",
+      noindex: hasQuery,
+    });
   },
   component: SearchPage,
 });
@@ -60,8 +73,19 @@ const tabs: { key: SearchType; label: string }[] = [
 function SearchPage() {
   const { q = "", type = "all", sort = "ranking_score" } = Route.useSearch();
   const navigate = Route.useNavigate();
+  const { user } = useAuth();
   const [input, setInput] = useState(q);
   const hydrated = useClientHydrated();
+
+  const discoverVersion = useSyncExternalStore(
+    subscribeDiscoverableFreelancers,
+    () => getAllDiscoverableFreelancers().length,
+    () => freelancers.length,
+  );
+  const discoverable = useMemo(
+    () => (hydrated ? getAllDiscoverableFreelancers() : freelancers),
+    [hydrated, discoverVersion],
+  );
 
   const allServices = useMemo(() => (hydrated ? getAllServices() : services), [hydrated]);
   const allProjects = useMemo(
@@ -70,25 +94,81 @@ function SearchPage() {
   );
 
   const params = { q, category: "", sort, filter: "" };
-
   const serviceResults = useMemo(() => filterServices(allServices, params), [allServices, q, sort]);
-  const freelancerResults = useMemo(() => filterFreelancers(freelancers, params), [q, sort]);
+  const freelancerResults = useMemo(
+    () => filterFreelancers(discoverable, params),
+    [discoverable, q, sort, discoverVersion],
+  );
   const projectResults = useMemo(() => filterProjects(allProjects.length ? allProjects : projects, params), [allProjects, q, sort]);
 
   const total = serviceResults.length + freelancerResults.length + projectResults.length;
+  const suggestions = useMemo(() => getDynamicSearchSuggestions(6), [discoverVersion, hydrated, q]);
+  const marketplaceStats = useMemo(
+    () => (hydrated ? getMarketplaceStatistics() : null),
+    [hydrated, discoverVersion, allServices.length, allProjects.length],
+  );
 
   const submit = (query: string) => {
     const trimmed = query.trim();
-    const route = pickSearchRoute(trimmed);
+    if (/^admin$/i.test(trimmed)) {
+      navigate({ to: "/admin" });
+      return;
+    }
+    const nextType =
+      type === "all"
+        ? trimmed
+          ? pickSearchRoute(trimmed).to === "/freelancers"
+            ? "freelancers"
+            : pickSearchRoute(trimmed).to === "/projects"
+              ? "projects"
+              : "services"
+          : "all"
+        : type;
     navigate({
       to: "/search",
-      search: { q: trimmed, type: route.to === "/freelancers" ? "freelancers" : route.to === "/projects" ? "projects" : type === "all" ? "services" : type, sort },
+      search: { q: trimmed, type: nextType, sort },
     });
+    if (trimmed) {
+      const params = { q: trimmed, category: "", sort: "ranking_score" as SortOption, filter: "" };
+      const count =
+        filterServices(allServices, params).length +
+        filterFreelancers(discoverable, params).length +
+        filterProjects(allProjects.length ? allProjects : projects, params).length;
+      recordSearchQuery(trimmed, count, nextType);
+    }
   };
 
   const showServices = type === "all" || type === "services";
   const showFreelancers = type === "all" || type === "freelancers";
   const showProjects = type === "all" || type === "projects";
+
+  const saveSearchType = (): "projects" | "services" | "freelancers" => {
+    if (type === "projects") return "projects";
+    if (type === "freelancers") return "freelancers";
+    return "services";
+  };
+
+  const handleSaveSearch = () => {
+    if (!q.trim()) {
+      toast.error("Avval qidiruv so'zini kiriting");
+      return;
+    }
+    if (!user) {
+      navigate({ to: "/login", search: { redirect: `/search?q=${encodeURIComponent(q)}&type=${type}` } });
+      return;
+    }
+    const result = saveMarketplaceSearch(user.id, { q, type: saveSearchType() });
+    if ("error" in result) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Qidiruv saqlandi — yangi natijalar haqida xabar olasiz", {
+      action: {
+        label: "Ogohlantirishlar",
+        onClick: () => navigate({ to: "/settings", search: { tab: "alerts" } }),
+      },
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -119,22 +199,58 @@ function SearchPage() {
           >
             Qidirish
           </button>
+          {q.trim() && (
+            <button
+              type="button"
+              onClick={handleSaveSearch}
+              className="touch-target inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium hover:border-primary/30"
+            >
+              <Bell className="size-4" /> Saqlash
+            </button>
+          )}
         </div>
 
-        <div className="mt-4 mobile-scroll-x flex gap-2 pb-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => navigate({ search: (prev) => ({ ...prev, type: tab.key }) })}
-              className={`touch-target rounded-lg px-3 py-1.5 text-xs font-semibold transition-default ${
-                type === tab.key ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mobile-scroll-x flex gap-2 pb-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => navigate({ search: (prev) => ({ ...prev, type: tab.key }) })}
+                className={`touch-target rounded-lg px-3 py-1.5 text-xs font-semibold transition-default ${
+                  type === tab.key ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="shrink-0 font-mono uppercase tracking-widest">Saralash</span>
+            <select
+              value={sort}
+              onChange={(e) =>
+                navigate({
+                  search: (prev) => ({ ...prev, sort: e.target.value as SortOption }),
+                })
+              }
+              className="touch-target min-h-9 rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground"
+              aria-label="Natijalarni saralash"
             >
-              {tab.label}
-            </button>
-          ))}
+              {(Object.keys(sortLabels) as SortOption[]).map((key) => (
+                <option key={key} value={key}>
+                  {sortLabels[key]}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
+
+        {hydrated && marketplaceStats && (
+          <div className="mt-4">
+            <MarketplaceStatsBar stats={marketplaceStats} />
+          </div>
+        )}
 
         {q && total > 0 && (
           <p className="mt-4 rounded-lg border border-success/20 bg-success/5 px-4 py-2.5 text-sm text-foreground">
@@ -148,10 +264,27 @@ function SearchPage() {
           </p>
         )}
 
-        {q && total === 0 && (
-          <p className="mt-4 font-mono text-xs text-muted-foreground">
-            &quot;{q}&quot; bo&apos;yicha natija topilmadi
-          </p>
+        {q && total === 0 && hydrated && (
+          <div className="mt-4 space-y-3">
+            <p className="font-mono text-xs text-muted-foreground">
+              &quot;{q}&quot; bo&apos;yicha natija topilmadi — imlo xatosini tekshiring yoki quyidagilarni sinab ko&apos;ring:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((s) => (
+                <button
+                  key={s.label}
+                  type="button"
+                  onClick={() => {
+                    setInput(s.query);
+                    submit(s.query);
+                  }}
+                  className="touch-target rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium hover:border-primary/25"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {q && !hydrated ? (
@@ -169,7 +302,7 @@ function SearchPage() {
             <div>
               <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Mashhur qidiruvlar</p>
               <div className="flex flex-wrap gap-2">
-                {POPULAR_SEARCHES.map((s) => (
+                {suggestions.map((s) => (
                   <button
                     key={s.label}
                     type="button"

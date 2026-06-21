@@ -9,7 +9,6 @@ import { PasswordStrengthMeter, getPasswordStrength } from "@/components/auth/pa
 import { saveOnboardingState, type UserType } from "@/lib/auth-constants";
 import { setPendingRegistrationPassword } from "@/lib/registration-store";
 import { loginWithCredentials } from "@/lib/auth";
-import { applyReferralCode } from "@/lib/referral-store";
 import { cn } from "@/lib/utils";
 
 type RegisterSearch = {
@@ -73,7 +72,7 @@ function RegisterPage() {
   return (
     <AuthLayout
       title="Hisobingizni yarating"
-      subtitle="Ishbor'ga qo'shiling — Markaziy Osiyoda eskrou himoyalangan ish."
+      subtitle="Ishbor'ga qo'shiling — eskrou himoyasi, Humo/Uzcard va o'zbek tilida frilans bozori."
       footer={
         <>
           Allaqachon hisobingiz bormi?{" "}

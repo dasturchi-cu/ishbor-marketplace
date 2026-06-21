@@ -3,7 +3,7 @@ import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react
 import { toast } from "sonner";
 import { useClientHydrated } from "@/hooks/use-client-hydrated";
 import { LoadingSpinner } from "@/components/site/feedback";
-import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, Send, ChevronRight, UserCheck, X, FileText, Sparkles, Pencil, FolderOpen } from "lucide-react";
+import { Star, Clock, Users, ShieldCheck, Check, ArrowRight, CircleCheck as CheckCircle2, DollarSign, Calendar, Send, ChevronRight, UserCheck, X, FileText, Sparkles, Pencil, FolderOpen, Share2 } from "lucide-react";
 import { SiteNav } from "@/components/site/nav";
 import { SiteFooter } from "@/components/site/footer";
 import { GradientAvatar } from "@/components/site/avatar";
@@ -26,7 +26,8 @@ import {
 } from "@/lib/project-validation";
 import { getSession } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
-import { freelancers } from "@/lib/mock-data";
+import { freelancers, projects } from "@/lib/mock-data";
+import { buildPageMeta, buildJsonLdHead, buildJobPostingJsonLd, buildBreadcrumbJsonLd } from "@/lib/seo";
 import { FeaturedPurchaseCard } from "@/components/analytics/featured-purchase-card";
 import { PageBreadcrumb } from "@/components/ux/page-breadcrumb";
 import { PrimaryLink, SecondaryLink, primaryActionClass } from "@/components/ux/action-buttons";
@@ -34,6 +35,7 @@ import { ClientCheckoutLink } from "@/components/checkout/client-checkout-link";
 import { useClientCheckout } from "@/hooks/use-client-checkout";
 import { isFeaturedActive } from "@/lib/featured-store";
 import { EntityNotFound } from "@/components/site/entity-not-found";
+import { shareEntity } from "@/lib/share-analytics";
 
 type ProjectSearch = { proposal?: boolean; published?: boolean };
 
@@ -42,9 +44,43 @@ export const Route = createFileRoute("/projects/$slug")({
     proposal: search.proposal === true || search.proposal === "true",
     published: search.published === true || search.published === "true" || search.published === '"true"',
   }),
-  head: () => ({
-    meta: [{ title: "Loyiha — Ishbor" }],
-  }),
+  loader: ({ params }) => {
+    const p = projects.find((x) => x.slug === params.slug);
+    if (!p) return { seo: null };
+    return {
+      seo: {
+        title: p.title,
+        slug: p.slug,
+        client: p.client,
+        budget: String(p.budget),
+        category: p.category,
+        description: p.description?.slice(0, 160),
+      },
+    };
+  },
+  head: ({ loaderData }) => {
+    const p = loaderData?.seo;
+    if (!p) {
+      return buildPageMeta({ title: "Loyiha topilmadi — Ishbor", noindex: true });
+    }
+    const desc = `${p.title} — ${p.client}. Byudjet $${p.budget}. Eskrou himoyasi bilan xavfsiz loyiha.`;
+    return {
+      ...buildPageMeta({
+        title: `${p.title} — ${p.client} | Ishbor`,
+        description: desc,
+        path: `/projects/${p.slug}`,
+        type: "article",
+      }),
+      ...buildJsonLdHead([
+        buildJobPostingJsonLd(p),
+        buildBreadcrumbJsonLd([
+          { name: "Bosh sahifa", path: "/" },
+          { name: "Loyihalar", path: "/projects" },
+          { name: p.title },
+        ]),
+      ]),
+    };
+  },
   component: ProjectDetail,
 });
 
@@ -196,6 +232,20 @@ function ProjectDetailContent({
     toast.success("Taklif rad etildi");
   };
 
+  const handleShare = async () => {
+    try {
+      await shareEntity({
+        entity: "project",
+        entityId: p.slug,
+        title: p.title,
+        url: `/projects/${p.slug}`,
+        onCopied: () => toast.success("Loyiha havolasi nusxalandi"),
+      });
+    } catch {
+      /* user cancelled */
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SiteNav />
@@ -292,7 +342,16 @@ function ProjectDetailContent({
               </div>
 
               <div className="p-5 sm:p-6">
-                <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{p.title}</h1>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">{p.title}</h1>
+                  <button
+                    type="button"
+                    onClick={() => void handleShare()}
+                    className="touch-target inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium hover:border-primary/30"
+                  >
+                    <Share2 className="size-4" /> Ulashish
+                  </button>
+                </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -389,7 +448,7 @@ function ProjectDetailContent({
                       </div>
                     ) : (
                       sortedApplications.map((app) => (
-                        <div key={app.id} className="p-5 transition-default hover:bg-secondary/20 sm:p-6">
+                        <div key={app.id} className="p-5 premium-list-row hover:bg-secondary/20 sm:p-6">
                           <div className="flex flex-wrap items-start justify-between gap-4">
                             <div className="flex items-center gap-3">
                               <GradientAvatar name={app.freelancerName ?? "Frilanser"} hue={app.freelancerHue ?? 250} size={44} rounded="rounded-xl" />
@@ -641,7 +700,7 @@ function ProjectDetailContent({
                     key={f.id}
                     to="/freelancers/$username"
                     params={{ username: f.username }}
-                    className="flex items-center gap-3 px-5 py-3.5 transition-default hover:bg-secondary/20"
+                    className="flex items-center gap-3 px-5 py-3.5 premium-list-row hover:bg-secondary/20"
                   >
                     <GradientAvatar name={f.name} hue={f.hue} size={36} rounded="rounded-lg" />
                     <div className="min-w-0 flex-1">

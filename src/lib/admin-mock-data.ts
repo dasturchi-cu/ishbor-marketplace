@@ -85,7 +85,7 @@ export type SupportTicket = {
 
 export type ModerationItem = {
   id: string;
-  type: "user" | "service" | "project" | "review";
+  type: "user" | "service" | "project" | "review" | "portfolio";
   title: string;
   reportedBy: string;
   reason: string;

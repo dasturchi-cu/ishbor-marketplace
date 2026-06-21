@@ -126,10 +126,16 @@ function ClientAnalyticsPage() {
           {analytics.proposalsReceived > 0 && (
             <div className="rounded-2xl border border-border bg-card px-5 py-4 text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">{analytics.proposalsReceived}</span> ta taklif qabul qilindi ·
-              o&apos;rtacha yollash{" "}
+              o&apos;rtacha yollash xarajati{" "}
               <span className="font-semibold text-foreground">
-                {analytics.averageHireTime > 0 ? `$${analytics.averageHireTime.toLocaleString()}` : "—"}
+                {analytics.averageSpendPerHire > 0 ? `$${analytics.averageSpendPerHire.toLocaleString()}` : "—"}
               </span>
+              {analytics.hiringSuccessRate > 0 && (
+                <>
+                  {" "}· yollash muvaffaqiyati{" "}
+                  <span className="font-semibold text-foreground">{analytics.hiringSuccessRate}%</span>
+                </>
+              )}
             </div>
           )}
         </div>
